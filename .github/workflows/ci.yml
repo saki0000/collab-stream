@@ -52,40 +52,6 @@ jobs:
     - name: Generate coverage reports
       run: ./gradlew koverXmlReport koverHtmlReport
 
-
-    - name: Generate coverage comment
-      run: ./gradlew generateCoverageComment
-
-    - name: Comment PR with coverage
-      if: github.event_name == 'pull_request'
-      run: |
-        if [ -f build/coverage-comment.md ]; then
-          gh pr comment ${{ github.event.number }} --body-file build/coverage-comment.md
-        fi
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-    - name: Archive test results
-      if: always()
-      uses: actions/upload-artifact@v4
-      with:
-        name: test-results
-        path: |
-          **/build/test-results/**/*.xml
-          **/build/reports/tests/**
-        retention-days: 30
-
-    - name: Archive coverage reports
-      if: always()
-      uses: actions/upload-artifact@v4
-      with:
-        name: coverage-reports
-        path: |
-          build/reports/kover/**
-          shared/build/reports/kover/**
-          composeApp/build/reports/kover/**
-        retention-days: 30
-
   android-build:
     name: Android Build
     runs-on: ubuntu-latest
