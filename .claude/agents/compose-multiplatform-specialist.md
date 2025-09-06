@@ -1,8 +1,11 @@
 ---
 name: compose-multiplatform-specialist
-description:  |
-  Use this agent when implementing UI components and screens in Compose Multiplatform projects following MVI architecture and Container-Screen-Content-Component design patterns. 
-  <example>Context: User needs to implement a login screen with email/password fields and validation. user: "Create a login screen with email and password fields, validation, and a login button" assistant: "I'll use the compose-multiplatform-specialist agent to implement this login screen following MVI architecture and the Container-Screen-Content-Component pattern."</example> <example>Context: User has a design mockup and needs to implement a complex dashboard UI. user: "Here's the dashboard design - implement this with proper state management and component hierarchy" assistant: "Let me use the compose-multiplatform-specialist agent to implement this dashboard UI following our established MVI architecture and component patterns."</example>
+description: |
+  PROACTIVELY TRIGGERED for Compose UI implementation, screen development, and MVI architecture. MUST BE USED when implementing Composables, UI components, state management, or screen layouts.
+
+  Auto-triggers on: "UI", "Compose", "screen", "component", "MVI", "ViewModel", "UiState", "@Composable", "Layout", "navigation", "user interface", files in composeApp/ directory.
+
+  Expert in MVI architecture and Container-Screen-Content-Component patterns for Kotlin Multiplatform UI development.
 model: sonnet
 ---
 
