@@ -8,4 +8,43 @@ plugins {
     alias(libs.plugins.kotlinJvm) apply false
     alias(libs.plugins.kotlinMultiplatform) apply false
     alias(libs.plugins.ktlint) apply false
+    alias(libs.plugins.kover)
+}
+
+dependencies {
+    kover(projects.shared)
+    kover(projects.composeApp)
+}
+
+kover {
+    reports {
+        filters {
+            excludes {
+                classes(
+                    "*Fragment",
+                    "*Fragment\$*",
+                    "*Activity", 
+                    "*Activity\$*",
+                    "*.databinding.*",
+                    "*.BuildConfig",
+                    "*\$WhenMappings",
+                    "*ComposableSingletons*",
+                    "*_Impl",
+                    "*_Impl\$*"
+                )
+                packages(
+                    "*.build.*"
+                )
+            }
+        }
+        total {
+            html {
+                onCheck = false
+                title = "CollabStream Test Coverage Report"
+            }
+            xml {
+                onCheck = false
+            }
+        }
+    }
 }
