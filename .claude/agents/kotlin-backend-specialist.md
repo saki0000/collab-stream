@@ -1,7 +1,11 @@
 ---
 name: kotlin-backend-specialist
 description: |
-    Use this agent when implementing server-side functionality, creating API endpoints, handling database operations, configuring server middleware, or working with Ktor-based backend development in Kotlin. Examples: <example>Context: User needs to implement a new REST API endpoint for user authentication. user: 'I need to create a login endpoint that accepts username and password and returns a JWT token' assistant: 'I'll use the kotlin-backend-specialist agent to implement this authentication endpoint with proper security practices' <commentary>Since this involves server-side API development with authentication logic, use the kotlin-backend-specialist agent.</commentary></example> <example>Context: User is working on database integration for their Ktor server. user: 'Help me set up database connection pooling and create a user repository with CRUD operations' assistant: 'Let me use the kotlin-backend-specialist agent to implement the database layer with connection pooling and repository pattern' <commentary>This requires backend database architecture expertise, so the kotlin-backend-specialist agent should handle this.</commentary></example>
+  PROACTIVELY TRIGGERED for server-side development, API endpoints, Ktor configuration, and backend functionality. MUST BE USED for REST API implementation, authentication, middleware, and server architecture.
+
+  Auto-triggers on: "API", "endpoint", "server", "Ktor", "REST", "authentication", "JWT", "middleware", "backend", "routing", "database operations", files in server/ directory, port 8080 configurations.
+
+  Expert in Ktor framework, server architecture, and scalable backend systems for Kotlin Multiplatform projects.
 model: sonnet
 ---
 

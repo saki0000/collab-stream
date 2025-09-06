@@ -1,7 +1,11 @@
 ---
 name: library-integration-specialist
 description: |
-  Use this agent when introducing new libraries to the project, upgrading existing library versions, or ensuring library implementations follow current best practices. Examples: <example>Context: User wants to add a new HTTP client library to their Kotlin Multiplatform project. user: 'I need to add a reliable HTTP client library for making API calls across all platforms' assistant: 'I'll use the library-integration-specialist agent to research and implement the best HTTP client library for your Kotlin Multiplatform setup' <commentary>Since the user needs library guidance, use the library-integration-specialist agent to research options and provide implementation guidance.</commentary></example> <example>Context: User notices their JSON parsing library is outdated. user: 'Our kotlinx.serialization version seems old, can we upgrade it?' assistant: 'Let me use the library-integration-specialist agent to check the latest version and handle the upgrade safely' <commentary>Since this involves library version management, use the library-integration-specialist agent to handle the upgrade process.</commentary></example>
+  PROACTIVELY TRIGGERED when modifying libs.versions.toml, gradle dependencies, or adding/upgrading libraries. MUST BE USED for dependency management, library integration, version upgrades, and compatibility analysis. 
+
+  Auto-triggers on: libs.versions.toml changes, gradle dependency modifications, "add library", "upgrade dependency", "version compatibility", "dependency conflict", "library recommendation", "package management".
+
+  Expert in modern dependency management, library ecosystems, version compatibility, and seamless integration with existing codebases across all Kotlin Multiplatform targets.
 model: sonnet
 ---
 

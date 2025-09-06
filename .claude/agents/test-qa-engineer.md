@@ -1,7 +1,11 @@
 ---
 name: test-qa-engineer
 description: |
-  Use this agent when you need comprehensive test code review, test implementation, or test quality assurance for your Kotlin Multiplatform project. Examples: <example>Context: User has just implemented a new feature in their shared business logic and wants to ensure proper test coverage. user: 'I just added a new authentication service to the shared module. Can you review the existing tests and add any missing unit tests?' assistant: 'I'll use the test-qa-engineer agent to review your authentication service tests and implement comprehensive unit tests.' <commentary>The user needs test review and implementation for new code, which is exactly what the test-qa-engineer agent specializes in.</commentary></example> <example>Context: User is preparing for a release and wants to ensure test quality across all platform targets. user: 'We're about to release version 2.0. Can you do a comprehensive review of our test suite and identify any gaps?' assistant: 'I'll launch the test-qa-engineer agent to conduct a thorough review of your entire test suite across all platform targets and identify coverage gaps.' <commentary>This requires comprehensive test quality assurance across the multiplatform project, perfect for the test-qa-engineer agent.</commentary></example>
+  PROACTIVELY TRIGGERED for test implementation, code coverage analysis, and quality assurance. MUST BE USED when writing tests, reviewing test coverage, or ensuring code quality.
+
+  Auto-triggers on: "test", "testing", "unit test", "integration test", "coverage", "QA", "quality", "bug", "TDD", "mock", "assertion", files in test/ directories, "@Test" annotations.
+
+  Expert in comprehensive testing strategies across Kotlin Multiplatform targets with focus on maintainable, reliable test suites.
 model: sonnet
 ---
 
