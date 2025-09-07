@@ -68,6 +68,55 @@
 
 [解決策の全体像を記述]
 
+### Interface設計
+
+> **必須セクション**: すべての機能実装において、レイヤー別Interface定義を行い、各責務を明確化してください。
+
+#### Core Interfaces
+
+**Domain Layer (shared)**
+```kotlin
+interface [Entity]Repository {
+  // 責務: データ永続化・取得
+  suspend fun get[Entity](id: String): Result<[Entity]?>
+  suspend fun save[Entity](entity: [Entity]): Result<Unit>
+}
+
+interface [Feature]UseCase {
+  // 責務: ビジネスロジック
+  suspend fun execute(request: [Feature]Request): Result<[Feature]Response>
+}
+```
+
+**Infrastructure Layer (server)**
+```kotlin
+interface [Feature]ApiController {
+  // 責務: HTTP リクエスト/レスポンス処理
+  suspend fun handle[Feature](call: ApplicationCall)
+}
+
+interface [Entity]Validator {
+  // 責務: 入力値検証
+  fun validate(data: [Entity]Data): ValidationResult
+}
+```
+
+#### Interface責務マトリックス
+
+| Layer | Interface | 主な責務 |
+|-------|-----------|----------|
+| Domain | [Entity]Repository | データ永続化・取得 |
+| Domain | [Feature]UseCase | ビジネスロジック |
+| Infrastructure | [Feature]ApiController | HTTP処理 |
+| Infrastructure | [Entity]Validator | 入力値検証 |
+
+#### 実装指針
+
+**Interface設計原則:**
+- 単一責任: 各Interfaceは1つの明確な責務を持つ
+- 依存関係: Domain ← Infrastructure, UI → Domain  
+- テスタビリティ: Mock作成が容易な粒度
+
 ### システムコンテキスト図
 
 ```

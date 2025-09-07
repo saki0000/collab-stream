@@ -17,12 +17,14 @@ GitHub issueから実装→テスト→PR作成まで完全自動化するワー
 
 ## 🔄 ワークフロー概要
 
-1. **Issue分析**: GitHub CLIでissue詳細取得・要件分析
-2. **Context作成**: `docs/context/{issue-number}/` にワークスペース作成
-3. **タスク分割**: レイヤー別（shared/compose/server）にタスク分解
-4. **順次実装**: shared → compose → server の依存関係に従った安全な実装
-5. **品質確認**: 各フェーズでユニットテスト・ビルド確認
-6. **PR作成**: 既存pr.mdコマンドと連携したPR自動生成
+1. **Design Doc参照**: create-issue.mdで作成されたDesign Docを読み込み
+2. **Issue分析**: GitHub CLIでissue詳細取得・要件分析
+3. **Interface確認**: Design DocのInterface設計を実装指針として活用
+4. **Context作成**: `docs/context/{issue-number}/` にワークスペース作成
+5. **タスク分割**: Interface設計に基づいたレイヤー別タスク分解
+6. **順次実装**: shared → compose → server の依存関係に従った安全な実装
+7. **品質確認**: 各フェーズでユニットテスト・ビルド確認
+8. **PR作成**: 既存pr.mdコマンドと連携したPR自動生成
 
 ## 📋 実行開始
 
@@ -41,28 +43,81 @@ GitHub issueから実装→テスト→PR作成まで完全自動化するワー
 gh issue view 123 --json title,body,labels,assignees,milestone
 ```
 
-## Phase 1: Issue分析 & Context作成
+## Phase 1: Design Doc参照 & Issue分析
 
-### 1.1 Issue情報抽出
-- **Title**: Issue タイトルから機能概要把握
+### 1.0 Design Doc読み込み
+> **必須ステップ**: create-issue.mdで作成されたDesign Docを参照
+
+**Design Docの位置確認:**
+```bash
+# Design Docの存在確認
+ls -la docs/design-doc/
+
+# Issue番号からDesign Docを特定
+find docs/design-doc/ -name "*.md" | grep -E "(issue[-_]?123|[^\/]*123[^\/]*\.md)"
+```
+
+**Interface設計情報の抽出:**
+- ✅ Core Interfaces定義
+- ✅ レイヤー別責務マトリックス
+- ✅ 依存関係マッピング
+- ✅ 実装指針
+
+### 1.1 Issue情報拽出
+- **Title**: Issue タイトルから機能概要把揥
 - **Body**: 詳細要件・受け入れ条件抽出  
-- **Labels**: feature/maintenance分類
-- **Technical requirements**: Kotlin Multiplatform要件分析
+- **Labels**: feature/maintenance分類 + interface-designedラベル確認
+- **Design Doc連携**: Issue本文内のDesign Doc参照情報
 
 ### 1.2 Context workspace作成
 ```
 docs/context/{issue-number}/
 ├── context.md              # Issue情報 + 全体管理
-├── analysis.md             # 要件分析結果
+├── design-doc-ref.md       # Design Doc参照情報
+├── interface-impl.md       # Interface実装状態管理
 ├── tasks.md               # 統一タスク管理（全フェーズ）
 ```
 
-### 1.3 Requirements analysis
-**task-breakdown-specialist agent呼び出し:**
-- Issue内容からKotlin Multiplatform要件抽出
-- レイヤー分割判定（shared/compose/server）
-- プラットフォーム固有要件分析（Android/iOS/Web/Server）
-- 依存関係マッピング・並行実装可能性判定
+### 1.3 Interface実装マッピング
+**Design DocのInterface設計を実装タスクに変換:**
+
+```markdown
+# interface-impl.md 例
+## Interface実装状態
+
+### Domain Layer (shared)
+- [ ] UserRepository - データ永続化・取得責務
+- [ ] UserUseCase - ユーザー関連ビジネスロジック
+
+### Presentation Layer (composeApp)
+- [ ] UserScreenViewModel - UI状態管理・ユーザー操作処理
+- [ ] UserNavigator - 画面遷移制御
+
+### Infrastructure Layer (server)
+- [ ] UserApiController - HTTP リクエスト/レスポンス処理
+- [ ] UserValidator - 入力値検証
+```
+
+### 1.4 Interface実装プラン作成
+**Design DocのInterface設計を基に実装プランを立案:**
+
+```yaml
+implementation_plan:
+  phase_1_shared:
+    interfaces: [UserRepository, UserUseCase]
+    dependencies: []
+    estimated_time: "30-60分"
+    
+  phase_2_compose:
+    interfaces: [UserScreenViewModel, UserNavigator]
+    dependencies: [phase_1_shared]
+    estimated_time: "45-90分"
+    
+  phase_3_server:
+    interfaces: [UserApiController, UserValidator]
+    dependencies: [phase_1_shared]
+    estimated_time: "30-75分"
+```
 
 ## Phase 2: Task分割 & Agent連携
 
