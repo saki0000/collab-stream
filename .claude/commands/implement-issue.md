@@ -1,6 +1,6 @@
 ---
 allowed-tools: Read, Write, Edit, MultiEdit, TodoWrite, Bash(gh:*), Bash(git:*), Bash(mkdir:*), Bash(date:*), Bash(./gradlew:*), Task, mcp__serena__*, Glob, Grep
-description: GitHub issue から完全自動実装まで - レイヤー別タスク分割・並行実装・PR作成
+description: GitHub issue から完全自動実装まで - レイヤー別タスク分割・順次実装・PR作成
 ---
 
 # Implement Issue: Full Automation Workflow
@@ -20,8 +20,8 @@ GitHub issueから実装→テスト→PR作成まで完全自動化するワー
 1. **Issue分析**: GitHub CLIでissue詳細取得・要件分析
 2. **Context作成**: `docs/context/{issue-number}/` にワークスペース作成
 3. **タスク分割**: レイヤー別（shared/compose/server）にタスク分解
-4. **並行実装**: Git worktreeを活用した効率的開発
-5. **品質確認**: ユニットテスト作成・ビルド確認・テスト実行
+4. **順次実装**: shared → compose → server の依存関係に従った安全な実装
+5. **品質確認**: 各フェーズでユニットテスト・ビルド確認
 6. **PR作成**: 既存pr.mdコマンドと連携したPR自動生成
 
 ## 📋 実行開始
@@ -54,16 +54,7 @@ gh issue view 123 --json title,body,labels,assignees,milestone
 docs/context/{issue-number}/
 ├── context.md              # Issue情報 + 全体管理
 ├── analysis.md             # 要件分析結果
-├── workflow-state.json     # Agent連携状態管理
-├── tasks/
-│   ├── shared-layer.md     # 共通ロジック層タスク
-│   ├── compose-layer.md    # UI層タスク
-│   ├── server-layer.md     # サーバー層タスク
-│   └── integration.md      # 統合・テスト
-└── implementation/
-    ├── commits.md          # コミット履歴
-    ├── errors.md           # エラーログ
-    └── verification.md     # 検証結果
+├── tasks.md               # 統一タスク管理（全フェーズ）
 ```
 
 ### 1.3 Requirements analysis
@@ -75,125 +66,131 @@ docs/context/{issue-number}/
 
 ## Phase 2: Task分割 & Agent連携
 
-### 2.1 レイヤー別タスク分割
+### 2.1 統一タスク管理ファイル構成
 
-```yaml
-# shared-layer (共通ロジック)
-tasks:
-  - commonMain: ビジネスロジック実装
-  - data-layer: Repository・Entity定義
-  - platform-specific: expect/actual実装
-  - unit-tests: レイヤーテスト作成
+**tasks.md ファイルの構成:**
+```markdown
+# Tasks Management - Issue #{number}
 
-# compose-layer (UI)  
-tasks:
-  - commonMain: 共通UI実装
-  - platform-ui: プラットフォーム固有UI
-  - navigation: 画面遷移実装
-  - ui-tests: UIテスト作成
+## 📊 Overall Progress
+- Phase 1 (Shared): ✅/🔄/❌
+- Phase 2 (Compose): ✅/🔄/❌  
+- Phase 3 (Server): ✅/🔄/❌
+- Phase 4 (Integration): ✅/🔄/❌
+- Total Progress: X% (completed/total tasks)
 
-# server-layer (API)
-tasks:
-  - routing: API エンドポイント定義
-  - business-logic: サーバーロジック
-  - data-access: DB・外部API連携
-  - api-tests: APIテスト作成
+## Phase 1: Shared Layer
+- [ ] Repository/Entity実装
+- [ ] expect/actual Platform実装
+- [ ] ユニットテスト作成
+- [ ] ビルド確認
+
+## Phase 2: Compose Layer
+- [ ] Compose UI実装
+- [ ] プラットフォーム固有UI
+- [ ] UIテスト作成
+
+## Phase 3: Server Layer
+- [ ] APIエンドポイント実装
+- [ ] サーバーロジック実装
+- [ ] APIテスト作成
+
+## Phase 4: Integration
+- [ ] 統合ビルド確認
+- [ ] 統合テスト実行
+
+## 🔍 Final Checklist
+- [ ] All phases completed
+- [ ] All tests passing
+- [ ] Ready for PR creation
 ```
 
-### 2.2 依存関係 & 並行実装判定
+### 2.2 実装順序の決定
 
-**自動判定ロジック:**
+**順次実装フロー:**
 ```
-if (shared独立 && server独立):
-    create_parallel_worktrees(["shared", "server"])
-    sequential_dependency(["shared", "compose"])
-    
-elif (全レイヤー独立):
-    create_parallel_worktrees(["shared", "compose", "server"])
-    
-else:
-    sequential_implementation(["shared", "compose", "server"])
+1. shared-layer:    共通ロジック・エンティティ実装
+2. compose-layer:   shared層依存のUI実装
+3. server-layer:    API・サーバーロジック実装
+4. integration:     全レイヤー統合テスト
 ```
 
 ## Phase 3: Git Worktree + 実装
 
 ### 3.1 ブランチ戦略
-**Trunk-based development:**
+**シンプルな単一ブランチ:**
 ```bash
 # メインブランチから実装ブランチ作成
 git checkout -b feature/issue-123-implementation
 
-# 並行実装の場合はworktree活用
-git worktree add ../CollabStream-shared feature/issue-123-implementation
-git worktree add ../CollabStream-server feature/issue-123-implementation
+# 各レイヤーを順次実装してコミット
+git commit -m "feat: implement shared layer for issue #123"
+git commit -m "feat: implement compose UI for issue #123"
+git commit -m "feat: implement server API for issue #123"
 ```
 
-### 3.2 Agent連携実装
+### 3.2 順次Agent実行
 
-**各レイヤーでのAgent実行:**
-
+**Phase 1: Shared Layer (基盤実装)**
 ```bash
-# Shared Layer Implementation
-├─ kotlin-backend-specialist呼び出し
-├─ 共通知識ベース (kotlin-multiplatform-patterns.md) 読み込み
-├─ Repository/Entity実装
-├─ expect/actual Platform実装
-├─ ユニットテスト作成
-├─ ビルド確認 (./gradlew :shared:build)
-├─ テスト実行 (./gradlew :shared:test)
-└─ タスク完了 → context更新
-
-# Compose Layer Implementation  
-├─ compose-multiplatform-specialist呼び出し
-├─ UI知識ベース読み込み
-├─ shared層依存関係確認
-├─ Compose UI実装
-├─ プラットフォーム固有UI実装
-├─ UIテスト作成
-├─ ビルド確認 (./gradlew :composeApp:build)
-└─ タスク完了 → context更新
-
-# Server Layer Implementation
-├─ kotlin-backend-specialist呼び出し  
-├─ Ktor API実装
-├─ ルーティング定義
-├─ サーバーロジック実装
-├─ APIテスト作成
-├─ ビルド確認 (./gradlew :server:build)
-├─ テスト実行 (./gradlew :server:test)
-└─ タスク完了 → context更新
+1. kotlin-backend-specialist呼び出し
+2. 共通知識ベース読み込み
+3. Repository/Entity/UseCase実装
+4. expect/actual Platform実装
+5. ユニットテスト作成
+6. ビルド&テスト確認
+7. コミット作成
 ```
 
-### 3.3 エラー処理・リトライ戦略
+**Phase 2: Compose Layer (依存UI実装)**
+```bash
+1. shared層完了確認
+2. compose-multiplatform-specialist呼び出し
+3. sharedエンティティ依存のUI実装
+4. プラットフォーム固有UI実装
+5. UIテスト作成
+6. ビルド確認
+7. コミット作成
+```
 
-**自動エラー処理:**
+**Phase 3: Server Layer (独立API実装)**
+```bash
+1. kotlin-backend-specialist呼び出し
+2. Ktor APIエンドポイント実装
+3. ビジネスロジック実装
+4. APIテスト作成
+5. ビルド&テスト確認
+6. コミット作成
+```
+
+### 3.3 エラー処理戦略
+
+**シンプルなエラー処理:**
 ```yaml
 error_handling:
-  compilation_error:
-    max_retries: 3
-    action: "詳細ログ出力 + context記録"
-    fallback: "ユーザー確認待機"
-  
-  test_failure:
-    max_retries: 2  
-    action: "テスト修正試行"
-    fallback: "手動介入要請"
+  phase_failure:
+    action: "現在フェーズ停止 + エラーログ記録"
+    recovery: "前フェーズから再開可能"
+    max_retries: 2
     
-  worktree_conflict:
-    action: "自動マージ試行"
-    fallback: "競合解決ガイド提示"
+  build_failure:
+    action: "ビルドエラー詳細表示 + context更新"
+    recovery: "エラー修正後同フェーズ再実行"
+    
+  test_failure:
+    action: "テスト失敗詳細表示 + 修正提案"
+    recovery: "テスト修正後再テスト"
 ```
 
 ## Phase 4: 統合・品質確認
 
-### 4.1 Worktreeマージ・統合
+### 4.1 統合確認
 ```bash
-# 並行worktreeの場合
-├─ 各worktreeの完了確認
-├─ メインworktreeにマージ  
-├─ 競合解決（必要に応じて）
+# 全レイヤー完了確認
+├─ shared/compose/server実装完了
+├─ 全レイヤーコミット確認
 ├─ 統合ビルド確認
-└─ worktree cleanup
+└─ 統合テスト実行
 ```
 
 ### 4.2 全プラットフォームビルド・テスト
@@ -240,28 +237,40 @@ completion_check:
 
 ## 📝 Context管理詳細
 
+### 🎯 統一タスク管理の利点
+
+**今までの問題:**
+- 4つのタスクファイルを個別に確認が必要
+- 全体進捗を把握しづらい
+- 最終確認時の確認漯れリスク
+
+**改善後のメリット:**
+- ✅ **一元管理**: 全タスクを1ファイルで管理
+- ✅ **進捗可視化**: リアルタイムで全体進捗を把握
+- ✅ **簡単な最終確認**: Final Checklistで一括確認
+- ✅ **依存関係明確**: 各フェーズの前提条件を表示
+
 ### workflow-state.json更新例
 ```json
 {
   "issue_number": 123,
   "current_phase": "compose-layer",
-  "completed_agents": ["task-breakdown-specialist", "kotlin-backend-specialist"],
-  "next_agent": "compose-multiplatform-specialist",
-  "worktrees": {
-    "shared": {"status": "completed", "path": "../CollabStream-shared"},
-    "server": {"status": "in-progress", "path": "../CollabStream-server"}
-  },
+  "completed_phases": ["shared-layer"],
+  "next_phase": "server-layer",
   "context_data": {
     "dependencies": ["Room", "Ktor", "Compose Navigation"],
     "platforms": ["android", "ios", "wasmJs", "jvm"],
-    "test_strategy": "unit_per_layer",
-    "api_endpoints": ["/api/users", "/api/sessions"]
+    "test_strategy": "unit_per_layer"
   },
-  "handoff_data": {
+  "implementation_artifacts": {
     "shared_entities": ["User", "Session"],
-    "api_contracts": [...],
-    "ui_requirements": [...]
+    "api_contracts": ["UserRepository", "SessionService"],
+    "ui_components": ["LoginScreen", "DashboardScreen"]
   },
+  "commits": [
+    "feat: implement shared layer for issue #123",
+    "feat: implement compose UI for issue #123"
+  ],
   "error_log": []
 }
 ```
@@ -276,17 +285,16 @@ completion_check:
 ✅ Issue #123: "Add user authentication feature" 取得完了
 ✅ Context workspace作成: docs/context/123/
 🔄 task-breakdown-specialist 実行中...
-✅ レイヤー分割完了: [shared, compose, server]
-🔄 並行実装判定: shared・server並行可能
-✅ Worktree作成: shared・server並行実装開始
-🔄 kotlin-backend-specialist (shared) 実行中...
-🔄 kotlin-backend-specialist (server) 実行中...  
-✅ shared層実装完了 + ユニットテスト
-✅ server層実装完了 + APIテスト
-🔄 compose-multiplatform-specialist 実行中...
-✅ UI層実装完了 + UIテスト
-✅ 全プラットフォームビルド成功
-✅ 全テスト成功
+✅ レイヤー分割完了: [shared → compose → server]
+✅ 順次実装フロー決定: 依存関係に従って安全に実行
+🔄 Phase 1: kotlin-backend-specialist (shared) 実行中...
+✅ shared層実装完了 + ユニットテスト + コミット
+🔄 Phase 2: compose-multiplatform-specialist 実行中...
+✅ compose層実装完了 + UIテスト + コミット
+🔄 Phase 3: kotlin-backend-specialist (server) 実行中...
+✅ server層実装完了 + APIテスト + コミット
+✅ 全プラットフォーム統合ビルド成功
+✅ 統合テスト成功
 🔄 PR作成中...
 ✅ PR作成完了: https://github.com/user/CollabStream/pull/456
 ```
@@ -296,8 +304,17 @@ completion_check:
 - **大規模Issue**: 複雑すぎる場合は手動介入を推奨
 - **依存関係**: 外部ライブラリが必要な場合は事前確認
 - **Platform固有**: iOS・Web固有要件は詳細指定が必要
-- **テスト戦略**: 各レイヤーでユニットテスト必須作成
+- **順次実行**: 各フェーズの完了を確認してから次へ進むため安全
 
 ---
 
-**開発者向け**: このワークフローはKotlin Multiplatformプロジェクトに最適化されており、shared/compose/serverの3層アーキテクチャを前提としています。
+**開発者向け**: このワークフローはKotlin Multiplatformプロジェクトに最適化された順次実行アプローチで、shared/compose/serverの3層アーキテクチャを前提とした安全で信頼性の高い実装です。
+
+## ✨ 新機能: 統一タスク管理
+
+このアップデートでは、従来の分散したタスク管理から、**一元化されたタスク管理システム**に移行しました。
+
+- 🔄 **Before**: 4つのタスクファイルを個別管理
+- ✅ **After**: 1つの`tasks.md`で全フェーズを統一管理
+
+こにより、最終確認が大幅に簡略化され、実装品質と信頼性が向上しました。
