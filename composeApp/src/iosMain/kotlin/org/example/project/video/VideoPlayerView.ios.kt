@@ -1,12 +1,7 @@
 package org.example.project.video
 
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.UIKitInteropProperties
 import androidx.compose.ui.viewinterop.UIKitView
@@ -33,15 +28,16 @@ actual fun VideoPlayerView(
         return
     }
 
-    UIKitView(factory = {
-        val config = WKWebViewConfiguration().apply {
-            allowsInlineMediaPlayback = true
-            mediaTypesRequiringUserActionForPlayback = 0u // Allow autoplay
-        }
+    UIKitView(
+        factory = {
+            val config = WKWebViewConfiguration().apply {
+                allowsInlineMediaPlayback = true
+                mediaTypesRequiringUserActionForPlayback = 0u // Allow autoplay
+            }
 
-        val webView = WKWebView(frame = cValue { CGRectZero }, configuration = config)
+            val webView = WKWebView(frame = cValue { CGRectZero }, configuration = config)
 
-        val html = """
+            val html = """
                     <!DOCTYPE html>
                     <html>
                     <head>
@@ -83,11 +79,11 @@ actual fun VideoPlayerView(
                         </div>
                     </body>
                     </html>
-                """.trimIndent()
+            """.trimIndent()
 
-        webView.loadHTMLString(html, baseURL = NSURL.URLWithString("https://www.youtube.com"))
-        webView
-    },
+            webView.loadHTMLString(html, baseURL = NSURL.URLWithString("https://www.youtube.com"))
+            webView
+        },
         modifier = modifier.fillMaxSize(),
         update = { webView ->
             // Update the webView if needed when videoId changes
@@ -133,9 +129,11 @@ actual fun VideoPlayerView(
                         </div>
                     </body>
                     </html>
-                """.trimIndent()
+            """.trimIndent()
 
             webView.loadHTMLString(html, baseURL = NSURL.URLWithString("https://www.youtube.com"))
         },
-        onRelease = {}, properties = UIKitInteropProperties(isInteractive = true, isNativeAccessibilityEnabled = true))
+        onRelease = {},
+        properties = UIKitInteropProperties(isInteractive = true, isNativeAccessibilityEnabled = true),
+    )
 }
