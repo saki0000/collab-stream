@@ -1,0 +1,123 @@
+{
+  "issue_number": "11",
+  "title": "YouTube再生時間取得機能",
+  "analysis_completed": true,
+  "current_phase": "implementation_ready",
+  "complexity": "medium",
+  "next_agents": {
+    "shared_layer": "kotlin-backend-specialist",
+    "compose_layer": "compose-multiplatform-specialist",
+    "integration": "integration_verification"
+  },
+  "execution_strategy": "sequential_with_parallel_phases",
+  "platforms": ["android", "ios"],
+  "layers_involved": ["shared", "composeApp"],
+  "context_data": {
+    "existing_implementations": {
+      "video_player_android": "/Users/kouseihujisaki/Desktop/CollabStream/composeApp/src/androidMain/kotlin/org/example/project/video/VideoPlayerView.android.kt",
+      "video_player_ios": "/Users/kouseihujisaki/Desktop/CollabStream/composeApp/src/iosMain/kotlin/org/example/project/video/VideoPlayerView.ios.kt",
+      "video_viewmodel": "/Users/kouseihujisaki/Desktop/CollabStream/composeApp/src/commonMain/kotlin/org/example/project/video/VideoViewModel.kt",
+      "video_ui_state": "/Users/kouseihujisaki/Desktop/CollabStream/composeApp/src/commonMain/kotlin/org/example/project/video/VideoUiState.kt"
+    },
+    "external_apis": {
+      "youtube_data_api_v3": {
+        "base_url": "https://www.googleapis.com/youtube/v3",
+        "required_endpoints": ["videos"],
+        "required_params": ["key", "id", "part=liveStreamingDetails,snippet"]
+      }
+    },
+    "architecture_patterns": {
+      "repository_pattern": "shared layer implementation",
+      "expect_actual": "platform-specific playback position provider",
+      "mvi_architecture": "existing VideoViewModel extension"
+    }
+  },
+  "handoff_data": {
+    "domain_models": [
+      "VideoSyncInfo",
+      "YouTubeVideoDetails",
+      "LiveStreamingDetails"
+    ],
+    "repository_interfaces": [
+      "VideoSyncRepository"
+    ],
+    "use_cases": [
+      "VideoSyncUseCase"
+    ],
+    "presentation_components": [
+      "PlaybackPositionProvider",
+      "VideoSyncController"
+    ],
+    "ui_extensions": [
+      "VideoUiState sync fields",
+      "VideoIntent sync actions",
+      "VideoViewModel sync methods"
+    ]
+  },
+  "implementation_phases": [
+    {
+      "phase": 1,
+      "name": "Shared Layer Foundation",
+      "type": "sequential",
+      "dependencies": [],
+      "estimated_time": "2-3 hours",
+      "tasks": [
+        "Create domain models in shared/src/commonMain/kotlin/org/example/project/domain/model/",
+        "Create repository interface in shared/src/commonMain/kotlin/org/example/project/domain/repository/",
+        "Implement use case in shared/src/commonMain/kotlin/org/example/project/domain/usecase/",
+        "Implement repository in shared/src/commonMain/kotlin/org/example/project/data/repository/"
+      ]
+    },
+    {
+      "phase": 2,
+      "name": "Core Presentation Layer",
+      "type": "sequential",
+      "dependencies": ["phase_1"],
+      "estimated_time": "2 hours",
+      "tasks": [
+        "Create PlaybackPositionProvider expect interface",
+        "Extend VideoUiState with sync fields",
+        "Extend VideoIntent with sync actions",
+        "Create VideoSyncController",
+        "Extend VideoViewModel with sync methods"
+      ]
+    },
+    {
+      "phase": 3,
+      "name": "Platform Implementations",
+      "type": "parallel",
+      "dependencies": ["phase_1", "phase_2"],
+      "estimated_time": "3-4 hours",
+      "parallel_tasks": {
+        "android_implementation": [
+          "Implement PlaybackPositionProvider.android.kt",
+          "Extend VideoPlayerView.android.kt with position access"
+        ],
+        "ios_implementation": [
+          "Implement PlaybackPositionProvider.ios.kt",
+          "Extend VideoPlayerView.ios.kt with JavaScript bridge"
+        ]
+      }
+    },
+    {
+      "phase": 4,
+      "name": "UI Integration & Testing",
+      "type": "sequential",
+      "dependencies": ["phase_3"],
+      "estimated_time": "2 hours",
+      "tasks": [
+        "Add sync button to VideoContainer.kt",
+        "Add sync result display to VideoScreen.kt",
+        "Create unit tests for shared layer",
+        "Create platform-specific tests",
+        "Create integration tests"
+      ]
+    }
+  ],
+  "quality_requirements": {
+    "unit_tests": "required_per_layer",
+    "platform_testing": "android_and_ios_verification",
+    "integration_testing": "end_to_end_sync_workflow",
+    "error_handling": "api_errors_and_platform_failures"
+  }
+}
