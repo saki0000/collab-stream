@@ -1,8 +1,38 @@
 # CollabStream
 
-A Kotlin Multiplatform project targeting Android, iOS, Web, and Server with integrated development workflow automation.
+> Synchronize two streaming archive videos by timestamp for collaborative viewing experiences
 
-## 🚀 Quick Start
+## 🎯 What is CollabStream?
+
+**CollabStream enables viewers to watch two streaming archive videos perfectly synchronized by timestamp. Experience collaborative streams, tournaments, and multi-perspective content from different creators simultaneously.**
+
+### ✨ Key Features
+- **Dual-Video Sync**: Watch 2 archive videos perfectly aligned by timestamp (second-level precision)
+- **Cross-Platform**: Android, iOS, Web, and Desktop support via Kotlin Multiplatform
+- **YouTube & Twitch**: Select and synchronize archives from both major platforms
+- **Simple Selection**: Choose any two archived streams to sync and enjoy together
+- **Free Service**: Complete functionality available at no cost
+
+### 🎮 Perfect For
+- **Tournament Coverage**: Watch multiple streamers covering the same esports event from different perspectives
+- **Collaborative Streams**: Experience group streams where creators covered identical content together
+- **Gaming Communities**: Enjoy shared viewing experiences for special events and competitions
+- **Content Comparison**: Compare different creators' approaches to the same game or challenge
+
+### 📺 How It Works
+1. **Select First Archive**: Choose a YouTube or Twitch archived stream
+2. **Select Second Archive**: Pick another archived stream to sync with
+3. **Auto-Sync**: CollabStream automatically synchronizes both videos by timestamp
+4. **Enjoy Together**: Play, pause, and seek - both videos stay perfectly in sync
+
+### 🔮 Future Plans
+- Subscription plans with premium features
+- Enhanced synchronization options
+- Additional platform integrations
+
+---
+
+## 🛠️ For Developers
 
 ### Development Workflow
 
