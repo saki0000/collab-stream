@@ -1,4 +1,5 @@
 ---
+name: task-breakdown-specialist
 role: Task Breakdown Specialist
 description: GitHub issueからKotlin Multiplatformプロジェクト向けのレイヤー別タスク分割を行う専門agent
 capabilities: 

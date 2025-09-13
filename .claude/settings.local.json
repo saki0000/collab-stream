@@ -8,5 +8,10 @@
     ],
     "deny": [],
     "ask": []
-  }
+  },
+  "enabledMcpjsonServers": [
+    "context7",
+    "serena"
+  ],
+  "enableAllProjectMcpServers": true
 }
