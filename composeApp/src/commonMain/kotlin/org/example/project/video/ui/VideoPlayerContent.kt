@@ -5,13 +5,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -31,40 +30,35 @@ fun VideoPlayerContent(
     uiState: VideoUiState,
     onVideoError: (String) -> Unit,
     onRetry: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        modifier = modifier.wrapContentSize(),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
     ) {
         Column(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp)
+                .padding(16.dp),
         ) {
             // Video info header
             VideoInfoHeader(
                 videoId = uiState.videoId,
                 serviceType = uiState.serviceType.name,
-                syncDateTime = uiState.syncDateTime
+                syncDateTime = uiState.syncDateTime,
             )
 
             Spacer(modifier = Modifier.height(12.dp))
 
             // Video player area
             Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f),
-                contentAlignment = Alignment.Center
+                modifier = Modifier,
+                contentAlignment = Alignment.Center,
             ) {
                 when {
                     uiState.videoId.isEmpty() -> {
                         EmptyStateComponent(
                             message = "Enter a YouTube video ID above to start",
-                            modifier = Modifier.fillMaxSize()
+                            modifier = Modifier,
                         )
                     }
 
@@ -72,7 +66,7 @@ fun VideoPlayerContent(
                         ErrorStateComponent(
                             errorMessage = uiState.errorMessage,
                             onRetry = onRetry,
-                            modifier = Modifier.fillMaxSize()
+                            modifier = Modifier,
                         )
                     }
 
@@ -80,18 +74,7 @@ fun VideoPlayerContent(
                         VideoPlayerView(
                             videoId = uiState.videoId,
                             onError = onVideoError,
-                            modifier = Modifier.fillMaxSize()
                         )
-                    }
-                }
-
-                // Show loading indicator overlay when needed
-                if (uiState.isLoading) {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator()
                     }
                 }
             }
@@ -107,24 +90,24 @@ private fun VideoInfoHeader(
     videoId: String,
     serviceType: String,
     syncDateTime: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier) {
         if (videoId.isNotEmpty()) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 Text(
                     text = "Video ID: $videoId",
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = MaterialTheme.colorScheme.onSurface,
                 )
                 Text(
                     text = serviceType,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.primary
+                    color = MaterialTheme.colorScheme.primary,
                 )
             }
 
@@ -133,7 +116,7 @@ private fun VideoInfoHeader(
                 Text(
                     text = "Loaded: $syncDateTime",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }

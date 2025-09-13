@@ -56,7 +56,8 @@ kotlin {
         androidMain.dependencies {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
-            implementation("androidx.webkit:webkit:1.8.0")
+            implementation(libs.androidx.webkit)
+            implementation(libs.core)
         }
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -68,7 +69,7 @@ kotlin {
             implementation(compose.components.uiToolingPreview)
             implementation(libs.androidx.lifecycle.viewmodelCompose)
             implementation(libs.androidx.lifecycle.runtimeCompose)
-            implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.0")
+            implementation(libs.kotlinx.datetime)
             implementation(projects.shared)
         }
         commonTest.dependencies {

@@ -1,14 +1,15 @@
 package org.example.project.video.ui
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import org.example.project.video.VideoIntent
 import org.example.project.video.VideoUiState
 
@@ -22,21 +23,20 @@ fun VideoScreen(
     onIntent: (VideoIntent) -> Unit,
     onVideoError: (String) -> Unit,
     snackbarHostState: SnackbarHostState,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Scaffold(
         modifier = modifier,
         snackbarHost = {
             SnackbarHost(hostState = snackbarHostState)
-        }
+        },
     ) { paddingValues ->
         Box(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
+                .padding(paddingValues),
         ) {
             Column(
-                modifier = Modifier.fillMaxSize()
+                verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 // Video input section
                 VideoInputContent(
@@ -44,7 +44,6 @@ fun VideoScreen(
                     onLoadVideo = { videoId ->
                         onIntent(VideoIntent.LoadVideo(videoId))
                     },
-                    modifier = Modifier.weight(0.3f)
                 )
 
                 // Video player section
@@ -52,7 +51,6 @@ fun VideoScreen(
                     uiState = uiState,
                     onVideoError = onVideoError,
                     onRetry = { onIntent(VideoIntent.RetryLoad) },
-                    modifier = Modifier.weight(0.7f)
                 )
             }
         }

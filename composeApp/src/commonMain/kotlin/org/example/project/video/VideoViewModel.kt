@@ -2,6 +2,7 @@ package org.example.project.video
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlin.time.ExperimentalTime
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -42,7 +43,7 @@ class VideoViewModel : ViewModel() {
     fun handleVideoError(errorMessage: String) {
         _uiState.value = _uiState.value.copy(
             isLoading = false,
-            errorMessage = errorMessage
+            errorMessage = errorMessage,
         )
 
         viewModelScope.launch {
@@ -60,7 +61,7 @@ class VideoViewModel : ViewModel() {
             videoId = videoId,
             isLoading = true,
             errorMessage = null,
-            syncDateTime = getCurrentDateTime()
+            syncDateTime = getCurrentDateTime(),
         )
 
         // Simulate loading success after a short delay
@@ -87,8 +88,9 @@ class VideoViewModel : ViewModel() {
         }
     }
 
+    @OptIn(ExperimentalTime::class)
     private fun getCurrentDateTime(): String {
-        val now = Clock.System.now()
+        val now = kotlin.time.Clock.System.now()
         val localDateTime = now.toLocalDateTime(TimeZone.currentSystemDefault())
         return "${localDateTime.date} ${localDateTime.hour}:${localDateTime.minute.toString().padStart(2, '0')}"
     }

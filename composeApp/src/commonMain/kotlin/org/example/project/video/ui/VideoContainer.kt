@@ -1,5 +1,6 @@
 package org.example.project.video.ui
 
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -8,7 +9,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
-import org.example.project.video.VideoIntent
 import org.example.project.video.VideoSideEffect
 import org.example.project.video.VideoViewModel
 
@@ -20,25 +20,27 @@ import org.example.project.video.VideoViewModel
 @Composable
 fun VideoContainer(
     modifier: Modifier = Modifier,
-    viewModel: VideoViewModel = viewModel()
+    viewModel: VideoViewModel = viewModel { VideoViewModel() },
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val snackbarHostState = remember { SnackbarHostState() }
+    val snackBarHostState = remember { SnackbarHostState() }
 
     // Handle side effects
     LaunchedEffect(Unit) {
         viewModel.sideEffect.collect { sideEffect ->
             when (sideEffect) {
                 is VideoSideEffect.ShowError -> {
-                    snackbarHostState.showSnackbar(
+                    snackBarHostState.showSnackbar(
                         message = sideEffect.message,
-                        actionLabel = "Dismiss"
+                        actionLabel = "Dismiss",
+                        duration = SnackbarDuration.Short,
                     )
                 }
                 is VideoSideEffect.ShowSuccess -> {
-                    snackbarHostState.showSnackbar(
+                    snackBarHostState.showSnackbar(
                         message = sideEffect.message,
-                        actionLabel = "OK"
+                        actionLabel = "OK",
+                        duration = SnackbarDuration.Short,
                     )
                 }
             }
@@ -49,7 +51,7 @@ fun VideoContainer(
         uiState = uiState,
         onIntent = viewModel::handleIntent,
         onVideoError = viewModel::handleVideoError,
-        snackbarHostState = snackbarHostState,
-        modifier = modifier
+        snackbarHostState = snackBarHostState,
+        modifier = modifier,
     )
 }

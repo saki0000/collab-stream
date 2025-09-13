@@ -9,7 +9,7 @@ data class VideoUiState(
     val serviceType: VideoServiceType = VideoServiceType.YOUTUBE,
     val syncDateTime: String = "",
     val isLoading: Boolean = false,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
 )
 
 /**
@@ -17,5 +17,5 @@ data class VideoUiState(
  * Currently only supports YouTube, but can be extended for future services.
  */
 enum class VideoServiceType {
-    YOUTUBE
+    YOUTUBE,
 }

@@ -7,7 +7,7 @@ import androidx.compose.ui.Modifier
 actual fun VideoPlayerView(
     videoId: String,
     modifier: Modifier,
-    onError: (String) -> Unit
+    onError: (String) -> Unit,
 ) {
     // 不要
 }
