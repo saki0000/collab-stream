@@ -90,27 +90,6 @@ fun VideoIdInputComponent(
     }
 }
 
-/**
- * Component Composable (Stateless, reusable) - Sample video button
- */
-@Composable
-fun SampleVideoButton(
-    text: String,
-    videoId: String,
-    onClick: (String) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    OutlinedButton(
-        onClick = { onClick(videoId) },
-        modifier = modifier,
-    ) {
-        Text(
-            text = text,
-            style = MaterialTheme.typography.bodySmall,
-            maxLines = 1,
-        )
-    }
-}
 
 /**
  * Component Composable (Stateless, reusable) - Empty state display
