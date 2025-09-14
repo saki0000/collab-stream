@@ -22,7 +22,7 @@ data class YouTubeVideoDetails(
      * Live streaming details if this is a live stream or was a live stream
      * Null for regular uploaded videos
      */
-    val liveStreamingDetails: LiveStreamingDetails?,
+    val liveStreamingDetails: LiveStreamingDetails? = null,
 )
 
 /**

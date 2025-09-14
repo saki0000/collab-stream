@@ -71,7 +71,4 @@ data class YouTubeLiveStreamingDetailsDto(
 
     @SerialName("actualEndTime")
     val actualEndTime: String?,
-
-    @SerialName("concurrentViewers")
-    val concurrentViewers: String?,
 )

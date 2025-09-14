@@ -2,7 +2,7 @@
 
 package org.example.project.data.mapper
 
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 import org.example.project.data.model.YouTubeVideoItem
 import org.example.project.domain.model.LiveStreamingDetails
 import org.example.project.domain.model.VideoSnippet
@@ -55,7 +55,6 @@ object YouTubeVideoMapper {
                             null
                         }
                     },
-                    concurrentViewers = liveDetailsDto.concurrentViewers?.toLongOrNull(),
                 )
             },
         )

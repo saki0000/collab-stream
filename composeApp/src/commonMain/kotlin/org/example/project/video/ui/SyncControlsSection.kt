@@ -1,3 +1,5 @@
+@file:OptIn(kotlin.time.ExperimentalTime::class)
+
 package org.example.project.video.ui
 
 import androidx.compose.foundation.layout.Arrangement
@@ -10,7 +12,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
@@ -54,19 +55,19 @@ fun SyncControlsSection(
 
                 Button(
                     onClick = onSync,
-                    enabled = !uiState.isLoading,
+//                    enabled = !uiState.isLoading,
                 ) {
-                    if (uiState.isLoading) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.padding(end = 8.dp),
-                        )
-                    } else {
-                        Icon(
-                            imageVector = Icons.Default.Sync,
-                            contentDescription = "Sync",
-                            modifier = Modifier.padding(end = 8.dp),
-                        )
-                    }
+//                    if (uiState.isLoading) {
+//                        CircularProgressIndicator(
+//                            modifier = Modifier.padding(end = 8.dp),
+//                        )
+//                    } else {
+                    Icon(
+                        imageVector = Icons.Default.Sync,
+                        contentDescription = "Sync",
+                        modifier = Modifier.padding(end = 8.dp),
+                    )
+//                    }
                     Text("Sync Time")
                 }
             }

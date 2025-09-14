@@ -76,18 +76,11 @@ fun VideoPlayerContent(
                         VideoPlayerView(
                             videoId = uiState.videoId,
                             onError = onVideoError,
+                            uiState = uiState,
+                            onIntent = onIntent,
                         )
                     }
                 }
-            }
-
-            // Sync controls section
-            if (uiState.videoId.isNotEmpty() && uiState.errorMessage == null) {
-                Spacer(modifier = Modifier.height(16.dp))
-                SyncControlsSection(
-                    uiState = uiState,
-                    onSync = { onIntent(VideoIntent.SyncToAbsoluteTime) },
-                )
             }
         }
     }

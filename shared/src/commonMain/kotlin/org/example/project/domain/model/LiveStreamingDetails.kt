@@ -30,10 +30,4 @@ data class LiveStreamingDetails(
      * Null for ongoing streams or streams without recorded end time.
      */
     val actualEndTime: Instant?,
-
-    /**
-     * Current concurrent viewers for live streams.
-     * Null for ended streams or if viewer count is hidden.
-     */
-    val concurrentViewers: Long?,
 )

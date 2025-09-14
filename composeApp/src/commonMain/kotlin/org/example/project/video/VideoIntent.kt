@@ -23,7 +23,12 @@ sealed interface VideoIntent {
     /**
      * Intent to synchronize video playback position to absolute time
      */
-    data object SyncToAbsoluteTime : VideoIntent
+    data class SyncToAbsoluteTime(val currentTime: Float) : VideoIntent
+
+    /**
+     * Intent to handle user-initiated seek to specific position
+     */
+    data class UserSeekToPosition(val position: Float) : VideoIntent
 
     /**
      * Intent to clear sync error state

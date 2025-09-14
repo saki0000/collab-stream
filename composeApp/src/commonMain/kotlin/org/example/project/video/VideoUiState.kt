@@ -2,7 +2,8 @@
 
 package org.example.project.video
 
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
+import org.example.project.video.player.PlayerState
 
 /**
  * Data class representing the UI state for video display components.
@@ -14,10 +15,17 @@ data class VideoUiState(
     val syncDateTime: String = "",
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
+    // Player state integration
+    val playerState: PlayerState = PlayerState.NotInitialized,
+    val isPlayerReady: Boolean = false,
     // Sync-related state
     val isSyncing: Boolean = false,
     val syncResult: VideoSyncUiState? = null,
     val syncError: String? = null,
+    val currentTime: Float = 0L.toFloat(),
+    // User seek tracking
+    val lastUserSeekPosition: Float? = null,
+    val lastUserSeekTime: String? = null,
 )
 
 /**

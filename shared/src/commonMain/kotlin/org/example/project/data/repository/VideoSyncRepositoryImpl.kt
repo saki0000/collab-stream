@@ -7,6 +7,7 @@ import io.ktor.client.request.get
 import io.ktor.client.request.parameter
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
+import org.exampl.project.BuildKonfig
 import org.example.project.data.mapper.YouTubeVideoMapper
 import org.example.project.data.model.YouTubeApiResponse
 import org.example.project.domain.model.YouTubeVideoDetails
@@ -17,7 +18,6 @@ import org.example.project.domain.repository.VideoSyncRepository
  * Handles HTTP communication with YouTube API and data transformation.
  */
 class VideoSyncRepositoryImpl(
-    private val apiKey: String,
     private val httpClient: HttpClient = createHttpClient(),
 ) : VideoSyncRepository {
 
@@ -45,14 +45,14 @@ class VideoSyncRepositoryImpl(
 
     override suspend fun getVideoDetails(videoId: String): Result<YouTubeVideoDetails> {
         return try {
-            if (apiKey.isBlank()) {
+            if (BuildKonfig.API_KEY.isBlank()) {
                 return Result.failure(IllegalStateException("YouTube API key is not configured"))
             }
 
             val response = httpClient.get(VIDEOS_ENDPOINT) {
                 parameter("part", "liveStreamingDetails,snippet")
                 parameter("id", videoId)
-                parameter("key", apiKey)
+                parameter("key", BuildKonfig.API_KEY)
             }
 
             val apiResponse: YouTubeApiResponse = response.body()
