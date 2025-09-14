@@ -51,37 +51,45 @@ actual fun VideoPlayerView(
                     // MUST disable automatic initialization before manual initialization
                     enableAutomaticInitialization = false
 
-                    // Initialize manually without default UI
-                    initialize(object : AbstractYouTubePlayerListener() {
-                        override fun onReady(youTubePlayer: YouTubePlayer) {
-                            player = youTubePlayer
-                            youTubePlayer.addListener(tracker)
+                    // Create IFramePlayerOptions to completely disable default controls
+                    val iFramePlayerOptions = com.pierfrancescosoffritti.androidyoutubeplayer.core.player.options.IFramePlayerOptions.Builder()
+                        .controls(0) // Disable all default controls
+                        .rel(0) // Don't show related videos
+                        .ivLoadPolicy(3) // Don't load video thumbnail
+                        .ccLoadPolicy(0) // Don't show captions button
+                        .build()
 
-                            // Load the video
-                            youTubePlayer.loadVideo(videoId, 0f)
-                        }
+                    // Initialize manually with custom options to hide default UI
+                    initialize(
+                        object : AbstractYouTubePlayerListener() {
+                            override fun onReady(youTubePlayer: YouTubePlayer) {
+                                player = youTubePlayer
+                                youTubePlayer.addListener(tracker)
 
-//                        override fun onCurrentSecond(youTubePlayer: YouTubePlayer, second: Float) {
-//                            currentTime = second
-//                        }
-
-                        override fun onStateChange(youTubePlayer: YouTubePlayer, state: PlayerConstants.PlayerState) {
-                            currentTime = tracker.currentSecond
-                        }
-
-                        override fun onError(youTubePlayer: YouTubePlayer, error: PlayerConstants.PlayerError) {
-                            val errorMsg = when (error) {
-                                PlayerConstants.PlayerError.INVALID_PARAMETER_IN_REQUEST -> "Invalid video ID: $videoId"
-                                PlayerConstants.PlayerError.HTML_5_PLAYER -> "HTML5 player error"
-                                PlayerConstants.PlayerError.VIDEO_NOT_FOUND -> "Video not found: $videoId"
-                                PlayerConstants.PlayerError.VIDEO_NOT_PLAYABLE_IN_EMBEDDED_PLAYER ->
-                                    "Video cannot be played in embedded player"
-
-                                else -> "YouTube player error: $error"
+                                // Load the video
+                                youTubePlayer.loadVideo(videoId, 0f)
                             }
-                            onError(errorMsg)
-                        }
-                    })
+
+                            override fun onStateChange(youTubePlayer: YouTubePlayer, state: PlayerConstants.PlayerState) {
+                                currentTime = tracker.currentSecond
+                            }
+
+                            override fun onError(youTubePlayer: YouTubePlayer, error: PlayerConstants.PlayerError) {
+                                val errorMsg = when (error) {
+                                    PlayerConstants.PlayerError.INVALID_PARAMETER_IN_REQUEST -> "Invalid video ID: $videoId"
+                                    PlayerConstants.PlayerError.HTML_5_PLAYER -> "HTML5 player error"
+                                    PlayerConstants.PlayerError.VIDEO_NOT_FOUND -> "Video not found: $videoId"
+                                    PlayerConstants.PlayerError.VIDEO_NOT_PLAYABLE_IN_EMBEDDED_PLAYER ->
+                                        "Video cannot be played in embedded player"
+
+                                    else -> "YouTube player error: $error"
+                                }
+                                onError(errorMsg)
+                            }
+                        },
+                        true,
+                        iFramePlayerOptions,
+                    ) // Pass the options to disable controls
                 }
             },
             update = { youTubePlayerView: YouTubePlayerView ->
@@ -96,7 +104,6 @@ actual fun VideoPlayerView(
                 player = ytPlayer,
                 onUserSeek = { seekTime ->
                     currentTime = seekTime
-                    onIntent(VideoIntent.UserSeekToPosition(seekTime))
                 },
             )
         }
@@ -106,7 +113,6 @@ actual fun VideoPlayerView(
         SyncControlsSection(
             uiState = uiState,
             onSync = {
-                player?.play()
                 player?.pause()
                 onIntent(VideoIntent.SyncToAbsoluteTime(currentTime))
             },
