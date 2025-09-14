@@ -2,11 +2,10 @@
 
 package org.example.project.domain.usecase
 
-import kotlinx.datetime.Instant
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.datetime.plus
 import org.example.project.domain.model.VideoSyncInfo
 import org.example.project.domain.repository.VideoSyncRepository
-import kotlin.time.Duration.Companion.seconds
 
 /**
  * Use case for video synchronization functionality.
@@ -26,7 +25,7 @@ interface VideoSyncUseCase {
      */
     suspend fun syncVideoToAbsoluteTime(
         videoId: String,
-        currentPlaybackSeconds: Float
+        currentPlaybackSeconds: Float,
     ): Result<VideoSyncInfo>
 }
 
@@ -34,12 +33,12 @@ interface VideoSyncUseCase {
  * Default implementation of VideoSyncUseCase.
  */
 class VideoSyncUseCaseImpl(
-    private val videoSyncRepository: VideoSyncRepository
+    private val videoSyncRepository: VideoSyncRepository,
 ) : VideoSyncUseCase {
 
     override suspend fun syncVideoToAbsoluteTime(
         videoId: String,
-        currentPlaybackSeconds: Float
+        currentPlaybackSeconds: Float,
     ): Result<VideoSyncInfo> {
         return try {
             // Validate input parameters
@@ -58,12 +57,12 @@ class VideoSyncUseCaseImpl(
                 onSuccess = { videoDetails ->
                     val liveStreamingDetails = videoDetails.liveStreamingDetails
                         ?: return Result.failure(
-                            IllegalStateException("Video $videoId does not have live streaming details")
+                            IllegalStateException("Video $videoId does not have live streaming details"),
                         )
 
                     val streamStartTime = liveStreamingDetails.actualStartTime
                         ?: return Result.failure(
-                            IllegalStateException("Video $videoId does not have actual start time")
+                            IllegalStateException("Video $videoId does not have actual start time"),
                         )
 
                     // Calculate absolute time by adding playback seconds to stream start time
@@ -73,14 +72,14 @@ class VideoSyncUseCaseImpl(
                         videoId = videoId,
                         playbackSeconds = currentPlaybackSeconds,
                         streamStartTime = streamStartTime,
-                        absoluteTime = absoluteTime
+                        absoluteTime = absoluteTime,
                     )
 
                     Result.success(syncInfo)
                 },
                 onFailure = { error ->
                     Result.failure(error)
-                }
+                },
             )
         } catch (e: Exception) {
             Result.failure(e)

@@ -2,14 +2,14 @@
 
 package org.example.project.data.mapper
 
-import kotlinx.datetime.Instant
-import org.example.project.data.model.YouTubeLiveStreamingDetailsDto
-import org.example.project.data.model.YouTubeSnippetDto
-import org.example.project.data.model.YouTubeVideoItem
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
+import kotlinx.datetime.Instant
+import org.example.project.data.model.YouTubeLiveStreamingDetailsDto
+import org.example.project.data.model.YouTubeSnippetDto
+import org.example.project.data.model.YouTubeVideoItem
 
 class YouTubeVideoMapperTest {
 
@@ -24,14 +24,14 @@ class YouTubeVideoMapperTest {
                 title = "Test Video Title",
                 description = "Test video description",
                 channelId = "test-channel-id",
-                channelTitle = "Test Channel"
+                channelTitle = "Test Channel",
             ),
             liveStreamingDetails = YouTubeLiveStreamingDetailsDto(
                 actualStartTime = "2023-12-25T10:00:00Z",
                 scheduledStartTime = "2023-12-25T09:55:00Z",
                 actualEndTime = "2023-12-25T11:30:00Z",
-                concurrentViewers = "1234"
-            )
+                concurrentViewers = "1234",
+            ),
         )
 
         // Act
@@ -60,7 +60,7 @@ class YouTubeVideoMapperTest {
             etag = "test-etag",
             id = "test-video-id",
             snippet = null,
-            liveStreamingDetails = null
+            liveStreamingDetails = null,
         )
 
         // Act
@@ -86,9 +86,9 @@ class YouTubeVideoMapperTest {
                 title = "Regular Video",
                 description = "Not a live stream",
                 channelId = "test-channel-id",
-                channelTitle = "Test Channel"
+                channelTitle = "Test Channel",
             ),
-            liveStreamingDetails = null
+            liveStreamingDetails = null,
         )
 
         // Act
@@ -111,14 +111,14 @@ class YouTubeVideoMapperTest {
                 title = "Live Stream",
                 description = "Ongoing stream",
                 channelId = "test-channel-id",
-                channelTitle = "Test Channel"
+                channelTitle = "Test Channel",
             ),
             liveStreamingDetails = YouTubeLiveStreamingDetailsDto(
                 actualStartTime = "2023-12-25T10:00:00Z",
                 scheduledStartTime = null,
                 actualEndTime = null, // Ongoing stream
-                concurrentViewers = null // Hidden viewer count
-            )
+                concurrentViewers = null, // Hidden viewer count
+            ),
         )
 
         // Act
@@ -144,14 +144,14 @@ class YouTubeVideoMapperTest {
                 title = "Test Video",
                 description = "Test description",
                 channelId = "test-channel-id",
-                channelTitle = "Test Channel"
+                channelTitle = "Test Channel",
             ),
             liveStreamingDetails = YouTubeLiveStreamingDetailsDto(
                 actualStartTime = "invalid-timestamp",
                 scheduledStartTime = "2023-12-25T10:00:00Z",
                 actualEndTime = null,
-                concurrentViewers = "not-a-number"
-            )
+                concurrentViewers = "not-a-number",
+            ),
         )
 
         // Act

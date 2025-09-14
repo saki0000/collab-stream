@@ -18,7 +18,7 @@ import org.example.project.domain.repository.VideoSyncRepository
  */
 class VideoSyncRepositoryImpl(
     private val apiKey: String,
-    private val httpClient: HttpClient = createHttpClient()
+    private val httpClient: HttpClient = createHttpClient(),
 ) : VideoSyncRepository {
 
     companion object {
@@ -31,11 +31,13 @@ class VideoSyncRepositoryImpl(
         fun createHttpClient(): HttpClient {
             return HttpClient {
                 install(ContentNegotiation) {
-                    json(Json {
-                        ignoreUnknownKeys = true
-                        coerceInputValues = true
-                        isLenient = true
-                    })
+                    json(
+                        Json {
+                            ignoreUnknownKeys = true
+                            coerceInputValues = true
+                            isLenient = true
+                        },
+                    )
                 }
             }
         }
@@ -57,7 +59,7 @@ class VideoSyncRepositoryImpl(
 
             if (apiResponse.items.isEmpty()) {
                 return Result.failure(
-                    NoSuchElementException("Video with ID '$videoId' not found")
+                    NoSuchElementException("Video with ID '$videoId' not found"),
                 )
             }
 
@@ -67,7 +69,7 @@ class VideoSyncRepositoryImpl(
             Result.success(domainModel)
         } catch (e: Exception) {
             Result.failure(
-                RuntimeException("Failed to fetch video details for video ID '$videoId': ${e.message}", e)
+                RuntimeException("Failed to fetch video details for video ID '$videoId': ${e.message}", e),
             )
         }
     }

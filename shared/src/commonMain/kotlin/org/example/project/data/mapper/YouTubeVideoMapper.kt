@@ -24,29 +24,40 @@ object YouTubeVideoMapper {
                     title = snippetDto.title,
                     description = snippetDto.description,
                     channelId = snippetDto.channelId,
-                    channelTitle = snippetDto.channelTitle
+                    channelTitle = snippetDto.channelTitle,
                 )
             } ?: VideoSnippet(
                 title = "Unknown Title",
                 description = "",
                 channelId = "",
-                channelTitle = ""
+                channelTitle = "",
             ),
             liveStreamingDetails = item.liveStreamingDetails?.let { liveDetailsDto ->
                 LiveStreamingDetails(
                     actualStartTime = liveDetailsDto.actualStartTime?.let { timeStr ->
-                        try { Instant.parse(timeStr) } catch (e: Exception) { null }
+                        try {
+                            Instant.parse(timeStr)
+                        } catch (e: Exception) {
+                            null
+                        }
                     },
                     scheduledStartTime = liveDetailsDto.scheduledStartTime?.let { timeStr ->
-                        try { Instant.parse(timeStr) } catch (e: Exception) { null }
+                        try {
+                            Instant.parse(timeStr)
+                        } catch (e: Exception) {
+                            null
+                        }
                     },
                     actualEndTime = liveDetailsDto.actualEndTime?.let { timeStr ->
-                        try { Instant.parse(timeStr) } catch (e: Exception) { null }
+                        try {
+                            Instant.parse(timeStr)
+                        } catch (e: Exception) {
+                            null
+                        }
                     },
-                    concurrentViewers = liveDetailsDto.concurrentViewers?.toLongOrNull()
+                    concurrentViewers = liveDetailsDto.concurrentViewers?.toLongOrNull(),
                 )
-            }
+            },
         )
     }
-
 }

@@ -12,12 +12,15 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
+import org.example.project.video.sync.VideoSyncController
 
 /**
  * ViewModel for video functionality following MVI architecture pattern.
  * Manages video state and handles user intents.
  */
-class VideoViewModel : ViewModel() {
+class VideoViewModel(
+    private val videoSyncController: VideoSyncController? = null
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(VideoUiState())
     val uiState: StateFlow<VideoUiState> = _uiState.asStateFlow()
@@ -33,6 +36,8 @@ class VideoViewModel : ViewModel() {
             is VideoIntent.LoadVideo -> loadVideo(intent.videoId)
             VideoIntent.ClearError -> clearError()
             VideoIntent.RetryLoad -> retryLoad()
+            VideoIntent.SyncToAbsoluteTime -> syncToAbsoluteTime()
+            VideoIntent.ClearSyncError -> clearSyncError()
         }
     }
 
@@ -92,5 +97,72 @@ class VideoViewModel : ViewModel() {
         val now = kotlin.time.Clock.System.now()
         val localDateTime = now.toLocalDateTime(TimeZone.currentSystemDefault())
         return "${localDateTime.date} ${localDateTime.hour}:${localDateTime.minute.toString().padStart(2, '0')}"
+    }
+
+    /**
+     * Synchronizes current video playback position to absolute time
+     */
+    private fun syncToAbsoluteTime() {
+        val currentVideoId = _uiState.value.videoId
+        if (currentVideoId.isBlank()) {
+            handleSyncError("No video loaded for synchronization")
+            return
+        }
+
+        if (videoSyncController == null) {
+            handleSyncError("Video sync functionality is not available")
+            return
+        }
+
+        _uiState.value = _uiState.value.copy(
+            isSyncing = true,
+            syncError = null
+        )
+
+        viewModelScope.launch {
+            try {
+                val syncResult = videoSyncController.handleSyncButtonClick(currentVideoId)
+
+                syncResult.fold(
+                    onSuccess = { syncUiState ->
+                        _uiState.value = _uiState.value.copy(
+                            isSyncing = false,
+                            syncResult = syncUiState,
+                            syncError = null
+                        )
+
+                        _sideEffect.emit(
+                            VideoSideEffect.ShowSyncResult(syncUiState.formattedAbsoluteTime)
+                        )
+                    },
+                    onFailure = { error ->
+                        handleSyncError("Sync failed: ${error.message}")
+                    }
+                )
+            } catch (e: Exception) {
+                handleSyncError("Unexpected sync error: ${e.message}")
+            }
+        }
+    }
+
+    /**
+     * Handles sync errors and updates state accordingly
+     */
+    private fun handleSyncError(errorMessage: String) {
+        _uiState.value = _uiState.value.copy(
+            isSyncing = false,
+            syncError = errorMessage
+        )
+
+        viewModelScope.launch {
+            _sideEffect.emit(VideoSideEffect.ShowSyncError(errorMessage))
+        }
+    }
+
+    /**
+     * Clears sync error state
+     */
+    private fun clearSyncError() {
+        _uiState.value = _uiState.value.copy(syncError = null)
     }
 }

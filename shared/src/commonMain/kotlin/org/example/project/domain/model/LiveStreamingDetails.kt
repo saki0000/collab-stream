@@ -2,8 +2,8 @@
 
 package org.example.project.domain.model
 
-import kotlinx.serialization.Serializable
 import kotlin.time.Instant
+import kotlinx.serialization.Serializable
 
 /**
  * Live streaming details from YouTube Data API v3.
@@ -34,5 +34,5 @@ data class LiveStreamingDetails(
      * Current concurrent viewers for live streams.
      * Null for ended streams or if viewer count is hidden.
      */
-    val concurrentViewers: Long?
+    val concurrentViewers: Long?,
 )

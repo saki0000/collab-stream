@@ -31,5 +31,5 @@ data class VideoSyncInfo(
      * Calculated absolute time corresponding to current playback position
      * Formula: streamStartTime + playbackSeconds
      */
-    val absoluteTime: Instant
+    val absoluteTime: Instant,
 )

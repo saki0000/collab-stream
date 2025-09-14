@@ -43,6 +43,20 @@ fun VideoContainer(
                         duration = SnackbarDuration.Short,
                     )
                 }
+                is VideoSideEffect.ShowSyncResult -> {
+                    snackBarHostState.showSnackbar(
+                        message = "Synchronized to: ${sideEffect.absoluteTime}",
+                        actionLabel = "OK",
+                        duration = SnackbarDuration.Long,
+                    )
+                }
+                is VideoSideEffect.ShowSyncError -> {
+                    snackBarHostState.showSnackbar(
+                        message = "Sync Error: ${sideEffect.message}",
+                        actionLabel = "Dismiss",
+                        duration = SnackbarDuration.Long,
+                    )
+                }
             }
         }
     }

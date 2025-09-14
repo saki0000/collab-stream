@@ -2,17 +2,16 @@
 
 package org.example.project.domain.usecase
 
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertIs
+import kotlin.test.assertTrue
 import kotlinx.datetime.Instant
 import org.example.project.domain.model.LiveStreamingDetails
 import org.example.project.domain.model.VideoSnippet
 import org.example.project.domain.model.YouTubeVideoDetails
 import org.example.project.domain.repository.VideoSyncRepository
 import org.example.project.runTest
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
-import kotlin.test.assertIs
-import kotlin.test.assertTrue
 
 /**
  * Test mock implementation of VideoSyncRepository.
@@ -44,14 +43,14 @@ class VideoSyncUseCaseTest {
             title = "Test Video",
             description = "Test Description",
             channelId = "test-channel-id",
-            channelTitle = "Test Channel"
+            channelTitle = "Test Channel",
         ),
         liveStreamingDetails = LiveStreamingDetails(
             actualStartTime = testStreamStartTime,
             scheduledStartTime = testStreamStartTime,
             actualEndTime = null,
-            concurrentViewers = 1000L
-        )
+            concurrentViewers = 1000L,
+        ),
     )
 
     @Test
@@ -130,8 +129,8 @@ class VideoSyncUseCaseTest {
         // Arrange
         val videoWithoutStartTime = testVideoDetails.copy(
             liveStreamingDetails = testVideoDetails.liveStreamingDetails!!.copy(
-                actualStartTime = null
-            )
+                actualStartTime = null,
+            ),
         )
         mockRepository.videoDetailsToReturn = videoWithoutStartTime
 

@@ -9,7 +9,7 @@ data class VideoSyncConfig(
      * YouTube Data API v3 key.
      * Required for making requests to YouTube API.
      */
-    val youTubeApiKey: String
+    val youTubeApiKey: String,
 ) {
     companion object {
         /**
@@ -18,7 +18,7 @@ data class VideoSyncConfig(
          */
         fun default(): VideoSyncConfig {
             return VideoSyncConfig(
-                youTubeApiKey = "YOUR_YOUTUBE_API_KEY_HERE" // Placeholder for development
+                youTubeApiKey = "YOUR_YOUTUBE_API_KEY_HERE", // Placeholder for development
             )
         }
     }

@@ -16,7 +16,7 @@ data class YouTubeApiResponse(
     val etag: String,
 
     @SerialName("items")
-    val items: List<YouTubeVideoItem>
+    val items: List<YouTubeVideoItem>,
 )
 
 /**
@@ -37,7 +37,7 @@ data class YouTubeVideoItem(
     val snippet: YouTubeSnippetDto?,
 
     @SerialName("liveStreamingDetails")
-    val liveStreamingDetails: YouTubeLiveStreamingDetailsDto?
+    val liveStreamingDetails: YouTubeLiveStreamingDetailsDto?,
 )
 
 /**
@@ -55,7 +55,7 @@ data class YouTubeSnippetDto(
     val channelId: String,
 
     @SerialName("channelTitle")
-    val channelTitle: String
+    val channelTitle: String,
 )
 
 /**
@@ -73,5 +73,5 @@ data class YouTubeLiveStreamingDetailsDto(
     val actualEndTime: String?,
 
     @SerialName("concurrentViewers")
-    val concurrentViewers: String?
+    val concurrentViewers: String?,
 )
