@@ -51,6 +51,7 @@ fun VideoScreen(
                     uiState = uiState,
                     onVideoError = onVideoError,
                     onRetry = { onIntent(VideoIntent.RetryLoad) },
+                    onIntent = onIntent,
                 )
             }
         }
