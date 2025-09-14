@@ -2,9 +2,9 @@
 
 package org.example.project.domain.model
 
+import kotlin.time.Instant
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.InstantComponentSerializer
-import kotlin.time.Instant
 
 /**
  * Result of video synchronization containing the calculated absolute time.

@@ -253,10 +253,10 @@ fun VideoPlayerViewWithSync(
             """.trimIndent()
 
             webView.loadHTMLString(html, baseURL = NSURL.URLWithString("https://www.youtube.com"))
-            
+
             // Notify that WebView is ready
             onWebViewReady(webView)
-            
+
             webView
         },
         modifier = modifier.fillMaxSize(),

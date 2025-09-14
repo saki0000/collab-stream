@@ -1,10 +1,9 @@
 package org.example.project.video.sync
 
+import kotlin.coroutines.resume
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.coroutines.suspendCancellableCoroutine
-import platform.Foundation.NSError
 import platform.WebKit.WKWebView
-import kotlin.coroutines.resume
 
 /**
  * iOS implementation of PlaybackPositionProvider using WKWebView JavaScript bridge.
@@ -12,7 +11,7 @@ import kotlin.coroutines.resume
  */
 @OptIn(ExperimentalForeignApi::class)
 class IOSPlaybackPositionProvider(
-    private val webViewProvider: () -> WKWebView?
+    private val webViewProvider: () -> WKWebView?,
 ) : PlaybackPositionProvider {
     /**
      * Retrieves the current playback position from the YouTube player via JavaScript bridge.
@@ -70,7 +69,9 @@ class IOSPlaybackPositionProvider(
                             if (currentTime >= 0f) {
                                 continuation.resume(Result.success(currentTime))
                             } else {
-                                continuation.resume(Result.failure(IllegalStateException("Invalid playback time: $currentTime")))
+                                continuation.resume(
+                                    Result.failure(IllegalStateException("Invalid playback time: $currentTime")),
+                                )
                             }
                         }
                     }
@@ -86,7 +87,7 @@ class IOSPlaybackPositionProvider(
 
 @OptIn(ExperimentalForeignApi::class)
 actual class PlaybackPositionProviderImpl(
-    private val webViewProvider: () -> WKWebView?
+    private val webViewProvider: () -> WKWebView?,
 ) : PlaybackPositionProvider {
     override suspend fun getCurrentPlaybackPosition(): Result<Float> = suspendCancellableCoroutine { continuation ->
         try {
@@ -139,7 +140,9 @@ actual class PlaybackPositionProviderImpl(
                             if (currentTime >= 0f) {
                                 continuation.resume(Result.success(currentTime))
                             } else {
-                                continuation.resume(Result.failure(IllegalStateException("Invalid playback time: $currentTime")))
+                                continuation.resume(
+                                    Result.failure(IllegalStateException("Invalid playback time: $currentTime")),
+                                )
                             }
                         }
                     }

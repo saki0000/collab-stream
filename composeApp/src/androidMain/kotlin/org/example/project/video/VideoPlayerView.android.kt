@@ -35,7 +35,7 @@ actual fun VideoPlayerView(
             YouTubePlayerView(context).apply {
                 // Store reference for external access
                 tag = "youtube_player_view"
-                
+
                 // Add YouTube Player listener
                 addYouTubePlayerListener(object : AbstractYouTubePlayerListener() {
                     override fun onReady(youTubePlayer: YouTubePlayer) {
@@ -123,7 +123,7 @@ fun VideoPlayerViewWithSync(
             YouTubePlayerView(context).apply {
                 // Store reference for external access
                 tag = "youtube_player_view"
-                
+
                 // Add YouTube Player listener
                 addYouTubePlayerListener(object : AbstractYouTubePlayerListener() {
                     override fun onReady(youTubePlayer: YouTubePlayer) {
