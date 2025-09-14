@@ -19,7 +19,7 @@ import org.example.project.video.sync.VideoSyncController
  * Manages video state and handles user intents.
  */
 class VideoViewModel(
-    private val videoSyncController: VideoSyncController? = null
+    private val videoSyncController: VideoSyncController? = null,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(VideoUiState())
@@ -116,7 +116,7 @@ class VideoViewModel(
 
         _uiState.value = _uiState.value.copy(
             isSyncing = true,
-            syncError = null
+            syncError = null,
         )
 
         viewModelScope.launch {
@@ -128,16 +128,16 @@ class VideoViewModel(
                         _uiState.value = _uiState.value.copy(
                             isSyncing = false,
                             syncResult = syncUiState,
-                            syncError = null
+                            syncError = null,
                         )
 
                         _sideEffect.emit(
-                            VideoSideEffect.ShowSyncResult(syncUiState.formattedAbsoluteTime)
+                            VideoSideEffect.ShowSyncResult(syncUiState.formattedAbsoluteTime),
                         )
                     },
                     onFailure = { error ->
                         handleSyncError("Sync failed: ${error.message}")
-                    }
+                    },
                 )
             } catch (e: Exception) {
                 handleSyncError("Unexpected sync error: ${e.message}")
@@ -151,7 +151,7 @@ class VideoViewModel(
     private fun handleSyncError(errorMessage: String) {
         _uiState.value = _uiState.value.copy(
             isSyncing = false,
-            syncError = errorMessage
+            syncError = errorMessage,
         )
 
         viewModelScope.launch {

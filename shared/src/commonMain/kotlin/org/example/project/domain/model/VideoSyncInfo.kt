@@ -2,15 +2,16 @@
 
 package org.example.project.domain.model
 
-import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.builtins.InstantComponentSerializer
+import kotlin.time.Instant
 
 /**
  * Result of video synchronization containing the calculated absolute time.
  * This represents the computed result after processing video playback position
  * and stream start time information.
  */
-@Serializable
+@Serializable(with = InstantComponentSerializer::class)
 data class VideoSyncInfo(
     /**
      * YouTube video ID that was synchronized

@@ -8,6 +8,7 @@ plugins {
     alias(libs.plugins.kotlinJvm) apply false
     alias(libs.plugins.kotlinMultiplatform) apply false
     alias(libs.plugins.ktlint) apply false
+    alias(libs.plugins.serialization) apply false
     alias(libs.plugins.kover)
 }
 

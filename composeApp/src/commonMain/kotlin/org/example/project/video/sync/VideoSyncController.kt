@@ -1,10 +1,11 @@
+@file:OptIn(kotlin.time.ExperimentalTime::class)
+
 package org.example.project.video.sync
 
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import org.example.project.domain.usecase.VideoSyncUseCase
 import org.example.project.video.VideoSyncUiState
-import kotlin.time.ExperimentalTime
 
 /**
  * Controller for video synchronization functionality.
@@ -40,7 +41,7 @@ class VideoSyncControllerImpl(
                     // Use VideoSyncUseCase to calculate absolute time
                     val syncResult = videoSyncUseCase.syncVideoToAbsoluteTime(
                         videoId = videoId,
-                        currentPlaybackSeconds = currentPlaybackSeconds
+                        currentPlaybackSeconds = currentPlaybackSeconds,
                     )
 
                     syncResult.fold(
@@ -53,28 +54,30 @@ class VideoSyncControllerImpl(
                                 playbackSeconds = syncInfo.playbackSeconds,
                                 streamStartTime = syncInfo.streamStartTime,
                                 absoluteTime = syncInfo.absoluteTime,
-                                formattedAbsoluteTime = formattedAbsoluteTime
+                                formattedAbsoluteTime = formattedAbsoluteTime,
                             )
 
                             Result.success(uiState)
                         },
                         onFailure = { error ->
                             Result.failure(error)
-                        }
+                        },
                     )
                 },
                 onFailure = { error ->
                     Result.failure(Exception("Failed to get playback position: ${error.message}", error))
-                }
+                },
             )
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
 
-    @OptIn(ExperimentalTime::class)
     private fun formatAbsoluteTime(absoluteTime: kotlinx.datetime.Instant): String {
         val localDateTime = absoluteTime.toLocalDateTime(TimeZone.currentSystemDefault())
-        return "${localDateTime.date} ${localDateTime.hour}:${localDateTime.minute.toString().padStart(2, '0')}:${localDateTime.second.toString().padStart(2, '0')}"
+        return "${localDateTime.date} ${localDateTime.hour}:${localDateTime.minute.toString().padStart(
+            2,
+            '0',
+        )}:${localDateTime.second.toString().padStart(2, '0')}"
     }
 }

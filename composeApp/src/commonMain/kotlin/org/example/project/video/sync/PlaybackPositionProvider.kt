@@ -5,7 +5,7 @@ package org.example.project.video.sync
  * This interface defines the contract for accessing playback position from
  * platform-specific video player implementations (YouTube Player on Android/iOS).
  */
-expect interface PlaybackPositionProvider {
+interface PlaybackPositionProvider {
     /**
      * Retrieves the current playback position from the platform-specific video player.
      *
@@ -13,3 +13,10 @@ expect interface PlaybackPositionProvider {
      */
     suspend fun getCurrentPlaybackPosition(): Result<Float>
 }
+
+/**
+ * Platform-specific implementation typealias for PlaybackPositionProvider.
+ * - Android: AndroidPlaybackPositionProvider (using YouTube Android Player API)
+ * - iOS: IOSPlaybackPositionProvider (using WKWebView JavaScript bridge)
+ */
+expect class PlaybackPositionProviderImpl : PlaybackPositionProvider

@@ -52,6 +52,7 @@ kotlin {
             implementation(libs.ktor.serialization.kotlinx.json)
             // Date and time handling
             implementation(libs.kotlinx.datetime)
+            implementation(libs.kotlinx.serialization)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
