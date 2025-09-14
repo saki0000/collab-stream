@@ -58,6 +58,9 @@ kotlin {
             implementation(libs.androidx.activity.compose)
             implementation(libs.androidx.webkit)
             implementation(libs.core)
+            implementation(libs.customUi)
+            // Dependency Injection - Android
+            implementation(libs.koin.android)
         }
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -71,6 +74,11 @@ kotlin {
             implementation(libs.androidx.lifecycle.runtimeCompose)
             implementation(libs.kotlinx.datetime)
             implementation(projects.shared)
+            implementation(libs.kotlinx.serialization)
+            // Dependency Injection
+            implementation(libs.koin.core)
+            implementation(libs.koin.compose)
+            implementation(libs.koin.compose.viewmodel)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

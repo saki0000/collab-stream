@@ -1,3 +1,6 @@
+import com.codingfeline.buildkonfig.compiler.FieldSpec
+import java.util.Properties
+import org.gradle.declarative.dsl.schema.FqName.Empty.packageName
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
@@ -8,6 +11,8 @@ plugins {
     alias(libs.plugins.androidLibrary)
     alias(libs.plugins.ktlint)
     alias(libs.plugins.kover)
+    alias(libs.plugins.konfig)
+    kotlin("plugin.serialization") version "2.2.20"
 }
 
 kotlin {
@@ -45,10 +50,21 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
-            // put your Multiplatform dependencies here
+            // HTTP client for API calls
+            implementation(libs.ktor.client.core)
+            implementation(libs.ktor.client.content.negotiation)
+            implementation(libs.ktor.serialization.kotlinx.json)
+            // Date and time handling
+            implementation(libs.kotlinx.datetime)
+            implementation(libs.kotlinx.serialization)
+            // Dependency Injection
+            implementation(libs.koin.core)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
+        }
+        androidMain.dependencies {
+            implementation(libs.ktor.client.okhttp)
         }
     }
 }
@@ -83,5 +99,20 @@ ktlint {
     filter {
         exclude("**/generated/**")
         include("**/kotlin/**")
+    }
+}
+
+// local.properties ファイルを読み込む
+val localProperties = Properties()
+val localPropertiesFile = project.rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    localProperties.load(localPropertiesFile.inputStream())
+}
+
+buildkonfig {
+    packageName = "org.exampl.project"
+    defaultConfigs {
+        val apiKey = System.getenv("API_KEY") ?: localProperties.getProperty("API_KEY")
+        buildConfigField(FieldSpec.Type.STRING, "API_KEY", "$apiKey")
     }
 }

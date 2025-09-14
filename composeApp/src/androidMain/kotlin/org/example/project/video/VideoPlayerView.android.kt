@@ -1,100 +1,158 @@
 package org.example.project.video
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.material3.CircularProgressIndicator
+import android.content.Context
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import com.pierfrancescosoffritti.androidyoutubeplayer.core.customui.views.YouTubePlayerSeekBar
+import com.pierfrancescosoffritti.androidyoutubeplayer.core.customui.views.YouTubePlayerSeekBarListener
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.PlayerConstants
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.YouTubePlayer
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.listeners.AbstractYouTubePlayerListener
+import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.utils.YouTubePlayerTracker
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.views.YouTubePlayerView
+import org.example.project.video.ui.SyncControlsSection
 
-/**
- * Android implementation of VideoPlayerView using YouTube Android Player API.
- * Uses YouTubePlayerView for native YouTube video playback with better performance.
- */
 @Composable
 actual fun VideoPlayerView(
     videoId: String,
+    uiState: VideoUiState,
+    onIntent: (VideoIntent) -> Unit,
     modifier: Modifier,
     onError: (String) -> Unit,
 ) {
-    var isLoading by remember { mutableStateOf(true) }
     var player by remember { mutableStateOf<YouTubePlayer?>(null) }
+    var currentTime by remember { mutableFloatStateOf(0F) }
 
+    val tracker = remember { YouTubePlayerTracker() }
     if (videoId.isBlank()) {
         onError("Video ID cannot be empty")
         return
     }
 
+    Column {
+        AndroidView(
+            modifier = modifier,
+            factory = { context: Context ->
+                YouTubePlayerView(context).apply {
+                    // Store reference for external access
+                    tag = "youtube_player_view"
+
+                    // MUST disable automatic initialization before manual initialization
+                    enableAutomaticInitialization = false
+
+                    // Create IFramePlayerOptions to completely disable default controls
+                    val iFramePlayerOptions = com.pierfrancescosoffritti.androidyoutubeplayer.core.player.options.IFramePlayerOptions.Builder()
+                        .controls(0) // Disable all default controls
+                        .rel(0) // Don't show related videos
+                        .ivLoadPolicy(3) // Don't load video thumbnail
+                        .ccLoadPolicy(0) // Don't show captions button
+                        .build()
+
+                    // Initialize manually with custom options to hide default UI
+                    initialize(
+                        object : AbstractYouTubePlayerListener() {
+                            override fun onReady(youTubePlayer: YouTubePlayer) {
+                                player = youTubePlayer
+                                youTubePlayer.addListener(tracker)
+
+                                // Load the video
+                                youTubePlayer.loadVideo(videoId, 0f)
+                            }
+
+                            override fun onStateChange(youTubePlayer: YouTubePlayer, state: PlayerConstants.PlayerState) {
+                                currentTime = tracker.currentSecond
+                            }
+
+                            override fun onError(youTubePlayer: YouTubePlayer, error: PlayerConstants.PlayerError) {
+                                val errorMsg = when (error) {
+                                    PlayerConstants.PlayerError.INVALID_PARAMETER_IN_REQUEST -> "Invalid video ID: $videoId"
+                                    PlayerConstants.PlayerError.HTML_5_PLAYER -> "HTML5 player error"
+                                    PlayerConstants.PlayerError.VIDEO_NOT_FOUND -> "Video not found: $videoId"
+                                    PlayerConstants.PlayerError.VIDEO_NOT_PLAYABLE_IN_EMBEDDED_PLAYER ->
+                                        "Video cannot be played in embedded player"
+
+                                    else -> "YouTube player error: $error"
+                                }
+                                onError(errorMsg)
+                            }
+                        },
+                        true,
+                        iFramePlayerOptions,
+                    ) // Pass the options to disable controls
+                }
+            },
+            update = { youTubePlayerView: YouTubePlayerView ->
+                // Update video if videoId changes
+                player?.loadVideo(videoId, 0f)
+            },
+        )
+
+        // Custom seek bar (this will be the ONLY seek bar now)
+        player?.let { ytPlayer ->
+            YouTubePlayerSeekBarComponent(
+                player = ytPlayer,
+                onUserSeek = { seekTime ->
+                    currentTime = seekTime
+                },
+            )
+        }
+
+        // Sync controls section
+        Spacer(modifier = Modifier.height(16.dp))
+        SyncControlsSection(
+            uiState = uiState,
+            onSync = {
+                player?.pause()
+                onIntent(VideoIntent.SyncToAbsoluteTime(currentTime))
+            },
+        )
+    }
+}
+
+@Composable
+fun YouTubePlayerSeekBarComponent(
+    player: YouTubePlayer,
+    onUserSeek: (Float) -> Unit,
+) {
     AndroidView(
-        modifier = modifier,
-        factory = { context: android.content.Context ->
-            YouTubePlayerView(context).apply {
-                // Add YouTube Player listener
-                addYouTubePlayerListener(object : AbstractYouTubePlayerListener() {
-                    override fun onReady(youTubePlayer: YouTubePlayer) {
-                        player = youTubePlayer
-                        isLoading = false
-                        // Load the video
-                        youTubePlayer.loadVideo(videoId, 0f)
-                    }
+        modifier = Modifier.fillMaxWidth(),
+        factory = { context: Context ->
+            YouTubePlayerSeekBar(context).apply {
+                // Connect the seek bar to the YouTube player for time updates
+                player.addListener(this)
 
-                    override fun onStateChange(youTubePlayer: YouTubePlayer, state: PlayerConstants.PlayerState) {
-                        when (state) {
-                            PlayerConstants.PlayerState.BUFFERING -> {
-                                isLoading = true
-                            }
-                            PlayerConstants.PlayerState.PLAYING,
-                            PlayerConstants.PlayerState.PAUSED,
-                            PlayerConstants.PlayerState.VIDEO_CUED,
-                            -> {
-                                isLoading = false
-                            }
-                            PlayerConstants.PlayerState.ENDED -> {
-                                isLoading = false
-                            }
-                            PlayerConstants.PlayerState.UNSTARTED -> {
-                                // Video not started yet
-                            }
-                            else -> {
-                                isLoading = false
-                            }
-                        }
+                // Create custom listener for user seek operations
+                val seekBarListener = object : YouTubePlayerSeekBarListener {
+                    override fun seekTo(time: Float) {
+                        // This method is called ONLY when user manually seeks
+                        player.seekTo(time)
+                        onUserSeek(time)
                     }
+                }
 
-                    override fun onError(youTubePlayer: YouTubePlayer, error: PlayerConstants.PlayerError) {
-                        isLoading = false
-                        val errorMsg = when (error) {
-                            PlayerConstants.PlayerError.INVALID_PARAMETER_IN_REQUEST -> "Invalid video ID: $videoId"
-                            PlayerConstants.PlayerError.HTML_5_PLAYER -> "HTML5 player error"
-                            PlayerConstants.PlayerError.VIDEO_NOT_FOUND -> "Video not found: $videoId"
-                            PlayerConstants.PlayerError.VIDEO_NOT_PLAYABLE_IN_EMBEDDED_PLAYER ->
-                                "Video cannot be played in embedded player"
-                            else -> "YouTube player error: $error"
-                        }
-                        onError(errorMsg)
-                    }
-                })
+                // Try to set the listener using reflection as fallback
+                try {
+                    val method = this.javaClass.getMethod(
+                        "setYoutubePlayerSeekBarListener",
+                        YouTubePlayerSeekBarListener::class.java,
+                    )
+                    method.invoke(this, seekBarListener)
+                } catch (_: Exception) {
+                    // Fallback: manually track seek bar changes
+                    onUserSeek(0f) // Placeholder - in real scenario we'd need alternative approach
+                }
             }
         },
-        update = { youTubePlayerView: YouTubePlayerView ->
-            // Update video if videoId changes
-            player?.loadVideo(videoId, 0f)
-        },
     )
-
-    if (isLoading) {
-        Box(
-            contentAlignment = Alignment.Center,
-        ) {
-            CircularProgressIndicator()
-        }
-    }
 }

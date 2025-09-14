@@ -18,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import org.example.project.video.VideoIntent
 import org.example.project.video.VideoPlayerView
 import org.example.project.video.VideoUiState
 
@@ -30,6 +31,7 @@ fun VideoPlayerContent(
     uiState: VideoUiState,
     onVideoError: (String) -> Unit,
     onRetry: () -> Unit,
+    onIntent: (VideoIntent) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Card(
@@ -74,6 +76,8 @@ fun VideoPlayerContent(
                         VideoPlayerView(
                             videoId = uiState.videoId,
                             onError = onVideoError,
+                            uiState = uiState,
+                            onIntent = onIntent,
                         )
                     }
                 }

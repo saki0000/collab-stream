@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import org.example.project.video.VideoSideEffect
 import org.example.project.video.VideoViewModel
+import org.koin.compose.viewmodel.koinViewModel
 
 /**
  * Container Composable (Stateful) - Connects to ViewModel and manages state
@@ -20,7 +21,7 @@ import org.example.project.video.VideoViewModel
 @Composable
 fun VideoContainer(
     modifier: Modifier = Modifier,
-    viewModel: VideoViewModel = viewModel { VideoViewModel() },
+    viewModel: VideoViewModel = koinViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val snackBarHostState = remember { SnackbarHostState() }
@@ -36,11 +37,28 @@ fun VideoContainer(
                         duration = SnackbarDuration.Short,
                     )
                 }
+
                 is VideoSideEffect.ShowSuccess -> {
                     snackBarHostState.showSnackbar(
                         message = sideEffect.message,
                         actionLabel = "OK",
                         duration = SnackbarDuration.Short,
+                    )
+                }
+
+                is VideoSideEffect.ShowSyncResult -> {
+                    snackBarHostState.showSnackbar(
+                        message = "Synchronized to: ${sideEffect.absoluteTime}",
+                        actionLabel = "OK",
+                        duration = SnackbarDuration.Long,
+                    )
+                }
+
+                is VideoSideEffect.ShowSyncError -> {
+                    snackBarHostState.showSnackbar(
+                        message = "Sync Error: ${sideEffect.message}",
+                        actionLabel = "Dismiss",
+                        duration = SnackbarDuration.Long,
                     )
                 }
             }

@@ -16,6 +16,8 @@ import androidx.compose.ui.Modifier
 @Composable
 expect fun VideoPlayerView(
     videoId: String,
+    uiState: VideoUiState,
+    onIntent: (VideoIntent) -> Unit,
     modifier: Modifier = Modifier,
     onError: (String) -> Unit = {},
 )

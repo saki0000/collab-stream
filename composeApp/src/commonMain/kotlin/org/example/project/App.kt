@@ -8,24 +8,27 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import org.example.project.di.KoinInitializer
 import org.example.project.video.ui.VideoContainer
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @Composable
 @Preview
 fun App() {
-    MaterialTheme {
-        Column(
-            modifier = Modifier
-                .background(MaterialTheme.colorScheme.background)
-                .safeContentPadding()
-                .fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            // YouTube Video Demo
-            VideoContainer(
-                modifier = Modifier.fillMaxSize(),
-            )
+    KoinInitializer {
+        MaterialTheme {
+            Column(
+                modifier = Modifier
+                    .background(MaterialTheme.colorScheme.background)
+                    .safeContentPadding()
+                    .fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                // YouTube Video Demo
+                VideoContainer(
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
         }
     }
 }

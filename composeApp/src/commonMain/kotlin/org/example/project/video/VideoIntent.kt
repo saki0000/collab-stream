@@ -19,6 +19,21 @@ sealed interface VideoIntent {
      * Intent to retry loading the current video
      */
     data object RetryLoad : VideoIntent
+
+    /**
+     * Intent to synchronize video playback position to absolute time
+     */
+    data class SyncToAbsoluteTime(val currentTime: Float) : VideoIntent
+
+    /**
+     * Intent to handle user-initiated seek to specific position
+     */
+    data class UserSeekToPosition(val position: Float) : VideoIntent
+
+    /**
+     * Intent to clear sync error state
+     */
+    data object ClearSyncError : VideoIntent
 }
 
 /**
@@ -35,4 +50,14 @@ sealed interface VideoSideEffect {
      * Show a success message when video loads successfully
      */
     data class ShowSuccess(val message: String) : VideoSideEffect
+
+    /**
+     * Show sync result to the user
+     */
+    data class ShowSyncResult(val absoluteTime: String) : VideoSideEffect
+
+    /**
+     * Show sync error message
+     */
+    data class ShowSyncError(val message: String) : VideoSideEffect
 }
