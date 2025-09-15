@@ -35,7 +35,6 @@ fun VideoScreen(
             modifier = Modifier
                 .padding(paddingValues),
         ) {
-
             Column(
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {

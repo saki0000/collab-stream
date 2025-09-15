@@ -62,7 +62,7 @@ actual fun VideoPlayerView(
         onError("Video ID cannot be empty")
         return
     }
-    
+
     val controller = remember { IOSWebViewPlayerController() }
 
     Column(modifier = modifier) {

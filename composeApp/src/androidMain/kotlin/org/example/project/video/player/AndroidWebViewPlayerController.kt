@@ -17,7 +17,7 @@ class AndroidWebViewPlayerController : WebViewPlayerController {
         // Add JavaScript interface for communication
         this.webView?.addJavascriptInterface(
             AndroidJavaScriptInterface(),
-            "AndroidInterface"
+            "AndroidInterface",
         )
     }
 
@@ -69,7 +69,7 @@ class AndroidWebViewPlayerController : WebViewPlayerController {
         fun onMessage(message: String) {
             try {
                 // Create a more lenient JSON instance
-                val json = Json { 
+                val json = Json {
                     ignoreUnknownKeys = true
                     coerceInputValues = true
                     isLenient = true
@@ -82,7 +82,7 @@ class AndroidWebViewPlayerController : WebViewPlayerController {
                 handleMessageManually(message)
             }
         }
-        
+
         private fun handleMessageManually(message: String) {
             try {
                 // Manual parsing for simple JSON messages
@@ -117,5 +117,5 @@ class AndroidWebViewPlayerController : WebViewPlayerController {
 @Serializable
 private data class PlayerMessage(
     val type: String,
-    val data: String
+    val data: String,
 )
