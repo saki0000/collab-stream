@@ -2,20 +2,48 @@ package org.example.project.video
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.UIKitInteropProperties
 import androidx.compose.ui.viewinterop.UIKitView
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.cValue
+import org.example.project.video.player.IOSWebViewPlayerController
+import org.example.project.video.player.YouTubeIframeTemplate
 import org.example.project.video.ui.SyncControlsSection
 import platform.CoreGraphics.CGRectZero
+import platform.Foundation.NSNumber
 import platform.Foundation.NSURL
+import platform.WebKit.WKScriptMessage
+import platform.WebKit.WKScriptMessageHandlerProtocol
+import platform.WebKit.WKUserContentController
 import platform.WebKit.WKWebView
 import platform.WebKit.WKWebViewConfiguration
+import platform.darwin.NSObject
+
+/**
+ * Message handler for JavaScript to native communication in iOS WebView.
+ * Implements WKScriptMessageHandlerProtocol to receive messages from JavaScript.
+ */
+class YouTubeMessageHandler(
+    private val onMessageReceived: (message: WKScriptMessage) -> Unit,
+) : NSObject(), WKScriptMessageHandlerProtocol {
+
+    override fun userContentController(
+        userContentController: WKUserContentController,
+        didReceiveScriptMessage: WKScriptMessage,
+    ) {
+        onMessageReceived(didReceiveScriptMessage)
+    }
+}
 
 /**
  * iOS implementation of VideoPlayerView using WKWebView with YouTube iframe.
@@ -35,339 +63,66 @@ actual fun VideoPlayerView(
         return
     }
 
-    Column {
+    val controller = remember { IOSWebViewPlayerController() }
+
+    Column(modifier = modifier) {
+        var webView by remember { mutableStateOf<WKWebView?>(null) }
+
+        // Set the WebView instance in the controller when available
+        remember(webView, controller) {
+            controller.setWebView(webView)
+        }
+
         UIKitView(
             factory = {
-                val config = WKWebViewConfiguration().apply {
-                    allowsInlineMediaPlayback = true
-                    mediaTypesRequiringUserActionForPlayback = 0u // Allow autoplay
+                // Create message handler for JavaScript to native communication
+                val messageHandler = YouTubeMessageHandler { message ->
+                    val state = (message.body as? NSNumber)?.intValue()
+                    state?.let {
+                        println("iOS WebView state changed: $it")
+                    }
                 }
 
-                val webView = WKWebView(frame = cValue { CGRectZero }, configuration = config)
+                // Configure WebView with message handler
+                val userContentController = WKUserContentController()
+                userContentController.addScriptMessageHandler(messageHandler, "nativeApp")
 
-                val html = """
-                     <!DOCTYPE html>
-                     <html>
-                     <head>
-                         <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-                         <style>
-                             body, html {
-                                 margin: 0;
-                                 padding: 0;
-                                 width: 100%;
-                                 height: 100%;
-                                 overflow: hidden;
-                                 background-color: black;
-                             }
-                             .video-container {
-                                 position: relative;
-                                 width: 100%;
-                                 height: 100%;
-                             }
-                             .video-container iframe {
-                                 position: absolute;
-                                 top: 0;
-                                 left: 0;
-                                 width: 100%;
-                                 height: 100%;
-                                 border: none;
-                             }
-                         </style>
-                     </head>
-                     <body>
-                         <div class="video-container">
-                             <iframe
-                                 src="https://www.youtube.com/embed/$videoId?enablejsapi=1&playsinline=1&rel=0&modestbranding=1&controls=1"
-                                 frameborder="0"
-                                 allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
-                                 allowfullscreen
-                                 webkitallowfullscreen
-                                 mozallowfullscreen>
-                             </iframe>
-                         </div>
-                     </body>
-                     </html>
-                """.trimIndent()
+                val config = WKWebViewConfiguration().apply {
+                    this.userContentController = userContentController
+                    allowsInlineMediaPlayback = true
+                    mediaTypesRequiringUserActionForPlayback = 0u
+                }
 
-                webView.loadHTMLString(html, baseURL = NSURL.URLWithString("https://www.youtube.com"))
-                webView
+                val webViewInstance = WKWebView(frame = cValue { CGRectZero }, configuration = config)
+                webViewInstance.scrollView.setScrollEnabled(false)
+
+                // Use shared template for HTML generation
+                val html = YouTubeIframeTemplate.generateHtml(videoId)
+                webViewInstance.loadHTMLString(html, baseURL = NSURL.URLWithString("https://www.youtube.com"))
+
+                // Store WebView instance in state
+                webView = webViewInstance
+
+                webViewInstance
             },
-            modifier = modifier.fillMaxSize(),
-            update = { webView ->
-                // Update the webView if needed when videoId changes
-                val html = """
-                     <!DOCTYPE html>
-                     <html>
-                     <head>
-                         <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-                         <style>
-                             body, html {
-                                 margin: 0;
-                                 padding: 0;
-                                 width: 100%;
-                                 height: 100%;
-                                 overflow: hidden;
-                                 background-color: black;
-                             }
-                             .video-container {
-                                 position: relative;
-                                 width: 100%;
-                                 height: 100%;
-                             }
-                             .video-container iframe {
-                                 position: absolute;
-                                 top: 0;
-                                 left: 0;
-                                 width: 100%;
-                                 height: 100%;
-                                 border: none;
-                             }
-                         </style>
-                     </head>
-                     <body>
-                         <div class="video-container">
-                             <iframe
-                                 src="https://www.youtube.com/embed/$videoId?enablejsapi=1&playsinline=1&rel=0&modestbranding=1&controls=1"
-                                 frameborder="0"
-                                 allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
-                                 allowfullscreen
-                                 webkitallowfullscreen
-                                 mozallowfullscr
-                                 een>
-                             </iframe>
-                         </div>
-                     </body>
-                     </html>
-                """.trimIndent()
-
-                webView.loadHTMLString(html, baseURL = NSURL.URLWithString("https://www.youtube.com"))
+            modifier = Modifier.fillMaxWidth().aspectRatio(16f / 9f),
+            update = { webViewInstance ->
+                // Use shared template for HTML generation on updates
+                val html = YouTubeIframeTemplate.generateHtml(videoId)
+                webViewInstance.loadHTMLString(html, baseURL = NSURL.URLWithString("https://www.youtube.com"))
             },
             onRelease = {},
             properties = UIKitInteropProperties(isInteractive = true, isNativeAccessibilityEnabled = true),
         )
+
+        Spacer(modifier = Modifier.height(8.dp))
+        SyncControlsSection(
+            uiState = uiState,
+            onSync = {
+                controller.requestCurrentTime { currentTime ->
+                    onIntent(VideoIntent.SyncToAbsoluteTime(currentTime))
+                }
+            },
+        )
     }
-    Spacer(modifier = Modifier.height(16.dp))
-    SyncControlsSection(
-        uiState = uiState,
-        onSync = { onIntent(VideoIntent.SyncToAbsoluteTime(0L.toFloat())) },
-    )
-}
-
-/**
- * Extended version of VideoPlayerView that provides access to WKWebView instance
- * for synchronization purposes via JavaScript bridge.
- */
-@OptIn(ExperimentalForeignApi::class)
-@Composable
-fun VideoPlayerViewWithSync(
-    videoId: String,
-    modifier: Modifier = Modifier,
-    onError: (String) -> Unit = {},
-    onWebViewReady: (WKWebView?) -> Unit = {},
-) {
-    if (videoId.isBlank()) {
-        onError("Video ID cannot be empty")
-        return
-    }
-
-    UIKitView(
-        factory = {
-            val config = WKWebViewConfiguration().apply {
-                allowsInlineMediaPlayback = true
-                mediaTypesRequiringUserActionForPlayback = 0u // Allow autoplay
-            }
-
-            val webView = WKWebView(frame = cValue { CGRectZero }, configuration = config)
-
-            val html = """
-                    <!DOCTYPE html>
-                    <html>
-                    <head>
-                        <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-                        <script src="https://www.youtube.com/iframe_api"></script>
-                        <style>
-                            body, html {
-                                margin: 0;
-                                padding: 0;
-                                width: 100%;
-                                height: 100%;
-                                overflow: hidden;
-                                background-color: black;
-                            }
-                            .video-container {
-                                position: relative;
-                                width: 100%;
-                                height: 100%;
-                            }
-                            #player {
-                                position: absolute;
-                                top: 0;
-                                left: 0;
-                                width: 100%;
-                                height: 100%;
-                                border: none;
-                            }
-                        </style>
-                    </head>
-                    <body>
-                        <div class="video-container">
-                            <div id="player"></div>
-                        </div>
-                        <script>
-                            var player;
-                            
-                            function onYouTubeIframeAPIReady() {
-                                player = new YT.Player('player', {
-                                    height: '100%',
-                                    width: '100%',
-                                    videoId: '$videoId',
-                                    playerVars: {
-                                        'playsinline': 1,
-                                        'rel': 0,
-                                        'modestbranding': 1,
-                                        'controls': 1,
-                                        'enablejsapi': 1
-                                    },
-                                    events: {
-                                        'onReady': onPlayerReady,
-                                        'onStateChange': onPlayerStateChange,
-                                        'onError': onPlayerError
-                                    }
-                                });
-                            }
-                            
-                            function onPlayerReady(event) {
-                                console.log('YouTube Player ready');
-                            }
-                            
-                            function onPlayerStateChange(event) {
-                                console.log('YouTube Player state changed:', event.data);
-                            }
-                            
-                            function onPlayerError(event) {
-                                console.log('YouTube Player error:', event.data);
-                            }
-                            
-                            // Function to get current time - exposed for native bridge
-                            function getCurrentTime() {
-                                if (player && player.getCurrentTime) {
-                                    return player.getCurrentTime();
-                                }
-                                return -1;
-                            }
-                            
-                            // Function to seek to specific time
-                            function seekTo(seconds) {
-                                if (player && player.seekTo) {
-                                    player.seekTo(seconds, true);
-                                }
-                            }
-                        </script>
-                    </body>
-                    </html>
-            """.trimIndent()
-
-            webView.loadHTMLString(html, baseURL = NSURL.URLWithString("https://www.youtube.com"))
-
-            // Notify that WebView is ready
-            onWebViewReady(webView)
-
-            webView
-        },
-        modifier = modifier.fillMaxSize(),
-        update = { webView ->
-            // Update the webView if needed when videoId changes
-            val html = """
-                    <!DOCTYPE html>
-                    <html>
-                    <head>
-                        <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-                        <script src="https://www.youtube.com/iframe_api"></script>
-                        <style>
-                            body, html {
-                                margin: 0;
-                                padding: 0;
-                                width: 100%;
-                                height: 100%;
-                                overflow: hidden;
-                                background-color: black;
-                            }
-                            .video-container {
-                                position: relative;
-                                width: 100%;
-                                height: 100%;
-                            }
-                            #player {
-                                position: absolute;
-                                top: 0;
-                                left: 0;
-                                width: 100%;
-                                height: 100%;
-                                border: none;
-                            }
-                        </style>
-                    </head>
-                    <body>
-                        <div class="video-container">
-                            <div id="player"></div>
-                        </div>
-                        <script>
-                            var player;
-                            
-                            function onYouTubeIframeAPIReady() {
-                                player = new YT.Player('player', {
-                                    height: '100%',
-                                    width: '100%',
-                                    videoId: '$videoId',
-                                    playerVars: {
-                                        'playsinline': 1,
-                                        'rel': 0,
-                                        'modestbranding': 1,
-                                        'controls': 1,
-                                        'enablejsapi': 1
-                                    },
-                                    events: {
-                                        'onReady': onPlayerReady,
-                                        'onStateChange': onPlayerStateChange,
-                                        'onError': onPlayerError
-                                    }
-                                });
-                            }
-                            
-                            function onPlayerReady(event) {
-                                console.log('YouTube Player ready');
-                            }
-                            
-                            function onPlayerStateChange(event) {
-                                console.log('YouTube Player state changed:', event.data);
-                            }
-                            
-                            function onPlayerError(event) {
-                                console.log('YouTube Player error:', event.data);
-                            }
-                            
-                            // Function to get current time - exposed for native bridge
-                            function getCurrentTime() {
-                                if (player && player.getCurrentTime) {
-                                    return player.getCurrentTime();
-                                }
-                                return -1;
-                            }
-                            
-                            // Function to seek to specific time
-                            function seekTo(seconds) {
-                                if (player && player.seekTo) {
-                                    player.seekTo(seconds, true);
-                                }
-                            }
-                        </script>
-                    </body>
-                    </html>
-            """.trimIndent()
-
-            webView.loadHTMLString(html, baseURL = NSURL.URLWithString("https://www.youtube.com"))
-        },
-        onRelease = {},
-        properties = UIKitInteropProperties(isInteractive = true, isNativeAccessibilityEnabled = true),
-    )
 }
