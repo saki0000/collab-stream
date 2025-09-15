@@ -101,14 +101,20 @@ class AndroidWebViewPlayerController : WebViewPlayerController {
 
     private fun handlePlayerMessage(message: PlayerMessage) {
         when (message.type) {
-            PlayerMessageType.PLAYER_READY -> {
+            "playerReady" -> {
                 println("Android WebView: YouTube Player ready")
             }
-            PlayerMessageType.STATE_CHANGE -> {
+            "stateChange" -> {
                 println("Android WebView: Player state changed to ${message.data}")
             }
-            PlayerMessageType.PLAYER_ERROR -> {
+            "playerError" -> {
                 println("Android WebView: Player error: ${message.data}")
+            }
+            "debug" -> {
+                println("Android WebView Debug: ${message.data}")
+            }
+            else -> {
+                println("Android WebView: Unknown message type: ${message.type}")
             }
         }
     }

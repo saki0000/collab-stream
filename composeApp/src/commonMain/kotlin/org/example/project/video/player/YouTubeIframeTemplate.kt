@@ -5,28 +5,19 @@ package org.example.project.video.player
  * Provides consistent YouTube player experience with JavaScript bridge communication.
  */
 object YouTubeIframeTemplate {
-
     fun generateHtml(videoId: String): String {
         return """
         <!DOCTYPE html>
         <html>
         <head>
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <style>
-                * {
+                body, html, #player {
                     margin: 0;
                     padding: 0;
-                    box-sizing: border-box;
-                }
-                html, body {
                     width: 100%;
                     height: 100%;
-                    background: #000;
+                    background-color: black;
                     overflow: hidden;
-                }
-                #player {
-                    width: 100%;
-                    height: 100%;
                 }
             </style>
         </head>
@@ -34,66 +25,79 @@ object YouTubeIframeTemplate {
             <div id="player"></div>
 
             <script>
-                var player;
-                var currentTime = 0.0;
-
-                // Load YouTube iframe API
+                // 2. IFrame Player APIのコードを非同期で読み込む
                 var tag = document.createElement('script');
                 tag.src = "https://www.youtube.com/iframe_api";
                 var firstScriptTag = document.getElementsByTagName('script')[0];
                 firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
-                // YouTube API ready callback
+                // 3. APIコードがダウンロードされた後にiframeとプレーヤーを作成する
+                var player;
                 function onYouTubeIframeAPIReady() {
                     player = new YT.Player('player', {
                         height: '100%',
                         width: '100%',
                         videoId: '$videoId',
                         playerVars: {
-                            autoplay: 0,
-                            controls: 1,
-                            rel: 0,
-                            playsinline: 1,
-                            origin: window.location.origin
+                            'playsinline': 1, // iOSでインライン再生を有効化
+                            'autoplay': 1,    // 自動再生
+                            'controls': 1,    // プレーヤーコントロールを非表示
+                            'fs': 1,          // 全画面表示ボタンを非表示
+                            'modestbranding': 1 // YouTubeロゴを控えめに
                         },
                         events: {
                             'onReady': onPlayerReady,
-                            'onStateChange': onPlayerStateChange
+                            'onStateChange': onPlayerStateChange,
+                            'onError': onPlayerError
                         }
                     });
                 }
 
+                // 4. APIがプレーヤーの準備ができたときにこの関数を呼び出す
                 function onPlayerReady(event) {
-                    console.log('YouTube player ready');
-                    // Start tracking current time
-                    setInterval(updateCurrentTime, 100);
+                    // JavaScript Interfaceを経由してAndroid側のメソッドを呼び出す
+                    if (window.AndroidInterface) {
+                        window.AndroidInterface.onMessage(JSON.stringify({type: "playerReady", data: "ready"}));
+                    }
+                    // event.target.playVideo(); // 準備完了後に再生する場合
                 }
 
+                // 5. プレーヤーの状態が変化したときにAPIがこの関数を呼び出す
                 function onPlayerStateChange(event) {
-                    console.log('Player state changed:', event.data);
-                    // Notify native code about state changes
-                    try {
-                        if (typeof webkit !== 'undefined' && webkit.messageHandlers && webkit.messageHandlers.nativeApp) {
-                            webkit.messageHandlers.nativeApp.postMessage(event.data);
-                        }
-                    } catch(e) {
-                        console.log('Error posting message to native:', e);
+                    if (window.AndroidInterface) {
+                        // event.dataに現在の状態コードが入っている
+                        window.AndroidInterface.onMessage(JSON.stringify({type: "stateChange", data: event.data.toString()}));
                     }
                 }
 
-                function updateCurrentTime() {
-                    if (player && typeof player.getCurrentTime === 'function') {
-                        currentTime = player.getCurrentTime();
+                function onPlayerError(event) {
+                    if (window.AndroidInterface) {
+                        window.AndroidInterface.onMessage(JSON.stringify({type: "playerError", data: event.data.toString()}));
                     }
                 }
-
-                // JavaScript functions called from native code
+                
+                // --- Kotlin側から呼び出すための関数 ---
                 function getCurrentTime() {
-                    if (player && typeof player.getCurrentTime === 'function') {
-                        currentTime = player.getCurrentTime();
-                        return currentTime;
+                    try {
+                        if (player && typeof player.getCurrentTime === 'function') {
+                            var currentTime = player.getCurrentTime();
+                            // Debug: AndroidInterfaceにメッセージを送信
+                            if (window.AndroidInterface) {
+                                window.AndroidInterface.onMessage(JSON.stringify({type: "debug", data: "getCurrentTime called, returning: " + currentTime}));
+                            }
+                            return currentTime;
+                        } else {
+                            if (window.AndroidInterface) {
+                                window.AndroidInterface.onMessage(JSON.stringify({type: "debug", data: "Player not ready or getCurrentTime not available"}));
+                            }
+                            return 0.0;
+                        }
+                    } catch (error) {
+                        if (window.AndroidInterface) {
+                            window.AndroidInterface.onMessage(JSON.stringify({type: "debug", data: "Error in getCurrentTime: " + error.message}));
+                        }
+                        return 0.0;
                     }
-                    return 0.0;
                 }
 
                 function seekTo(seconds) {
@@ -122,6 +126,7 @@ object YouTubeIframeTemplate {
                         player.playVideo();
                     }
                 }
+
             </script>
         </body>
         </html>
