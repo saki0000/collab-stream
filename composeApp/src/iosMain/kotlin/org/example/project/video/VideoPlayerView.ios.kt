@@ -56,7 +56,7 @@ class VideoNavigationDelegate : NSObject(), platform.WebKit.WKNavigationDelegate
     override fun webView(
         webView: platform.WebKit.WKWebView,
         didFailProvisionalNavigation: platform.WebKit.WKNavigation?,
-        withError: platform.Foundation.NSError
+        withError: platform.Foundation.NSError,
     ) {
         println("iOS WebView provisional navigation failed: ${withError.localizedDescription} (Code: ${withError.code})")
     }
@@ -65,7 +65,7 @@ class VideoNavigationDelegate : NSObject(), platform.WebKit.WKNavigationDelegate
     override fun webView(
         webView: platform.WebKit.WKWebView,
         didFailNavigation: platform.WebKit.WKNavigation?,
-        withError: platform.Foundation.NSError
+        withError: platform.Foundation.NSError,
     ) {
         println("iOS WebView navigation failed: ${withError.localizedDescription} (Code: ${withError.code})")
     }
@@ -73,7 +73,7 @@ class VideoNavigationDelegate : NSObject(), platform.WebKit.WKNavigationDelegate
     @kotlinx.cinterop.ObjCSignatureOverride
     override fun webView(
         webView: platform.WebKit.WKWebView,
-        didFinishNavigation: platform.WebKit.WKNavigation?
+        didFinishNavigation: platform.WebKit.WKNavigation?,
     ) {
         println("iOS WebView navigation finished successfully")
     }
@@ -81,7 +81,7 @@ class VideoNavigationDelegate : NSObject(), platform.WebKit.WKNavigationDelegate
     @kotlinx.cinterop.ObjCSignatureOverride
     override fun webView(
         webView: platform.WebKit.WKWebView,
-        didStartProvisionalNavigation: platform.WebKit.WKNavigation?
+        didStartProvisionalNavigation: platform.WebKit.WKNavigation?,
     ) {
         println("iOS WebView started provisional navigation")
     }
