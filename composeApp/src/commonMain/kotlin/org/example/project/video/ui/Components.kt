@@ -31,6 +31,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import org.example.project.domain.model.VideoServiceType
 
 /**
  * Component Composable (Stateless, reusable) - Video ID input field with submit button
@@ -40,9 +41,20 @@ fun VideoIdInputComponent(
     value: String,
     onValueChange: (String) -> Unit,
     onSubmit: () -> Unit,
+    serviceType: VideoServiceType,
     modifier: Modifier = Modifier,
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
+
+    val placeholderText = when (serviceType) {
+        VideoServiceType.YOUTUBE -> "Enter YouTube video ID or URL"
+        VideoServiceType.TWITCH -> "Enter Twitch video ID or URL"
+    }
+
+    val labelText = when (serviceType) {
+        VideoServiceType.YOUTUBE -> "YouTube Video ID"
+        VideoServiceType.TWITCH -> "Twitch Video ID"
+    }
 
     Row(
         modifier = modifier,
@@ -54,12 +66,12 @@ fun VideoIdInputComponent(
             onValueChange = onValueChange,
             placeholder = {
                 Text(
-                    text = "Enter YouTube video ID",
+                    text = placeholderText,
                     style = MaterialTheme.typography.bodyMedium,
                 )
             },
             label = {
-                Text("Video ID")
+                Text(labelText)
             },
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
             keyboardActions = KeyboardActions(

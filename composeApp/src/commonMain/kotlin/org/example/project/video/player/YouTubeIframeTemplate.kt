@@ -3,6 +3,7 @@ package org.example.project.video.player
 /**
  * Shared YouTube iframe HTML template for unified implementation across platforms.
  * Provides consistent YouTube player experience with JavaScript bridge communication.
+ * Note: YouTube doesn't require parent domain configuration like Twitch does.
  */
 object YouTubeIframeTemplate {
     fun generateHtml(videoId: String): String {

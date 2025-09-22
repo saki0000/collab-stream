@@ -16,7 +16,9 @@ import androidx.compose.ui.viewinterop.UIKitInteropProperties
 import androidx.compose.ui.viewinterop.UIKitView
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.cValue
+import org.example.project.domain.model.VideoServiceType
 import org.example.project.video.player.IOSWebViewPlayerController
+import org.example.project.video.player.TwitchIframeTemplate
 import org.example.project.video.player.YouTubeIframeTemplate
 import org.example.project.video.ui.SyncControlsSection
 import platform.CoreGraphics.CGRectZero
@@ -32,8 +34,9 @@ import platform.darwin.NSObject
 /**
  * Message handler for JavaScript to native communication in iOS WebView.
  * Implements WKScriptMessageHandlerProtocol to receive messages from JavaScript.
+ * Supports both YouTube and Twitch iframe communication.
  */
-class YouTubeMessageHandler(
+class VideoMessageHandler(
     private val onMessageReceived: (message: WKScriptMessage) -> Unit,
 ) : NSObject(), WKScriptMessageHandlerProtocol {
 
@@ -46,8 +49,8 @@ class YouTubeMessageHandler(
 }
 
 /**
- * iOS implementation of VideoPlayerView using WKWebView with YouTube iframe.
- * Uses WKWebView with JavaScript enabled and media playback configuration.
+ * iOS implementation of VideoPlayerView using WKWebView with iframe embedding.
+ * Supports both YouTube and Twitch services with JavaScript enabled and media playback configuration.
  */
 @OptIn(ExperimentalForeignApi::class)
 @Composable
@@ -76,7 +79,7 @@ actual fun VideoPlayerView(
         UIKitView(
             factory = {
                 // Create message handler for JavaScript to native communication
-                val messageHandler = YouTubeMessageHandler { message ->
+                val messageHandler = VideoMessageHandler { message ->
                     val state = (message.body as? NSNumber)?.intValue()
                     state?.let {
                         println("iOS WebView state changed: $it")
@@ -96,9 +99,17 @@ actual fun VideoPlayerView(
                 val webViewInstance = WKWebView(frame = cValue { CGRectZero }, configuration = config)
                 webViewInstance.scrollView.setScrollEnabled(false)
 
-                // Use shared template for HTML generation
-                val html = YouTubeIframeTemplate.generateHtml(videoId)
-                webViewInstance.loadHTMLString(html, baseURL = NSURL.URLWithString("https://www.youtube.com"))
+                // Generate HTML based on service type
+                val (baseUrl, html) = when (uiState.serviceType) {
+                    VideoServiceType.YOUTUBE -> {
+                        "https://www.youtube.com" to YouTubeIframeTemplate.generateHtml(videoId)
+                    }
+                    VideoServiceType.TWITCH -> {
+                        val parentHost = "com.example.project"
+                        "https://$parentHost" to TwitchIframeTemplate.generateHtml(videoId, parentHost)
+                    }
+                }
+                webViewInstance.loadHTMLString(html, baseURL = NSURL.URLWithString(baseUrl))
 
                 // Store WebView instance in state
                 webView = webViewInstance
@@ -107,9 +118,17 @@ actual fun VideoPlayerView(
             },
             modifier = Modifier.fillMaxWidth().aspectRatio(16f / 9f),
             update = { webViewInstance ->
-                // Use shared template for HTML generation on updates
-                val html = YouTubeIframeTemplate.generateHtml(videoId)
-                webViewInstance.loadHTMLString(html, baseURL = NSURL.URLWithString("https://www.youtube.com"))
+                // Generate HTML based on service type for updates
+                val (baseUrl, html) = when (uiState.serviceType) {
+                    VideoServiceType.YOUTUBE -> {
+                        "https://www.youtube.com" to YouTubeIframeTemplate.generateHtml(videoId)
+                    }
+                    VideoServiceType.TWITCH -> {
+                        val parentHost = "com.example.project"
+                        "https://$parentHost" to TwitchIframeTemplate.generateHtml(videoId, parentHost)
+                    }
+                }
+                webViewInstance.loadHTMLString(html, baseURL = NSURL.URLWithString(baseUrl))
             },
             onRelease = {},
             properties = UIKitInteropProperties(isInteractive = true, isNativeAccessibilityEnabled = true),

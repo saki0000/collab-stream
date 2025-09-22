@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
+import org.example.project.domain.model.VideoServiceType
 import org.example.project.domain.usecase.VideoSyncUseCase
 
 /**
@@ -37,6 +38,8 @@ class VideoViewModel(
     fun handleIntent(intent: VideoIntent) {
         when (intent) {
             is VideoIntent.LoadVideo -> loadVideo(intent.videoId)
+            is VideoIntent.LoadVideoWithService -> loadVideoWithService(intent.videoId, intent.serviceType)
+            is VideoIntent.ChangeServiceType -> changeServiceType(intent.serviceType)
             VideoIntent.ClearError -> clearError()
             VideoIntent.RetryLoad -> retryLoad()
             is VideoIntent.SyncToAbsoluteTime -> syncToAbsoluteTime(intent.currentTime)
@@ -85,14 +88,65 @@ class VideoViewModel(
         }
     }
 
+    private fun loadVideoWithService(videoId: String, serviceType: VideoServiceType) {
+        if (videoId.isBlank()) {
+            handleVideoError("Video ID cannot be empty")
+            return
+        }
+
+        _uiState.value = _uiState.value.copy(
+            videoId = videoId,
+            serviceType = serviceType,
+            isLoading = true,
+            errorMessage = null,
+            syncDateTime = getCurrentDateTime(),
+        )
+
+        // Simulate loading success after a short delay
+        // In real implementation, this would handle actual video loading
+        viewModelScope.launch {
+            try {
+                // Video loading is handled by the platform-specific VideoPlayerView
+                // We just update the state to indicate loading has started
+                val serviceName = when (serviceType) {
+                    VideoServiceType.YOUTUBE -> "YouTube"
+                    VideoServiceType.TWITCH -> "Twitch"
+                }
+                _sideEffect.emit(VideoSideEffect.ShowSuccess("$serviceName video loading started"))
+            } catch (e: Exception) {
+                handleVideoError("Failed to load video: ${e.message}")
+            }
+        }
+    }
+
+    private fun changeServiceType(serviceType: VideoServiceType) {
+        _uiState.value = _uiState.value.copy(
+            serviceType = serviceType,
+            // Clear current video when switching services
+            videoId = "",
+            errorMessage = null,
+            syncResult = null,
+            syncError = null,
+        )
+
+        val serviceName = when (serviceType) {
+            VideoServiceType.YOUTUBE -> "YouTube"
+            VideoServiceType.TWITCH -> "Twitch"
+        }
+
+        viewModelScope.launch {
+            _sideEffect.emit(VideoSideEffect.ShowSuccess("Switched to $serviceName"))
+        }
+    }
+
     private fun clearError() {
         _uiState.value = _uiState.value.copy(errorMessage = null)
     }
 
     private fun retryLoad() {
-        val currentVideoId = _uiState.value.videoId
-        if (currentVideoId.isNotBlank()) {
-            loadVideo(currentVideoId)
+        val currentState = _uiState.value
+        if (currentState.videoId.isNotBlank()) {
+            loadVideoWithService(currentState.videoId, currentState.serviceType)
         }
     }
 

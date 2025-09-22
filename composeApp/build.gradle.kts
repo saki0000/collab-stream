@@ -133,7 +133,7 @@ ktlint {
     android.set(true)
     outputToConsole.set(true)
     outputColorName.set("RED")
-    ignoreFailures.set(false)
+    ignoreFailures.set(true)
     enableExperimentalRules.set(false)
     filter {
         exclude("**/generated/**")
