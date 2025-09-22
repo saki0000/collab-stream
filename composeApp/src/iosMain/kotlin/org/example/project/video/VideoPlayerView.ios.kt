@@ -49,6 +49,45 @@ class VideoMessageHandler(
 }
 
 /**
+ * Navigation delegate for debugging WebView loading issues (optional for troubleshooting)
+ */
+class VideoNavigationDelegate : NSObject(), platform.WebKit.WKNavigationDelegateProtocol {
+    @kotlinx.cinterop.ObjCSignatureOverride
+    override fun webView(
+        webView: platform.WebKit.WKWebView,
+        didFailProvisionalNavigation: platform.WebKit.WKNavigation?,
+        withError: platform.Foundation.NSError
+    ) {
+        println("iOS WebView provisional navigation failed: ${withError.localizedDescription} (Code: ${withError.code})")
+    }
+
+    @kotlinx.cinterop.ObjCSignatureOverride
+    override fun webView(
+        webView: platform.WebKit.WKWebView,
+        didFailNavigation: platform.WebKit.WKNavigation?,
+        withError: platform.Foundation.NSError
+    ) {
+        println("iOS WebView navigation failed: ${withError.localizedDescription} (Code: ${withError.code})")
+    }
+
+    @kotlinx.cinterop.ObjCSignatureOverride
+    override fun webView(
+        webView: platform.WebKit.WKWebView,
+        didFinishNavigation: platform.WebKit.WKNavigation?
+    ) {
+        println("iOS WebView navigation finished successfully")
+    }
+
+    @kotlinx.cinterop.ObjCSignatureOverride
+    override fun webView(
+        webView: platform.WebKit.WKWebView,
+        didStartProvisionalNavigation: platform.WebKit.WKNavigation?
+    ) {
+        println("iOS WebView started provisional navigation")
+    }
+}
+
+/**
  * iOS implementation of VideoPlayerView using WKWebView with iframe embedding.
  * Supports both YouTube and Twitch services with JavaScript enabled and media playback configuration.
  */
@@ -94,10 +133,17 @@ actual fun VideoPlayerView(
                     this.userContentController = userContentController
                     allowsInlineMediaPlayback = true
                     mediaTypesRequiringUserActionForPlayback = 0u
+                    allowsAirPlayForMediaPlayback = true
+                    allowsPictureInPictureMediaPlayback = true
+                    suppressesIncrementalRendering = false
                 }
 
                 val webViewInstance = WKWebView(frame = cValue { CGRectZero }, configuration = config)
                 webViewInstance.scrollView.setScrollEnabled(false)
+
+                // Add navigation delegate for debugging
+                val navigationDelegate = VideoNavigationDelegate()
+                webViewInstance.navigationDelegate = navigationDelegate
 
                 // Generate HTML based on service type
                 val (baseUrl, html) = when (uiState.serviceType) {
@@ -105,11 +151,13 @@ actual fun VideoPlayerView(
                         "https://www.youtube.com" to YouTubeIframeTemplate.generateHtml(videoId)
                     }
                     VideoServiceType.TWITCH -> {
-                        val parentHost = "com.example.project"
-                        "https://$parentHost" to TwitchIframeTemplate.generateHtml(videoId, parentHost)
+                        // iOS Twitch: Use shared template with parent/baseURL matching
+                        val parentDomain = "org.example.project.CollabStream"
+                        val baseURL = "https://$parentDomain"
+                        baseURL to TwitchIframeTemplate.generateSimpleIframeHtml(videoId, parentDomain)
                     }
                 }
-                webViewInstance.loadHTMLString(html, baseURL = NSURL.URLWithString(baseUrl))
+                webViewInstance.loadHTMLString(html, baseURL = baseUrl?.let { NSURL.URLWithString(it) })
 
                 // Store WebView instance in state
                 webView = webViewInstance
@@ -124,11 +172,13 @@ actual fun VideoPlayerView(
                         "https://www.youtube.com" to YouTubeIframeTemplate.generateHtml(videoId)
                     }
                     VideoServiceType.TWITCH -> {
-                        val parentHost = "com.example.project"
-                        "https://$parentHost" to TwitchIframeTemplate.generateHtml(videoId, parentHost)
+                        // iOS Twitch: Use shared template with parent/baseURL matching
+                        val parentDomain = "org.example.project.CollabStream"
+                        val baseURL = "https://$parentDomain"
+                        baseURL to TwitchIframeTemplate.generateSimpleIframeHtml(videoId, parentDomain)
                     }
                 }
-                webViewInstance.loadHTMLString(html, baseURL = NSURL.URLWithString(baseUrl))
+                webViewInstance.loadHTMLString(html, baseURL = baseUrl?.let { NSURL.URLWithString(it) })
             },
             onRelease = {},
             properties = UIKitInteropProperties(isInteractive = true, isNativeAccessibilityEnabled = true),

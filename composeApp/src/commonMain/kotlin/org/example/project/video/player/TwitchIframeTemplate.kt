@@ -1,10 +1,13 @@
 package org.example.project.video.player
 
 /**
- * Shared Twitch iframe HTML template for unified implementation across platforms.
- * Provides consistent Twitch player experience with JavaScript bridge communication.
+ * Twitch iframe HTML templates for different platform implementations.
+ * Provides both JavaScript API and simple iframe solutions.
  */
 object TwitchIframeTemplate {
+    /**
+     * Android implementation using JavaScript API for full control
+     */
     fun generateHtml(videoId: String, parentHost: String): String {
         // Ensure video ID has the 'v' prefix required by Twitch
         val formattedVideoId = if (videoId.startsWith("v")) videoId else "v$videoId"
@@ -33,13 +36,18 @@ object TwitchIframeTemplate {
 
                 // Initialize Twitch player
                 function initializeTwitchPlayer() {
-                    player = new Twitch.Player('player', {
+                    try {
+
+                        player = new Twitch.Player('player', {
                         width: '100%',
                         height: '100%',
                         video: '$formattedVideoId',
                         parent: ['$parentHost'],
                         autoplay: false,
-                        muted: false
+                        muted: false,
+                        playsinline: true,  // Enable inline playback for iOS
+                        allowfullscreen: true,
+                        layout: "video"
                     });
 
                     // Player ready event
@@ -57,12 +65,14 @@ object TwitchIframeTemplate {
                     });
 
                     player.addEventListener(Twitch.Player.PAUSE, function() {
+                        // Send message to Android
                         if (window.AndroidInterface) {
                             window.AndroidInterface.onMessage(JSON.stringify({type: "stateChange", data: "paused"}));
                         }
                     });
 
                     player.addEventListener(Twitch.Player.ENDED, function() {
+                        // Send message to Android
                         if (window.AndroidInterface) {
                             window.AndroidInterface.onMessage(JSON.stringify({type: "stateChange", data: "ended"}));
                         }
@@ -70,10 +80,19 @@ object TwitchIframeTemplate {
 
                     // Error handling
                     player.addEventListener(Twitch.Player.OFFLINE, function() {
+                        // Send message to Android
                         if (window.AndroidInterface) {
                             window.AndroidInterface.onMessage(JSON.stringify({type: "playerError", data: "Video is offline"}));
                         }
                     });
+
+                    } catch (error) {
+                        // Send detailed error info for iOS debugging
+                        var errorMessage = "Twitch player initialization failed: " + error.message;
+                        if (window.AndroidInterface) {
+                            window.AndroidInterface.onMessage(JSON.stringify({type: "playerError", data: errorMessage}));
+                        }
+                    }
                 }
 
                 // Initialize player when DOM is ready
@@ -84,17 +103,20 @@ object TwitchIframeTemplate {
                     try {
                         if (player && typeof player.getCurrentTime === 'function') {
                             var currentTime = player.getCurrentTime();
+                            // Send debug message to Android
                             if (window.AndroidInterface) {
                                 window.AndroidInterface.onMessage(JSON.stringify({type: "debug", data: "getCurrentTime called, returning: " + currentTime}));
                             }
                             return currentTime;
                         } else {
+                            // Send debug message to Android
                             if (window.AndroidInterface) {
                                 window.AndroidInterface.onMessage(JSON.stringify({type: "debug", data: "Player not ready or getCurrentTime not available"}));
                             }
                             return 0.0;
                         }
                     } catch (error) {
+                        // Send debug message to Android
                         if (window.AndroidInterface) {
                             window.AndroidInterface.onMessage(JSON.stringify({type: "debug", data: "Error in getCurrentTime: " + error.message}));
                         }
@@ -110,6 +132,7 @@ object TwitchIframeTemplate {
                         }
                         return false;
                     } catch (error) {
+                        // Send debug message to Android
                         if (window.AndroidInterface) {
                             window.AndroidInterface.onMessage(JSON.stringify({type: "debug", data: "Error in seekTo: " + error.message}));
                         }
@@ -120,11 +143,13 @@ object TwitchIframeTemplate {
                 function getPlayerState() {
                     try {
                         if (player && typeof player.isPaused === 'function') {
-                            return player.isPaused() ? "paused" : "playing";
+                            // Convert Twitch player state to YouTube-compatible integer states
+                            // YouTube states: -1=unstarted, 0=ended, 1=playing, 2=paused, 3=buffering, 5=cued
+                            return player.isPaused() ? 2 : 1;  // 2=paused, 1=playing
                         }
-                        return "unknown";
+                        return -1;  // unknown/unstarted
                     } catch (error) {
-                        return "error";
+                        return -1;  // error state
                     }
                 }
 
@@ -134,6 +159,7 @@ object TwitchIframeTemplate {
                             player.pause();
                         }
                     } catch (error) {
+                        // Send debug message to Android
                         if (window.AndroidInterface) {
                             window.AndroidInterface.onMessage(JSON.stringify({type: "debug", data: "Error in pauseVideo: " + error.message}));
                         }
@@ -146,6 +172,7 @@ object TwitchIframeTemplate {
                             player.play();
                         }
                     } catch (error) {
+                        // Send debug message to Android
                         if (window.AndroidInterface) {
                             window.AndroidInterface.onMessage(JSON.stringify({type: "debug", data: "Error in playVideo: " + error.message}));
                         }
@@ -158,12 +185,53 @@ object TwitchIframeTemplate {
                             player.setVolume(volume);
                         }
                     } catch (error) {
+                        // Send debug message to Android
                         if (window.AndroidInterface) {
                             window.AndroidInterface.onMessage(JSON.stringify({type: "debug", data: "Error in setVolume: " + error.message}));
                         }
                     }
                 }
 
+            </script>
+        </body>
+        </html>
+        """.trimIndent()
+    }
+
+    /**
+     * iOS implementation using simple iframe for parent/baseURL compatibility
+     */
+    fun generateSimpleIframeHtml(videoId: String, parentDomain: String): String {
+        val twitchUrl = "https://player.twitch.tv/?video=$videoId&parent=$parentDomain&autoplay=true&muted=true&allowfullscreen=true"
+
+        return """
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <style>
+                body, html, iframe {
+                    margin: 0; padding: 0; width: 100%; height: 100%;
+                    border: none; background: black; overflow: hidden;
+                }
+            </style>
+        </head>
+        <body>
+            <iframe src="$twitchUrl"
+                    width="100%"
+                    height="100%"
+                    frameborder="0"
+                    scrolling="no"
+                    allowfullscreen="true">
+            </iframe>
+            <script>
+                if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.nativeApp) {
+                    window.webkit.messageHandlers.nativeApp.postMessage({
+                        type: "debug",
+                        data: "iOS Twitch loaded with parent: $parentDomain, video: $videoId"
+                    });
+                }
             </script>
         </body>
         </html>
