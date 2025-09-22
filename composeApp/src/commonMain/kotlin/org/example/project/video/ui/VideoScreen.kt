@@ -41,8 +41,12 @@ fun VideoScreen(
                 // Video input section
                 VideoInputContent(
                     currentVideoId = uiState.videoId,
-                    onLoadVideo = { videoId ->
-                        onIntent(VideoIntent.LoadVideo(videoId))
+                    currentServiceType = uiState.serviceType,
+                    onLoadVideo = { videoId, serviceType ->
+                        onIntent(VideoIntent.LoadVideoWithService(videoId, serviceType))
+                    },
+                    onServiceTypeChange = { serviceType ->
+                        onIntent(VideoIntent.ChangeServiceType(serviceType))
                     },
                 )
 

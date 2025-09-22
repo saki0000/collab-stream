@@ -1,14 +1,26 @@
 package org.example.project.video
 
+import org.example.project.domain.model.VideoServiceType
+
 /**
  * Sealed interface defining all possible user intents for video functionality.
  * Following MVI architecture pattern for state management.
  */
 sealed interface VideoIntent {
     /**
-     * Intent to load a video with the specified video ID
+     * Intent to load a video with the specified video ID (legacy)
      */
     data class LoadVideo(val videoId: String) : VideoIntent
+
+    /**
+     * Intent to load a video with the specified video ID and service type
+     */
+    data class LoadVideoWithService(val videoId: String, val serviceType: VideoServiceType) : VideoIntent
+
+    /**
+     * Intent to change the service type
+     */
+    data class ChangeServiceType(val serviceType: VideoServiceType) : VideoIntent
 
     /**
      * Intent to clear any error state

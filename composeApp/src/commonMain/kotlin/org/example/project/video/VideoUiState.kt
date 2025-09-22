@@ -3,6 +3,7 @@
 package org.example.project.video
 
 import kotlin.time.Instant
+import org.example.project.domain.model.VideoServiceType
 import org.example.project.video.player.PlayerState
 
 /**
@@ -38,11 +39,3 @@ data class VideoSyncUiState(
     val absoluteTime: Instant,
     val formattedAbsoluteTime: String,
 )
-
-/**
- * Enum class defining supported video service types.
- * Currently only supports YouTube, but can be extended for future services.
- */
-enum class VideoServiceType {
-    YOUTUBE,
-}

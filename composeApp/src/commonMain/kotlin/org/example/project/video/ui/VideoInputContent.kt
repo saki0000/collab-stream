@@ -1,10 +1,13 @@
 package org.example.project.video.ui
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
@@ -17,6 +20,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import org.example.project.domain.model.VideoServiceType
 
 /**
  * Content Composable (Stateless) - Represents the video input section
@@ -25,7 +29,9 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun VideoInputContent(
     currentVideoId: String,
-    onLoadVideo: (String) -> Unit,
+    currentServiceType: VideoServiceType,
+    onLoadVideo: (String, VideoServiceType) -> Unit,
+    onServiceTypeChange: (VideoServiceType) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var inputVideoId by remember { mutableStateOf(currentVideoId) }
@@ -42,7 +48,7 @@ fun VideoInputContent(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
-                text = "YouTube Video Player Demo",
+                text = "Video Player Demo",
                 style = MaterialTheme.typography.headlineSmall,
                 color = MaterialTheme.colorScheme.primary,
             )
@@ -50,10 +56,60 @@ fun VideoInputContent(
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
-                text = "Enter a YouTube video ID or try sample videos",
+                text = "Select service and enter video ID or URL",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Service type selector
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp),
+            ) {
+                Button(
+                    onClick = { onServiceTypeChange(VideoServiceType.YOUTUBE) },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (currentServiceType == VideoServiceType.YOUTUBE) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.surface
+                        },
+                    ),
+                    modifier = Modifier.weight(1f),
+                ) {
+                    Text(
+                        text = "YouTube",
+                        color = if (currentServiceType == VideoServiceType.YOUTUBE) {
+                            MaterialTheme.colorScheme.onPrimary
+                        } else {
+                            MaterialTheme.colorScheme.onSurface
+                        },
+                    )
+                }
+
+                Button(
+                    onClick = { onServiceTypeChange(VideoServiceType.TWITCH) },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (currentServiceType == VideoServiceType.TWITCH) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.surface
+                        },
+                    ),
+                    modifier = Modifier.weight(1f),
+                ) {
+                    Text(
+                        text = "Twitch",
+                        color = if (currentServiceType == VideoServiceType.TWITCH) {
+                            MaterialTheme.colorScheme.onPrimary
+                        } else {
+                            MaterialTheme.colorScheme.onSurface
+                        },
+                    )
+                }
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -61,7 +117,8 @@ fun VideoInputContent(
             VideoIdInputComponent(
                 value = inputVideoId,
                 onValueChange = { inputVideoId = it },
-                onSubmit = { onLoadVideo(inputVideoId) },
+                onSubmit = { onLoadVideo(inputVideoId, currentServiceType) },
+                serviceType = currentServiceType,
                 modifier = Modifier.fillMaxWidth(),
             )
         }

@@ -18,13 +18,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import org.example.project.domain.model.VideoServiceType
 import org.example.project.video.player.AndroidWebViewPlayerController
-import org.example.project.video.player.YouTubeIframeTemplate.generateHtml
+import org.example.project.video.player.TwitchIframeTemplate
+import org.example.project.video.player.YouTubeIframeTemplate
 import org.example.project.video.ui.SyncControlsSection
 
 /**
- * Android implementation of VideoPlayerView using WebView with YouTube iframe.
- * Uses WebView with JavaScript enabled to match iOS implementation design.
+ * Android implementation of VideoPlayerView using WebView with iframe embedding.
+ * Supports both YouTube and Twitch services with JavaScript enabled for interactive control.
  */
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
@@ -46,7 +48,11 @@ actual fun VideoPlayerView(
         LaunchedEffect(webView, controller) {
             controller.setWebView(webView)
         }
-        YoutubePlayer(videoId, { webView = it })
+        VideoPlayer(
+            videoId = videoId,
+            serviceType = uiState.serviceType,
+            onChangeWebView = { webView = it },
+        )
 
         Spacer(modifier = Modifier.height(8.dp))
         SyncControlsSection(
@@ -62,10 +68,21 @@ actual fun VideoPlayerView(
 
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
-fun YoutubePlayer(
-    youtubeVideoId: String,
+fun VideoPlayer(
+    videoId: String,
+    serviceType: VideoServiceType,
     onChangeWebView: (WebView) -> Unit = {},
 ) {
+    val (baseUrl, htmlContent) = when (serviceType) {
+        VideoServiceType.YOUTUBE -> {
+            "https://www.youtube.com" to YouTubeIframeTemplate.generateHtml(videoId)
+        }
+        VideoServiceType.TWITCH -> {
+            val parentHost = "android.example.project"
+            "https://$parentHost" to TwitchIframeTemplate.generateHtml(videoId, parentHost)
+        }
+    }
+
     AndroidView(
         factory = { context ->
             WebView(context).apply {
@@ -78,8 +95,8 @@ fun YoutubePlayer(
                 webChromeClient = WebChromeClient()
 
                 loadDataWithBaseURL(
-                    "https://www.youtube.com",
-                    generateHtml(youtubeVideoId),
+                    baseUrl,
+                    htmlContent,
                     "text/html",
                     "utf-8",
                     null,
@@ -92,13 +109,21 @@ fun YoutubePlayer(
             .fillMaxWidth()
             .aspectRatio(16f / 9f),
 
-        // updateブロックは再コンポーズ時に呼ばれる
-        // 例えばvideoIdが変更されたときに動画を更新するなどの処理を記述できる
+        // Update block is called on recomposition
+        // For example, when videoId or serviceType changes, update the video
         update = { wv ->
-            // videoIdが変更されたら新しい動画をロードするロジック
+            val (updatedBaseUrl, updatedHtmlContent) = when (serviceType) {
+                VideoServiceType.YOUTUBE -> {
+                    "https://www.youtube.com" to YouTubeIframeTemplate.generateHtml(videoId)
+                }
+                VideoServiceType.TWITCH -> {
+                    val parentHost = "android.example.project"
+                    "https://$parentHost" to TwitchIframeTemplate.generateHtml(videoId, parentHost)
+                }
+            }
             wv.loadDataWithBaseURL(
-                "https://www.youtube.com",
-                generateHtml(youtubeVideoId),
+                updatedBaseUrl,
+                updatedHtmlContent,
                 "text/html",
                 "utf-8",
                 null,
