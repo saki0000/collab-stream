@@ -176,7 +176,8 @@ class VideoViewModel(
 
         viewModelScope.launch {
             try {
-                val syncResult = videoSyncUseCase.syncVideoToAbsoluteTime(currentVideoId, currentTime)
+                val currentServiceType = _uiState.value.serviceType
+                val syncResult = videoSyncUseCase.syncVideoToAbsoluteTime(currentVideoId, currentTime, currentServiceType)
 
                 syncResult.fold(
                     onSuccess = { syncInfo ->

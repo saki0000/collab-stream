@@ -4,6 +4,8 @@ package org.example.project.domain.usecase
 
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.datetime.plus
+import org.example.project.domain.model.VideoDetails
+import org.example.project.domain.model.VideoServiceType
 import org.example.project.domain.model.VideoSyncInfo
 import org.example.project.domain.repository.VideoSyncRepository
 
@@ -15,18 +17,21 @@ interface VideoSyncUseCase {
     /**
      * Synchronizes video playback position to absolute time.
      *
-     * Retrieves video details from YouTube API and calculates the absolute time
+     * Retrieves video details from the specified video service API and calculates the absolute time
      * corresponding to the current playback position by adding the playback seconds
-     * to the stream's actual start time.
+     * to the stream's start time.
      *
-     * @param videoId YouTube video ID to synchronize
+     * @param videoId Video ID to synchronize
      * @param currentPlaybackSeconds Current playback position in seconds
+     * @param serviceType The video service type (YouTube or Twitch)
      * @return Result containing VideoSyncInfo with calculated absolute time
      */
     suspend fun syncVideoToAbsoluteTime(
         videoId: String,
         currentPlaybackSeconds: Float,
+        serviceType: VideoServiceType,
     ): Result<VideoSyncInfo>
+
 }
 
 /**
@@ -39,6 +44,7 @@ class VideoSyncUseCaseImpl(
     override suspend fun syncVideoToAbsoluteTime(
         videoId: String,
         currentPlaybackSeconds: Float,
+        serviceType: VideoServiceType,
     ): Result<VideoSyncInfo> {
         return try {
             // Validate input parameters
@@ -50,32 +56,12 @@ class VideoSyncUseCaseImpl(
                 return Result.failure(IllegalArgumentException("Playback seconds must be non-negative"))
             }
 
-            // Fetch video details from YouTube API
-            val videoDetailsResult = videoSyncRepository.getVideoDetails(videoId)
+            // Fetch video details from the specified service API
+            val videoDetailsResult = videoSyncRepository.getVideoDetails(videoId, serviceType)
 
             videoDetailsResult.fold(
                 onSuccess = { videoDetails ->
-                    val liveStreamingDetails = videoDetails.liveStreamingDetails
-                        ?: return Result.failure(
-                            IllegalStateException("Video $videoId does not have live streaming details"),
-                        )
-
-                    val streamStartTime = liveStreamingDetails.actualStartTime
-                        ?: return Result.failure(
-                            IllegalStateException("Video $videoId does not have actual start time"),
-                        )
-
-                    // Calculate absolute time by adding playback seconds to stream start time
-                    val absoluteTime = streamStartTime.plus(currentPlaybackSeconds.toDouble().seconds)
-
-                    val syncInfo = VideoSyncInfo(
-                        videoId = videoId,
-                        playbackSeconds = currentPlaybackSeconds,
-                        streamStartTime = streamStartTime,
-                        absoluteTime = absoluteTime,
-                    )
-
-                    Result.success(syncInfo)
+                    calculateSyncInfo(videoDetails, videoId, currentPlaybackSeconds)
                 },
                 onFailure = { error ->
                     Result.failure(error)
@@ -84,5 +70,28 @@ class VideoSyncUseCaseImpl(
         } catch (e: Exception) {
             Result.failure(e)
         }
+    }
+
+    private fun calculateSyncInfo(
+        videoDetails: VideoDetails,
+        videoId: String,
+        currentPlaybackSeconds: Float
+    ): Result<VideoSyncInfo> {
+        val streamStartTime = videoDetails.getStartTimeForSync()
+            ?: return Result.failure(
+                IllegalStateException("Video $videoId does not have start time information for synchronization")
+            )
+
+        // Calculate absolute time by adding playback seconds to stream start time
+        val absoluteTime = streamStartTime.plus(currentPlaybackSeconds.toDouble().seconds)
+
+        val syncInfo = VideoSyncInfo(
+            videoId = videoId,
+            playbackSeconds = currentPlaybackSeconds,
+            streamStartTime = streamStartTime,
+            absoluteTime = absoluteTime,
+        )
+
+        return Result.success(syncInfo)
     }
 }
