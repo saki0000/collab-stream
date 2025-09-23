@@ -1,7 +1,7 @@
 package org.example.project.domain.model
 
-import kotlinx.serialization.Serializable
 import kotlin.time.ExperimentalTime
+import kotlinx.serialization.Serializable
 
 /**
  * Common video details interface for multi-platform video services.

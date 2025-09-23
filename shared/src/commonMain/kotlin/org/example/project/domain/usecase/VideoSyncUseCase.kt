@@ -31,7 +31,6 @@ interface VideoSyncUseCase {
         currentPlaybackSeconds: Float,
         serviceType: VideoServiceType,
     ): Result<VideoSyncInfo>
-
 }
 
 /**
@@ -75,11 +74,11 @@ class VideoSyncUseCaseImpl(
     private fun calculateSyncInfo(
         videoDetails: VideoDetails,
         videoId: String,
-        currentPlaybackSeconds: Float
+        currentPlaybackSeconds: Float,
     ): Result<VideoSyncInfo> {
         val streamStartTime = videoDetails.getStartTimeForSync()
             ?: return Result.failure(
-                IllegalStateException("Video $videoId does not have start time information for synchronization")
+                IllegalStateException("Video $videoId does not have start time information for synchronization"),
             )
 
         // Calculate absolute time by adding playback seconds to stream start time

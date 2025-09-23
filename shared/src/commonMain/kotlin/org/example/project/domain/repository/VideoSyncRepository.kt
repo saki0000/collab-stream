@@ -20,5 +20,4 @@ interface VideoSyncRepository {
      * @return Result containing VideoDetails on success, or error information on failure
      */
     suspend fun getVideoDetails(videoId: String, serviceType: VideoServiceType): Result<VideoDetails>
-
 }

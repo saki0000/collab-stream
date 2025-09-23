@@ -3,10 +3,10 @@
 package org.example.project.data.mapper
 
 import kotlin.test.Test
-import kotlin.time.ExperimentalTime
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
+import kotlin.time.ExperimentalTime
 import org.example.project.data.model.TwitchVideoItem
 
 class TwitchVideoMapperTest {
@@ -30,7 +30,7 @@ class TwitchVideoMapperTest {
             viewCount = 1500,
             language = "en",
             type = "archive",
-            duration = "1h30m45s"
+            duration = "1h30m45s",
         )
 
         // Act
@@ -71,7 +71,7 @@ class TwitchVideoMapperTest {
             viewCount = 500,
             language = "en",
             type = "upload",
-            duration = "45m30s"
+            duration = "45m30s",
         )
 
         // Act
@@ -118,7 +118,7 @@ class TwitchVideoMapperTest {
             "https://twitch.tv/videos/123456789" to "123456789",
             "videos/123456789" to "123456789",
             "123456789" to "123456789",
-            "www.twitch.tv/videos/987654321" to "987654321"
+            "www.twitch.tv/videos/987654321" to "987654321",
         )
 
         testCases.forEach { (input, expected) ->
@@ -137,7 +137,7 @@ class TwitchVideoMapperTest {
             "https://youtube.com/watch?v=123",
             "invalid-url",
             "twitch.tv/channel/username",
-            ""
+            "",
         )
 
         invalidUrls.forEach { invalidUrl ->
@@ -156,7 +156,7 @@ class TwitchVideoMapperTest {
             "123456789" to "123456789",
             "v123456789" to "123456789",
             "987654321" to "987654321",
-            "v987654321" to "987654321"
+            "v987654321" to "987654321",
         )
 
         testCases.forEach { (input, expected) ->

@@ -82,7 +82,7 @@ class VideoSyncUseCaseMultiServiceTest {
         val result = useCase.syncVideoToAbsoluteTime(
             videoId = "test-youtube-video-id",
             currentPlaybackSeconds = playbackSeconds,
-            serviceType = VideoServiceType.YOUTUBE
+            serviceType = VideoServiceType.YOUTUBE,
         )
 
         // Assert
@@ -107,7 +107,7 @@ class VideoSyncUseCaseMultiServiceTest {
         val result = useCase.syncVideoToAbsoluteTime(
             videoId = "test-twitch-video-id",
             currentPlaybackSeconds = playbackSeconds,
-            serviceType = VideoServiceType.TWITCH
+            serviceType = VideoServiceType.TWITCH,
         )
 
         // Assert
@@ -132,7 +132,7 @@ class VideoSyncUseCaseMultiServiceTest {
         val result = useCase.syncVideoToAbsoluteTime(
             videoId = "any-video-id",
             currentPlaybackSeconds = 60f,
-            serviceType = VideoServiceType.YOUTUBE
+            serviceType = VideoServiceType.YOUTUBE,
         )
 
         // Assert
@@ -146,7 +146,7 @@ class VideoSyncUseCaseMultiServiceTest {
         val blankIdResult = useCase.syncVideoToAbsoluteTime(
             videoId = "",
             currentPlaybackSeconds = 60f,
-            serviceType = VideoServiceType.TWITCH
+            serviceType = VideoServiceType.TWITCH,
         )
         assertTrue(blankIdResult.isFailure)
         assertEquals("Video ID cannot be blank", blankIdResult.exceptionOrNull()?.message)
@@ -155,7 +155,7 @@ class VideoSyncUseCaseMultiServiceTest {
         val negativeSecondsResult = useCase.syncVideoToAbsoluteTime(
             videoId = "valid-id",
             currentPlaybackSeconds = -10f,
-            serviceType = VideoServiceType.YOUTUBE
+            serviceType = VideoServiceType.YOUTUBE,
         )
         assertTrue(negativeSecondsResult.isFailure)
         assertEquals("Playback seconds must be non-negative", negativeSecondsResult.exceptionOrNull()?.message)
@@ -180,7 +180,7 @@ class VideoSyncUseCaseMultiServiceTest {
         val result = useCase.syncVideoToAbsoluteTime(
             videoId = "no-start-time-video",
             currentPlaybackSeconds = 60f,
-            serviceType = VideoServiceType.YOUTUBE
+            serviceType = VideoServiceType.YOUTUBE,
         )
 
         // Assert

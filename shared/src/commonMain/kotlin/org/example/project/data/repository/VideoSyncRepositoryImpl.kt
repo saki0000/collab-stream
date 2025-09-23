@@ -52,7 +52,6 @@ class VideoSyncRepositoryImpl(
         }
     }
 
-
     override suspend fun getVideoDetails(videoId: String, serviceType: VideoServiceType): Result<VideoDetails> {
         return when (serviceType) {
             VideoServiceType.YOUTUBE -> getYouTubeVideoDetails(videoId)
@@ -82,12 +81,12 @@ class VideoSyncRepositoryImpl(
 
             val videoItem = apiResponse.items.first()
             val domainModel = YouTubeVideoMapper.toDomainModel(videoItem)
-            
+
             // Convert to unified VideoDetails
             val unifiedModel = YouTubeVideoDetailsImpl(
                 id = domainModel.id,
                 snippet = domainModel.snippet,
-                liveStreamingDetails = domainModel.liveStreamingDetails
+                liveStreamingDetails = domainModel.liveStreamingDetails,
             )
 
             Result.success(unifiedModel)
@@ -100,7 +99,6 @@ class VideoSyncRepositoryImpl(
 
     private suspend fun getTwitchVideoDetails(videoId: String): Result<VideoDetails> {
         return try {
-
             if (BuildKonfig.TWITCH_CLIENT_ID.isBlank() || BuildKonfig.TWITCH_API_KEY.isBlank()) {
                 return Result.failure(IllegalStateException("Twitch API credentials are not configured"))
             }
@@ -114,7 +112,7 @@ class VideoSyncRepositoryImpl(
             // Check HTTP status first
             if (response.status.value !in 200..299) {
                 return Result.failure(
-                    RuntimeException("Twitch API returned HTTP ${response.status.value}: ${response.status.description}")
+                    RuntimeException("Twitch API returned HTTP ${response.status.value}: ${response.status.description}"),
                 )
             }
 
@@ -123,7 +121,7 @@ class VideoSyncRepositoryImpl(
             // Check for API error response
             if (!apiResponse.error.isNullOrBlank()) {
                 return Result.failure(
-                    RuntimeException("Twitch API error: ${apiResponse.error} - ${apiResponse.message ?: "Unknown error"}")
+                    RuntimeException("Twitch API error: ${apiResponse.error} - ${apiResponse.message ?: "Unknown error"}"),
                 )
             }
 
@@ -135,12 +133,12 @@ class VideoSyncRepositoryImpl(
 
             val videoItem = apiResponse.data.first()
             val domainModel = TwitchVideoMapper.toDomainModel(videoItem)
-            
+
             // Convert to unified VideoDetails
             val unifiedModel = TwitchVideoDetailsImpl(
                 id = domainModel.id,
                 snippet = domainModel.snippet,
-                streamInfo = domainModel.streamInfo
+                streamInfo = domainModel.streamInfo,
             )
 
             Result.success(unifiedModel)
