@@ -116,6 +116,10 @@ buildkonfig {
     packageName = "org.exampl.project"
     defaultConfigs {
         val apiKey = System.getenv("API_KEY") ?: localProperties.getProperty("API_KEY")
+        val twitchApiKey = System.getenv("TWITCH_API_KEY") ?: localProperties.getProperty("TWITCH_API_KEY")
+        val twitchClientId = System.getenv("TWITCH_CLIENT_ID") ?: localProperties.getProperty("TWITCH_CLIENT_ID")
         buildConfigField(FieldSpec.Type.STRING, "API_KEY", "$apiKey")
+        buildConfigField(FieldSpec.Type.STRING, "TWITCH_API_KEY", "$twitchApiKey")
+        buildConfigField(FieldSpec.Type.STRING, "TWITCH_CLIENT_ID", "$twitchClientId")
     }
 }

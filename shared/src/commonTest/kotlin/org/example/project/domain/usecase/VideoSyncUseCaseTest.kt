@@ -8,8 +8,10 @@ import kotlin.test.assertIs
 import kotlin.test.assertTrue
 import kotlinx.datetime.Instant
 import org.example.project.domain.model.LiveStreamingDetails
+import org.example.project.domain.model.VideoDetails
+import org.example.project.domain.model.VideoServiceType
 import org.example.project.domain.model.VideoSnippet
-import org.example.project.domain.model.YouTubeVideoDetails
+import org.example.project.domain.model.YouTubeVideoDetailsImpl
 import org.example.project.domain.repository.VideoSyncRepository
 import org.example.project.runTest
 
@@ -19,9 +21,9 @@ import org.example.project.runTest
 class MockVideoSyncRepository : VideoSyncRepository {
     var shouldReturnError: Boolean = false
     var errorToReturn: Throwable = RuntimeException("Mock error")
-    var videoDetailsToReturn: YouTubeVideoDetails? = null
+    var videoDetailsToReturn: VideoDetails? = null
 
-    override suspend fun getVideoDetails(videoId: String): Result<YouTubeVideoDetails> {
+    override suspend fun getVideoDetails(videoId: String, serviceType: VideoServiceType): Result<VideoDetails> {
         return if (shouldReturnError) {
             Result.failure(errorToReturn)
         } else {
@@ -37,7 +39,7 @@ class VideoSyncUseCaseTest {
     private val useCase = VideoSyncUseCaseImpl(mockRepository)
 
     private val testStreamStartTime = Instant.parse("2023-12-25T10:00:00Z")
-    private val testVideoDetails = YouTubeVideoDetails(
+    private val testVideoDetails = YouTubeVideoDetailsImpl(
         id = "test-video-id",
         snippet = VideoSnippet(
             title = "Test Video",
@@ -49,7 +51,6 @@ class VideoSyncUseCaseTest {
             actualStartTime = testStreamStartTime,
             scheduledStartTime = testStreamStartTime,
             actualEndTime = null,
-            concurrentViewers = 1000L,
         ),
     )
 
@@ -60,7 +61,7 @@ class VideoSyncUseCaseTest {
         val playbackSeconds = 300.0f // 5 minutes
 
         // Act
-        val result = useCase.syncVideoToAbsoluteTime("test-video-id", playbackSeconds)
+        val result = useCase.syncVideoToAbsoluteTime("test-video-id", playbackSeconds, VideoServiceType.YOUTUBE)
 
         // Assert
         assertTrue(result.isSuccess)
@@ -82,7 +83,7 @@ class VideoSyncUseCaseTest {
         val playbackSeconds = 0.0f
 
         // Act
-        val result = useCase.syncVideoToAbsoluteTime("test-video-id", playbackSeconds)
+        val result = useCase.syncVideoToAbsoluteTime("test-video-id", playbackSeconds, VideoServiceType.YOUTUBE)
 
         // Assert
         assertTrue(result.isSuccess)
@@ -93,7 +94,7 @@ class VideoSyncUseCaseTest {
     @Test
     fun `syncVideoToAbsoluteTime should fail for blank video ID`() = runTest {
         // Act
-        val result = useCase.syncVideoToAbsoluteTime("", 100.0f)
+        val result = useCase.syncVideoToAbsoluteTime("", 100.0f, VideoServiceType.YOUTUBE)
 
         // Assert
         assertTrue(result.isFailure)
@@ -103,7 +104,7 @@ class VideoSyncUseCaseTest {
     @Test
     fun `syncVideoToAbsoluteTime should fail for negative playback seconds`() = runTest {
         // Act
-        val result = useCase.syncVideoToAbsoluteTime("test-video-id", -10.0f)
+        val result = useCase.syncVideoToAbsoluteTime("test-video-id", -10.0f, VideoServiceType.YOUTUBE)
 
         // Assert
         assertTrue(result.isFailure)
@@ -117,7 +118,7 @@ class VideoSyncUseCaseTest {
         mockRepository.videoDetailsToReturn = videoWithoutLiveDetails
 
         // Act
-        val result = useCase.syncVideoToAbsoluteTime("test-video-id", 100.0f)
+        val result = useCase.syncVideoToAbsoluteTime("test-video-id", 100.0f, VideoServiceType.YOUTUBE)
 
         // Assert
         assertTrue(result.isFailure)
@@ -135,7 +136,7 @@ class VideoSyncUseCaseTest {
         mockRepository.videoDetailsToReturn = videoWithoutStartTime
 
         // Act
-        val result = useCase.syncVideoToAbsoluteTime("test-video-id", 100.0f)
+        val result = useCase.syncVideoToAbsoluteTime("test-video-id", 100.0f, VideoServiceType.YOUTUBE)
 
         // Assert
         assertTrue(result.isFailure)
@@ -149,7 +150,7 @@ class VideoSyncUseCaseTest {
         mockRepository.errorToReturn = RuntimeException("API Error")
 
         // Act
-        val result = useCase.syncVideoToAbsoluteTime("test-video-id", 100.0f)
+        val result = useCase.syncVideoToAbsoluteTime("test-video-id", 100.0f, VideoServiceType.YOUTUBE)
 
         // Assert
         assertTrue(result.isFailure)
