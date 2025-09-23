@@ -10,6 +10,7 @@ androidx-core = "1.17.0"
 androidx-espresso = "3.7.0"
 androidx-lifecycle = "2.9.3"
 androidx-testExt = "1.3.0"
+coilNetworkKtor3 = "3.3.0"
 composeMultiplatform = "1.8.2"
 core = "12.1.2"
 junit = "4.13.2"
@@ -26,6 +27,8 @@ konfig = "0.17.1"
 
 [libraries]
 androidx-webkit = { module = "androidx.webkit:webkit", version.ref = "webkit" }
+coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coilNetworkKtor3" }
+coil-network-ktor3 = { module = "io.coil-kt.coil3:coil-network-ktor3", version.ref = "coilNetworkKtor3" }
 core = { module = "com.pierfrancescosoffritti.androidyoutubeplayer:core", version.ref = "core" }
 customUi = { module = "com.pierfrancescosoffritti.androidyoutubeplayer:custom-ui", version.ref = "core" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }

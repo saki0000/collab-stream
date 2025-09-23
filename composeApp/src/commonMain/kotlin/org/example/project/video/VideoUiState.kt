@@ -3,6 +3,7 @@
 package org.example.project.video
 
 import kotlin.time.Instant
+import org.example.project.domain.model.SearchResult
 import org.example.project.domain.model.VideoServiceType
 import org.example.project.video.player.PlayerState
 
@@ -27,6 +28,13 @@ data class VideoUiState(
     // User seek tracking
     val lastUserSeekPosition: Float? = null,
     val lastUserSeekTime: String? = null,
+    // Search-related state
+    val searchQuery: String = "",
+    val searchResults: List<SearchResult> = emptyList(),
+    val isSearching: Boolean = false,
+    val searchError: String? = null,
+    val isSearchBottomSheetVisible: Boolean = false,
+    val searchNextPageToken: String? = null,
 )
 
 /**

@@ -4,6 +4,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -29,6 +33,16 @@ fun VideoScreen(
         modifier = modifier,
         snackbarHost = {
             SnackbarHost(hostState = snackbarHostState)
+        },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = { onIntent(VideoIntent.ToggleSearchBottomSheet) },
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Search,
+                    contentDescription = "Search Videos",
+                )
+            }
         },
     ) { paddingValues ->
         Box(
@@ -59,5 +73,20 @@ fun VideoScreen(
                 )
             }
         }
+
+        // Search Bottom Sheet
+        VideoSearchBottomSheet(
+            isVisible = uiState.isSearchBottomSheetVisible,
+            searchQuery = uiState.searchQuery,
+            searchResults = uiState.searchResults,
+            isSearching = uiState.isSearching,
+            searchError = uiState.searchError,
+            hasMoreResults = uiState.searchNextPageToken != null,
+            onDismiss = { onIntent(VideoIntent.ToggleSearchBottomSheet) },
+            onSearchQuery = { query -> onIntent(VideoIntent.SearchVideos(query)) },
+            onSelectResult = { result -> onIntent(VideoIntent.SelectSearchResult(result)) },
+            onLoadMore = { onIntent(VideoIntent.LoadMoreSearchResults) },
+            onClearError = { onIntent(VideoIntent.ClearSearchError) },
+        )
     }
 }

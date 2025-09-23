@@ -4,7 +4,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import kotlin.time.ExperimentalTime
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 import org.example.project.domain.model.LiveStreamingDetails
 import org.example.project.domain.model.TwitchStreamInfo
 import org.example.project.domain.model.TwitchVideoDetailsImpl

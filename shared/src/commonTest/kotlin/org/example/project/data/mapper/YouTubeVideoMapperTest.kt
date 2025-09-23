@@ -6,7 +6,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 import org.example.project.data.model.YouTubeLiveStreamingDetailsDto
 import org.example.project.data.model.YouTubeSnippetDto
 import org.example.project.data.model.YouTubeVideoItem
