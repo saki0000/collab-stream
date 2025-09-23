@@ -30,7 +30,6 @@ class YouTubeVideoMapperTest {
                 actualStartTime = "2023-12-25T10:00:00Z",
                 scheduledStartTime = "2023-12-25T09:55:00Z",
                 actualEndTime = "2023-12-25T11:30:00Z",
-                concurrentViewers = "1234",
             ),
         )
 
@@ -49,7 +48,7 @@ class YouTubeVideoMapperTest {
         assertEquals(Instant.parse("2023-12-25T10:00:00Z"), liveDetails.actualStartTime)
         assertEquals(Instant.parse("2023-12-25T09:55:00Z"), liveDetails.scheduledStartTime)
         assertEquals(Instant.parse("2023-12-25T11:30:00Z"), liveDetails.actualEndTime)
-        assertEquals(1234L, liveDetails.concurrentViewers)
+        // concurrentViewers field was removed from the model
     }
 
     @Test
@@ -117,7 +116,6 @@ class YouTubeVideoMapperTest {
                 actualStartTime = "2023-12-25T10:00:00Z",
                 scheduledStartTime = null,
                 actualEndTime = null, // Ongoing stream
-                concurrentViewers = null, // Hidden viewer count
             ),
         )
 
@@ -130,7 +128,7 @@ class YouTubeVideoMapperTest {
         assertEquals(Instant.parse("2023-12-25T10:00:00Z"), liveDetails.actualStartTime)
         assertNull(liveDetails.scheduledStartTime)
         assertNull(liveDetails.actualEndTime)
-        assertNull(liveDetails.concurrentViewers)
+        // concurrentViewers field was removed from the model
     }
 
     @Test
@@ -150,7 +148,6 @@ class YouTubeVideoMapperTest {
                 actualStartTime = "invalid-timestamp",
                 scheduledStartTime = "2023-12-25T10:00:00Z",
                 actualEndTime = null,
-                concurrentViewers = "not-a-number",
             ),
         )
 
@@ -162,6 +159,6 @@ class YouTubeVideoMapperTest {
         val liveDetails = result.liveStreamingDetails
         assertNull(liveDetails.actualStartTime) // Invalid timestamp should be null
         assertEquals(Instant.parse("2023-12-25T10:00:00Z"), liveDetails.scheduledStartTime)
-        assertNull(liveDetails.concurrentViewers) // Invalid number should be null
+        // concurrentViewers field was removed from the model
     }
 }

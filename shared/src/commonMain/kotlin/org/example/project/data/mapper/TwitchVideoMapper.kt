@@ -50,26 +50,5 @@ object TwitchVideoMapper {
         }
     }
 
-    /**
-     * Extracts video ID from Twitch video URL.
-     * Supports various Twitch URL formats:
-     * - https://www.twitch.tv/videos/123456789
-     * - https://twitch.tv/videos/123456789
-     * - videos/123456789
-     * - 123456789
-     */
-    fun extractVideoId(url: String): String? {
-        val videoIdRegex = """(?:twitch\.tv/videos/|videos/)?(\d+)""".toRegex()
-        return videoIdRegex.find(url)?.groupValues?.get(1)
-    }
 
-    /**
-     * Formats video ID for Twitch API requests.
-     * Ensures the video ID is in the correct format for API calls.
-     */
-    fun formatVideoId(videoId: String): String {
-        // Remove 'v' prefix if present and ensure it's numeric
-        val cleanId = videoId.removePrefix("v")
-        return if (cleanId.matches(Regex("\\d+"))) cleanId else videoId
-    }
 }
