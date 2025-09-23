@@ -109,6 +109,4 @@ class TwitchVideoMapperTest {
         // Assert
         assertNull(result)
     }
-
-
 }
