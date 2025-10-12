@@ -51,6 +51,8 @@ import coil3.compose.AsyncImage
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import org.example.project.domain.model.SearchResult
+import kotlin.time.ExperimentalTime
+import kotlin.time.Instant
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -284,6 +286,7 @@ private fun VideoSearchContent(
     }
 }
 
+@OptIn(ExperimentalTime::class)
 @Composable
 private fun SearchResultItem(
     result: SearchResult,
@@ -366,5 +369,5 @@ private fun SearchResultItem(
 @Composable
 private fun formatPublishedDate(publishedAt: Instant): String {
     val localDateTime = publishedAt.toLocalDateTime(TimeZone.currentSystemDefault())
-    return "${localDateTime.month} ${localDateTime.dayOfMonth}, ${localDateTime.year}"
+    return "${localDateTime.month} ${localDateTime.day}, ${localDateTime.year}"
 }

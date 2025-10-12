@@ -61,6 +61,13 @@ fun VideoContainer(
                         duration = SnackbarDuration.Long,
                     )
                 }
+
+                is VideoSideEffect.ShowSearchError -> {
+                    //TODO()
+                     }
+                is VideoSideEffect.ShowSearchSuccess -> {
+                    //TODO()
+                     }
             }
         }
     }
