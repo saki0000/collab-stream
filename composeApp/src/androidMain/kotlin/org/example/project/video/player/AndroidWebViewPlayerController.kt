@@ -4,6 +4,7 @@ import android.webkit.JavascriptInterface
 import android.webkit.WebView
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import org.example.project.feature.video_playback.player.WebViewPlayerController
 
 /**
  * Android implementation of WebViewPlayerController using Android WebView.

@@ -21,7 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import org.example.project.video.VideoUiState
+import org.example.project.feature.video_playback.VideoUiState
 
 /**
  * Component Composable (Stateless, reusable) - Sync controls and results
