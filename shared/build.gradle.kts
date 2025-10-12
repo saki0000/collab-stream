@@ -2,9 +2,7 @@ import com.codingfeline.buildkonfig.compiler.FieldSpec
 import java.util.Properties
 import org.gradle.declarative.dsl.schema.FqName.Empty.packageName
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
-import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
@@ -28,7 +26,6 @@ kotlin {
     iosSimulatorArm64()
 
     jvm()
-
 
     sourceSets {
         commonMain.dependencies {

@@ -2,11 +2,11 @@
 
 package org.example.project.feature.video_playback
 
+import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 import org.example.project.domain.model.SearchResult
 import org.example.project.domain.model.VideoServiceType
 import org.example.project.feature.video_playback.player.PlayerState
-import kotlin.time.ExperimentalTime
 
 /**
  * Data class representing the UI state for video display components.

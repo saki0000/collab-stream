@@ -21,9 +21,9 @@ import androidx.compose.ui.viewinterop.AndroidView
 import org.example.project.domain.model.VideoServiceType
 import org.example.project.feature.video_playback.VideoIntent
 import org.example.project.feature.video_playback.VideoUiState
-import org.example.project.video.player.AndroidWebViewPlayerController
 import org.example.project.feature.video_playback.player.TwitchIframeTemplate
 import org.example.project.feature.video_playback.player.YouTubeIframeTemplate
+import org.example.project.video.player.AndroidWebViewPlayerController
 import org.example.project.video.ui.SyncControlsSection
 
 /**
