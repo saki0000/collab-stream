@@ -13,7 +13,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
+import org.example.project.domain.model.SearchResult
 import org.example.project.domain.model.VideoServiceType
+import org.example.project.domain.usecase.VideoSearchUseCase
 import org.example.project.domain.usecase.VideoSyncUseCase
 
 /**
@@ -22,6 +24,7 @@ import org.example.project.domain.usecase.VideoSyncUseCase
  */
 class VideoViewModel(
     private val videoSyncUseCase: VideoSyncUseCase,
+    private val videoSearchUseCase: VideoSearchUseCase,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(VideoUiState())
@@ -45,6 +48,13 @@ class VideoViewModel(
             is VideoIntent.SyncToAbsoluteTime -> syncToAbsoluteTime(intent.currentTime)
             is VideoIntent.UserSeekToPosition -> handleUserSeek(intent.position)
             VideoIntent.ClearSyncError -> clearSyncError()
+            // Search-related intents
+            is VideoIntent.SearchVideos -> searchVideos(intent.query)
+            VideoIntent.LoadMoreSearchResults -> loadMoreSearchResults()
+            is VideoIntent.SelectSearchResult -> selectSearchResult(intent.searchResult)
+            VideoIntent.ClearSearchError -> clearSearchError()
+            VideoIntent.ToggleSearchBottomSheet -> toggleSearchBottomSheet()
+            VideoIntent.ClearSearchResults -> clearSearchResults()
         }
     }
 
@@ -258,5 +268,129 @@ class VideoViewModel(
             2,
             '0',
         )}:${localDateTime.second.toString().padStart(2, '0')}"
+    }
+
+    // Search-related methods
+
+    private fun searchVideos(query: String) {
+        if (query.isBlank()) {
+            handleSearchError("Search query cannot be empty")
+            return
+        }
+
+        _uiState.value = _uiState.value.copy(
+            searchQuery = query,
+            isSearching = true,
+            searchError = null,
+        )
+
+        viewModelScope.launch {
+            try {
+                val result = videoSearchUseCase.searchVideos(query, preferArchived = true)
+
+                result.fold(
+                    onSuccess = { searchResponse ->
+                        _uiState.value = _uiState.value.copy(
+                            isSearching = false,
+                            searchResults = searchResponse.results,
+                            searchNextPageToken = searchResponse.nextPageToken,
+                            searchError = null,
+                        )
+
+                        _sideEffect.emit(
+                            VideoSideEffect.ShowSearchSuccess("Found ${searchResponse.results.size} videos"),
+                        )
+                    },
+                    onFailure = { error ->
+                        handleSearchError("Search failed: ${error.message}")
+                    },
+                )
+            } catch (e: Exception) {
+                handleSearchError("Unexpected search error: ${e.message}")
+            }
+        }
+    }
+
+    private fun loadMoreSearchResults() {
+        val currentState = _uiState.value
+        val nextPageToken = currentState.searchNextPageToken
+
+        if (nextPageToken.isNullOrBlank() || currentState.searchQuery.isBlank()) {
+            return
+        }
+
+        _uiState.value = currentState.copy(isSearching = true)
+
+        viewModelScope.launch {
+            try {
+                val result = videoSearchUseCase.loadMoreResults(
+                    query = currentState.searchQuery,
+                    nextPageToken = nextPageToken,
+                    preferArchived = true,
+                )
+
+                result.fold(
+                    onSuccess = { searchResponse ->
+                        _uiState.value = _uiState.value.copy(
+                            isSearching = false,
+                            searchResults = currentState.searchResults + searchResponse.results,
+                            searchNextPageToken = searchResponse.nextPageToken,
+                            searchError = null,
+                        )
+                    },
+                    onFailure = { error ->
+                        handleSearchError("Failed to load more results: ${error.message}")
+                    },
+                )
+            } catch (e: Exception) {
+                handleSearchError("Unexpected error loading more results: ${e.message}")
+            }
+        }
+    }
+
+    private fun selectSearchResult(searchResult: SearchResult) {
+        // Load the selected video
+        loadVideoWithService(searchResult.videoId, VideoServiceType.YOUTUBE)
+
+        // Hide the search bottom sheet
+        _uiState.value = _uiState.value.copy(
+            isSearchBottomSheetVisible = false,
+        )
+
+        viewModelScope.launch {
+            _sideEffect.emit(
+                VideoSideEffect.ShowSuccess("Loading ${searchResult.title}"),
+            )
+        }
+    }
+
+    private fun clearSearchError() {
+        _uiState.value = _uiState.value.copy(searchError = null)
+    }
+
+    private fun toggleSearchBottomSheet() {
+        _uiState.value = _uiState.value.copy(
+            isSearchBottomSheetVisible = !_uiState.value.isSearchBottomSheetVisible,
+        )
+    }
+
+    private fun clearSearchResults() {
+        _uiState.value = _uiState.value.copy(
+            searchQuery = "",
+            searchResults = emptyList(),
+            searchError = null,
+            searchNextPageToken = null,
+        )
+    }
+
+    private fun handleSearchError(errorMessage: String) {
+        _uiState.value = _uiState.value.copy(
+            isSearching = false,
+            searchError = errorMessage,
+        )
+
+        viewModelScope.launch {
+            _sideEffect.emit(VideoSideEffect.ShowSearchError(errorMessage))
+        }
     }
 }

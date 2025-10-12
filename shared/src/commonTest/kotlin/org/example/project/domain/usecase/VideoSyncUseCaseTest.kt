@@ -6,7 +6,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 import org.example.project.domain.model.LiveStreamingDetails
 import org.example.project.domain.model.VideoDetails
 import org.example.project.domain.model.VideoServiceType

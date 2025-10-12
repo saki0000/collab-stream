@@ -22,6 +22,7 @@ val appModule = module {
     viewModel {
         VideoViewModel(
             videoSyncUseCase = get(),
+            videoSearchUseCase = get(),
         )
     }
 }
