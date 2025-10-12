@@ -1,7 +1,7 @@
 package org.example.project.video.player
 
 import kotlinx.cinterop.ExperimentalForeignApi
-import org.example.project.video.player.WebViewPlayerController
+import org.example.project.feature.video_playback.player.WebViewPlayerController
 import platform.Foundation.NSNumber
 import platform.WebKit.WKWebView
 
