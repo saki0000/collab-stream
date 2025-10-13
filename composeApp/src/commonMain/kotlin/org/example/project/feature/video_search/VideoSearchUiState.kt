@@ -1,8 +1,10 @@
 package org.example.project.feature.video_search
 
 import kotlin.time.ExperimentalTime
+import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.minus
 import kotlinx.datetime.toLocalDateTime
 import org.example.project.domain.model.SearchResult
 import org.example.project.domain.model.VideoServiceType
@@ -21,9 +23,10 @@ constructor(
     val searchError: String? = null,
     val searchNextPageToken: String? = null,
     val selectedDate: LocalDate = kotlin.time.Clock.System.now()
-        .toLocalDateTime(TimeZone.currentSystemDefault()).date,
+        .toLocalDateTime(TimeZone.currentSystemDefault()).date
+        .minus(1, DateTimeUnit.DAY),
     val searchMode: SearchMode = SearchMode.KEYWORD,
-    val selectedServices: Set<VideoServiceType> = setOf(VideoServiceType.YOUTUBE),
+    val selectedService: VideoServiceType = VideoServiceType.YOUTUBE,
 )
 
 /**

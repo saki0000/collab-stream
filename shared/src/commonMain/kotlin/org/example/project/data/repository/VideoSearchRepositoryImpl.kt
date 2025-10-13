@@ -4,7 +4,9 @@ import kotlin.time.ExperimentalTime
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import org.example.project.data.datasource.TwitchSearchDataSource
 import org.example.project.data.datasource.YouTubeSearchDataSource
+import org.example.project.data.mapper.TwitchSearchMapper
 import org.example.project.data.mapper.YouTubeSearchMapper
 import org.example.project.domain.model.SearchOrder
 import org.example.project.domain.model.SearchQuery
@@ -15,6 +17,7 @@ import org.example.project.domain.repository.VideoSearchRepository
 
 class VideoSearchRepositoryImpl(
     private val youTubeSearchDataSource: YouTubeSearchDataSource,
+    private val twitchSearchDataSource: TwitchSearchDataSource,
 ) : VideoSearchRepository {
 
     @OptIn(ExperimentalTime::class)
@@ -75,14 +78,12 @@ class VideoSearchRepositoryImpl(
                     }
             }
             VideoServiceType.TWITCH -> {
-                // TODO: Implement Twitch search when TwitchSearchDataSource is ready
-                Result.success(
-                    SearchResponse(
-                        results = emptyList(),
-                        totalResults = 0,
-                        servicePageTokens = mapOf(VideoServiceType.TWITCH to null),
-                    ),
-                )
+                twitchSearchDataSource.searchVideos(searchQuery)
+                    .map { apiResponse ->
+                        TwitchSearchMapper.mapToSearchResponse(apiResponse).copy(
+                            servicePageTokens = mapOf(VideoServiceType.TWITCH to apiResponse.pagination?.cursor),
+                        )
+                    }
             }
         }
     }

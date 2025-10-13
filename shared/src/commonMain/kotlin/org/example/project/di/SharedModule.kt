@@ -1,5 +1,7 @@
 package org.example.project.di
 
+import org.example.project.data.datasource.TwitchSearchDataSource
+import org.example.project.data.datasource.TwitchSearchDataSourceImpl
 import org.example.project.data.datasource.YouTubeSearchDataSource
 import org.example.project.data.datasource.YouTubeSearchDataSourceImpl
 import org.example.project.data.repository.VideoSearchRepositoryImpl
@@ -24,12 +26,16 @@ val sharedModule = module {
     }
 
     single<VideoSearchRepository> {
-        VideoSearchRepositoryImpl(get())
+        VideoSearchRepositoryImpl(get(), get())
     }
 
     // Data source bindings
     single<YouTubeSearchDataSource> {
         YouTubeSearchDataSourceImpl(get())
+    }
+
+    single<TwitchSearchDataSource> {
+        TwitchSearchDataSourceImpl(get())
     }
 
     // Use case bindings
