@@ -24,7 +24,6 @@ import org.example.project.feature.video_playback.VideoUiState
 import org.example.project.feature.video_playback.player.TwitchIframeTemplate
 import org.example.project.feature.video_playback.player.YouTubeIframeTemplate
 import org.example.project.video.player.AndroidWebViewPlayerController
-import org.example.project.video.ui.SyncControlsSection
 
 /**
  * Android implementation of VideoPlayerView using WebView with iframe embedding.
@@ -38,6 +37,8 @@ actual fun VideoPlayerView(
     onIntent: (VideoIntent) -> Unit,
     modifier: Modifier,
     onError: (String) -> Unit,
+    isMainPlayer: Boolean,
+    onControllerReady: (Any?) -> Unit,
 ) {
     if (videoId.isBlank()) {
         onError("Video ID cannot be empty")
@@ -45,27 +46,22 @@ actual fun VideoPlayerView(
     }
     val controller = remember { AndroidWebViewPlayerController() }
     var webView by remember { mutableStateOf<WebView?>(null) }
-    Column(modifier = Modifier) {
-        // Set the WebView instance in the controller when available
-        LaunchedEffect(webView, controller) {
-            controller.setWebView(webView)
-        }
-        VideoPlayer(
-            videoId = videoId,
-            serviceType = uiState.serviceType,
-            onChangeWebView = { webView = it },
-        )
 
-        Spacer(modifier = Modifier.height(8.dp))
-        SyncControlsSection(
-            uiState = uiState,
-            onSync = {
-                controller.requestCurrentTime { currentTime ->
-                    onIntent(VideoIntent.SyncToAbsoluteTime(currentTime))
-                }
-            },
-        )
+    // Set the WebView instance in the controller when available
+    LaunchedEffect(webView, controller) {
+        controller.setWebView(webView)
     }
+
+    // Notify parent when controller is ready
+    LaunchedEffect(controller) {
+        onControllerReady(controller)
+    }
+
+    VideoPlayer(
+        videoId = videoId,
+        serviceType = uiState.serviceType,
+        onChangeWebView = { webView = it },
+    )
 }
 
 @SuppressLint("SetJavaScriptEnabled")

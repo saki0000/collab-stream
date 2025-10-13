@@ -8,12 +8,27 @@ import org.example.project.domain.model.VideoServiceType
 import org.example.project.feature.video_playback.player.PlayerState
 
 /**
+ * Data class representing a single video player's information.
+ * This structure allows for easy extension to support multiple videos.
+ */
+data class VideoPlayerInfo(
+    val videoId: String = "",
+    val serviceType: VideoServiceType = VideoServiceType.YOUTUBE,
+    val playerState: PlayerState = PlayerState.NotInitialized,
+    val currentTime: Float = 0f,
+    val isPlayerReady: Boolean = false,
+)
+
+/**
  * Data class representing the UI state for video playback components.
  * Contains all necessary state information for video player rendering and sync functionality.
  *
  * Note: Search state has been moved to VideoSearchUiState for better separation of concerns.
  */
 data class VideoUiState(
+    // Multi-video support
+    val mainVideo: VideoPlayerInfo = VideoPlayerInfo(),
+    val subVideo: VideoPlayerInfo = VideoPlayerInfo(),
     val videoId: String = "",
     val serviceType: VideoServiceType = VideoServiceType.YOUTUBE,
     val syncDateTime: String = "",

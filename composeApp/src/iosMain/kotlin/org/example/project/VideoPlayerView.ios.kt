@@ -23,7 +23,6 @@ import org.example.project.feature.video_playback.VideoUiState
 import org.example.project.feature.video_playback.player.IOSWebViewPlayerController
 import org.example.project.feature.video_playback.player.TwitchIframeTemplate
 import org.example.project.feature.video_playback.player.YouTubeIframeTemplate
-import org.example.project.video.ui.SyncControlsSection
 import platform.CoreGraphics.CGRectZero
 import platform.Foundation.NSError
 import platform.Foundation.NSNumber
@@ -105,6 +104,8 @@ actual fun VideoPlayerView(
     onIntent: (VideoIntent) -> Unit,
     modifier: Modifier,
     onError: (String) -> Unit,
+    isMainPlayer: Boolean,
+    onControllerReady: (Any?) -> Unit,
 ) {
     if (videoId.isBlank()) {
         onError("Video ID cannot be empty")
@@ -112,6 +113,11 @@ actual fun VideoPlayerView(
     }
 
     val controller = remember { IOSWebViewPlayerController() }
+
+    // Notify parent when controller is ready
+    remember(controller) {
+        onControllerReady(controller)
+    }
 
     Column(modifier = modifier) {
         var webView by remember { mutableStateOf<WKWebView?>(null) }
@@ -188,16 +194,6 @@ actual fun VideoPlayerView(
             },
             onRelease = {},
             properties = UIKitInteropProperties(isInteractive = true, isNativeAccessibilityEnabled = true),
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-        SyncControlsSection(
-            uiState = uiState,
-            onSync = {
-                controller.requestCurrentTime { currentTime ->
-                    onIntent(VideoIntent.SyncToAbsoluteTime(currentTime))
-                }
-            },
         )
     }
 }

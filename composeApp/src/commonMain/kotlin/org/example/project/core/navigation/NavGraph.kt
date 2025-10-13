@@ -47,15 +47,28 @@ fun AppNavGraph(
             // Retrieve video selection parameters from navigation arguments
             val route = backStackEntry.toRoute<HomeRoute>()
 
-            // Reconstruct VideoSelectionResult from primitive types if both are present
-            val videoSelectionResult = if (route.selectedVideoId != null && route.selectedServiceType != null) {
+            // Reconstruct main video selection result
+            val mainVideoResult = if (route.mainVideoId != null && route.mainServiceType != null) {
                 try {
                     VideoSelectionResult(
-                        videoId = route.selectedVideoId,
-                        serviceType = VideoServiceType.valueOf(route.selectedServiceType),
+                        videoId = route.mainVideoId,
+                        serviceType = VideoServiceType.valueOf(route.mainServiceType),
                     )
                 } catch (e: IllegalArgumentException) {
-                    // Invalid service type, ignore
+                    null
+                }
+            } else {
+                null
+            }
+
+            // Reconstruct sub video selection result
+            val subVideoResult = if (route.subVideoId != null && route.subServiceType != null) {
+                try {
+                    VideoSelectionResult(
+                        videoId = route.subVideoId,
+                        serviceType = VideoServiceType.valueOf(route.subServiceType),
+                    )
+                } catch (e: IllegalArgumentException) {
                     null
                 }
             } else {
@@ -63,26 +76,51 @@ fun AppNavGraph(
             }
 
             VideoContainer(
-                onNavigateToSearch = { initialQuery ->
-                    navController.navigate(VideoSearchRoute(initialQuery = initialQuery))
+                onNavigateToSearch = { initialQuery, selectionTarget ->
+                    navController.navigate(
+                        VideoSearchRoute(
+                            initialQuery = initialQuery,
+                            selectionTarget = selectionTarget,
+                        ),
+                    )
                 },
-                videoSelectionResult = videoSelectionResult,
+                mainVideoResult = mainVideoResult,
+                subVideoResult = subVideoResult,
                 modifier = Modifier,
             )
         }
 
         // Video search bottom sheet
-        bottomSheet<VideoSearchRoute> {
+        bottomSheet<VideoSearchRoute> { backStackEntry ->
+            val route = backStackEntry.toRoute<VideoSearchRoute>()
+            val selectionTarget = route.selectionTarget
+
             VideoSearchContainer(
                 onDismiss = { navController.popBackStack() },
                 onVideoSelected = { result ->
-                    // Navigate back to HomeRoute with individual primitive parameters
-                    navController.navigate(
+                    // Get previous route parameters to preserve existing videos
+                    // previousBackStackEntry refers to the HomeRoute that opened this search
+                    val previousRoute = navController.previousBackStackEntry
+                        ?.toRoute<HomeRoute>() ?: HomeRoute()
+
+                    // Navigate back with updated parameters based on selection target
+                    val updatedRoute = if (selectionTarget == "SUB") {
                         HomeRoute(
-                            selectedVideoId = result.videoId,
-                            selectedServiceType = result.serviceType.name,
-                        ),
-                    ) {
+                            mainVideoId = previousRoute.mainVideoId,
+                            mainServiceType = previousRoute.mainServiceType,
+                            subVideoId = result.videoId,
+                            subServiceType = result.serviceType.name,
+                        )
+                    } else {
+                        HomeRoute(
+                            mainVideoId = result.videoId,
+                            mainServiceType = result.serviceType.name,
+                            subVideoId = previousRoute.subVideoId,
+                            subServiceType = previousRoute.subServiceType,
+                        )
+                    }
+
+                    navController.navigate(updatedRoute) {
                         // Pop up to the original HomeRoute and replace it
                         popUpTo<HomeRoute> {
                             inclusive = true
