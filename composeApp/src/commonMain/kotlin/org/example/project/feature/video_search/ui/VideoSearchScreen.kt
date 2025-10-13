@@ -27,15 +27,23 @@ fun VideoSearchScreen(
         modifier = modifier,
     ) {
         VideoSearchContent(
+            inputText = uiState.inputText,
             searchQuery = uiState.searchQuery,
             searchResults = uiState.searchResults,
             isSearching = uiState.isSearching,
             searchError = uiState.searchError,
             hasMoreResults = uiState.searchNextPageToken != null,
-            onSearchQuery = { query -> onIntent(VideoSearchIntent.SearchVideos(query)) },
+            selectedDate = uiState.selectedDate,
+            searchMode = uiState.searchMode,
+            selectedServices = uiState.selectedServices,
+            onInputTextChange = { text -> onIntent(VideoSearchIntent.UpdateInputText(text)) },
+            onExecuteSearch = { onIntent(VideoSearchIntent.ExecuteSearch) },
             onSelectResult = { result -> onIntent(VideoSearchIntent.SelectSearchResult(result)) },
             onLoadMore = { onIntent(VideoSearchIntent.LoadMoreSearchResults) },
             onClearError = { onIntent(VideoSearchIntent.ClearSearchError) },
+            onDateChange = { date -> onIntent(VideoSearchIntent.ChangeSelectedDate(date)) },
+            onSearchModeChange = { mode -> onIntent(VideoSearchIntent.ChangeSearchMode(mode)) },
+            onToggleService = { service -> onIntent(VideoSearchIntent.ToggleService(service)) },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),

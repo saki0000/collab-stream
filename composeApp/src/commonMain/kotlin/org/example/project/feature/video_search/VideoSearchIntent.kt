@@ -1,6 +1,8 @@
 package org.example.project.feature.video_search
 
+import kotlinx.datetime.LocalDate
 import org.example.project.domain.model.SearchResult
+import org.example.project.domain.model.VideoServiceType
 
 /**
  * Sealed interface defining all possible user intents for video search functionality.
@@ -8,7 +10,17 @@ import org.example.project.domain.model.SearchResult
  */
 sealed interface VideoSearchIntent {
     /**
-     * Intent to search for videos with the specified query
+     * Intent to update the input text field (typing)
+     */
+    data class UpdateInputText(val text: String) : VideoSearchIntent
+
+    /**
+     * Intent to execute search with current input text
+     */
+    data object ExecuteSearch : VideoSearchIntent
+
+    /**
+     * Intent to search for videos with the specified query (legacy - prefer ExecuteSearch)
      */
     data class SearchVideos(val query: String) : VideoSearchIntent
 
@@ -36,6 +48,21 @@ sealed interface VideoSearchIntent {
      * Intent to clear search results
      */
     data object ClearSearchResults : VideoSearchIntent
+
+    /**
+     * Intent to change the selected date for search
+     */
+    data class ChangeSelectedDate(val date: LocalDate) : VideoSearchIntent
+
+    /**
+     * Intent to change the search mode
+     */
+    data class ChangeSearchMode(val mode: SearchMode) : VideoSearchIntent
+
+    /**
+     * Intent to toggle a video service selection
+     */
+    data class ToggleService(val service: VideoServiceType) : VideoSearchIntent
 }
 
 /**
