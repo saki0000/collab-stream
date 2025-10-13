@@ -3,6 +3,7 @@ package org.example.project.feature.video_search
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlin.time.ExperimentalTime
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -18,7 +19,6 @@ import org.example.project.domain.model.SearchOrder
 import org.example.project.domain.model.SearchResult
 import org.example.project.domain.model.VideoServiceType
 import org.example.project.domain.usecase.VideoSearchUseCase
-import kotlin.time.ExperimentalTime
 
 /**
  * ViewModel for video search functionality following MVI architecture pattern.

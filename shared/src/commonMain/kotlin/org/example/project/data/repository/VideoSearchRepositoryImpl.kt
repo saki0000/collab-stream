@@ -1,5 +1,6 @@
 package org.example.project.data.repository
 
+import kotlin.time.ExperimentalTime
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -11,7 +12,6 @@ import org.example.project.domain.model.SearchResponse
 import org.example.project.domain.model.SearchResult
 import org.example.project.domain.model.VideoServiceType
 import org.example.project.domain.repository.VideoSearchRepository
-import kotlin.time.ExperimentalTime
 
 class VideoSearchRepositoryImpl(
     private val youTubeSearchDataSource: YouTubeSearchDataSource,

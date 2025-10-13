@@ -15,7 +15,9 @@ constructor(
     val isLiveBroadcast: Boolean,
 )
 
-data class SearchQuery @OptIn(ExperimentalTime::class) constructor(
+data class SearchQuery
+@OptIn(ExperimentalTime::class)
+constructor(
     val query: String,
     val maxResults: Int = 25,
     val pageToken: String? = null,

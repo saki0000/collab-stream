@@ -1,5 +1,6 @@
 package org.example.project.domain.usecase
 
+import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 import org.example.project.domain.model.SearchEventType
 import org.example.project.domain.model.SearchOrder
@@ -7,7 +8,6 @@ import org.example.project.domain.model.SearchQuery
 import org.example.project.domain.model.SearchResponse
 import org.example.project.domain.model.VideoServiceType
 import org.example.project.domain.repository.VideoSearchRepository
-import kotlin.time.ExperimentalTime
 
 class VideoSearchUseCase(
     private val videoSearchRepository: VideoSearchRepository,
