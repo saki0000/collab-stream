@@ -22,7 +22,7 @@ import org.example.project.feature.video_playback.VideoIntent
 import org.example.project.feature.video_playback.VideoUiState
 import org.example.project.feature.video_playback.player.TwitchIframeTemplate
 import org.example.project.feature.video_playback.player.YouTubeIframeTemplate
-import org.example.project.video.player.IOSWebViewPlayerController
+import org.example.project.feature.video_playback.player.IOSWebViewPlayerController
 import org.example.project.video.ui.SyncControlsSection
 import platform.CoreGraphics.CGRectZero
 import platform.Foundation.NSError

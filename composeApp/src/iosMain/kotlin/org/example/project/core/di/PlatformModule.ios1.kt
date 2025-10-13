@@ -1,8 +1,9 @@
-package org.example.project.di
+package org.example.project.core.di
 
+import org.koin.core.module.Module
 import org.koin.dsl.module
 
 actual fun platformModule() = module {
-    // Android-specific dependencies can be added here if needed
+    // iOS-specific dependencies can be added here if needed
     // PlaybackPositionProvider is now managed by the common appModule using PlayerStateManager
 }
