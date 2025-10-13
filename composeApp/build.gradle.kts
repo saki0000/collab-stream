@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
+    alias(libs.plugins.serialization)
     alias(libs.plugins.ktlint)
     alias(libs.plugins.kover)
 }
@@ -49,6 +50,7 @@ kotlin {
             implementation(compose.components.uiToolingPreview)
             implementation(libs.androidx.lifecycle.viewmodelCompose)
             implementation(libs.androidx.lifecycle.runtimeCompose)
+            implementation(libs.androidx.navigation.compose)
             implementation(libs.kotlinx.datetime)
             implementation(projects.shared)
             implementation(libs.kotlinx.serialization)

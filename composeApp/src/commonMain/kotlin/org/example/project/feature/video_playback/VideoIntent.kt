@@ -1,11 +1,12 @@
 package org.example.project.feature.video_playback
 
-import org.example.project.domain.model.SearchResult
 import org.example.project.domain.model.VideoServiceType
 
 /**
- * Sealed interface defining all possible user intents for video functionality.
+ * Sealed interface defining all possible user intents for video playback functionality.
  * Following MVI architecture pattern for state management.
+ *
+ * Note: Search intents have been moved to VideoSearchIntent.
  */
 sealed interface VideoIntent {
     /**
@@ -47,43 +48,13 @@ sealed interface VideoIntent {
      * Intent to clear sync error state
      */
     data object ClearSyncError : VideoIntent
-
-    // Search-related intents
-
-    /**
-     * Intent to search for videos with the specified query
-     */
-    data class SearchVideos(val query: String) : VideoIntent
-
-    /**
-     * Intent to load more search results
-     */
-    data object LoadMoreSearchResults : VideoIntent
-
-    /**
-     * Intent to select a search result and load the video
-     */
-    data class SelectSearchResult(val searchResult: SearchResult) : VideoIntent
-
-    /**
-     * Intent to clear search error state
-     */
-    data object ClearSearchError : VideoIntent
-
-    /**
-     * Intent to toggle search bottom sheet visibility
-     */
-    data object ToggleSearchBottomSheet : VideoIntent
-
-    /**
-     * Intent to clear search results
-     */
-    data object ClearSearchResults : VideoIntent
 }
 
 /**
  * Sealed interface defining side effects for one-time events.
  * Used for navigation, snackbars, and other one-time actions.
+ *
+ * Note: Search side effects have been moved to VideoSearchSideEffect.
  */
 sealed interface VideoSideEffect {
     /**
@@ -105,14 +76,4 @@ sealed interface VideoSideEffect {
      * Show sync error message
      */
     data class ShowSyncError(val message: String) : VideoSideEffect
-
-    /**
-     * Show search error message
-     */
-    data class ShowSearchError(val message: String) : VideoSideEffect
-
-    /**
-     * Show search success message
-     */
-    data class ShowSearchSuccess(val message: String) : VideoSideEffect
 }

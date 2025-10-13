@@ -2,6 +2,7 @@ package org.example.project.core.di
 
 import org.example.project.feature.video_playback.VideoViewModel
 import org.example.project.feature.video_playback.player.PlayerStateManager
+import org.example.project.feature.video_search.VideoSearchViewModel
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 
@@ -22,7 +23,13 @@ val appModule = module {
     viewModel {
         VideoViewModel(
             videoSyncUseCase = get(),
+        )
+    }
+
+    viewModel {
+        VideoSearchViewModel(
             videoSearchUseCase = get(),
+            savedStateHandle = get(),
         )
     }
 }

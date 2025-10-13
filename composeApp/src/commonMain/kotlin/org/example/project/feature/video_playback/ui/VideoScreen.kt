@@ -16,7 +16,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.example.project.feature.video_playback.VideoIntent
 import org.example.project.feature.video_playback.VideoUiState
-import org.example.project.video.ui.VideoSearchBottomSheet
 
 /**
  * Screen Composable (Stateless) - Defines overall screen layout and structure
@@ -28,6 +27,7 @@ fun VideoScreen(
     onIntent: (VideoIntent) -> Unit,
     onVideoError: (String) -> Unit,
     snackbarHostState: SnackbarHostState,
+    onNavigateToSearch: (initialQuery: String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
@@ -37,7 +37,7 @@ fun VideoScreen(
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { onIntent(VideoIntent.ToggleSearchBottomSheet) },
+                onClick = { onNavigateToSearch("") }, // Pass empty string for no initial query
             ) {
                 Icon(
                     imageVector = Icons.Default.Search,
@@ -74,20 +74,5 @@ fun VideoScreen(
                 )
             }
         }
-
-        // Search Bottom Sheet
-        VideoSearchBottomSheet(
-            isVisible = uiState.isSearchBottomSheetVisible,
-            searchQuery = uiState.searchQuery,
-            searchResults = uiState.searchResults,
-            isSearching = uiState.isSearching,
-            searchError = uiState.searchError,
-            hasMoreResults = uiState.searchNextPageToken != null,
-            onDismiss = { onIntent(VideoIntent.ToggleSearchBottomSheet) },
-            onSearchQuery = { query -> onIntent(VideoIntent.SearchVideos(query)) },
-            onSelectResult = { result -> onIntent(VideoIntent.SelectSearchResult(result)) },
-            onLoadMore = { onIntent(VideoIntent.LoadMoreSearchResults) },
-            onClearError = { onIntent(VideoIntent.ClearSearchError) },
-        )
     }
 }

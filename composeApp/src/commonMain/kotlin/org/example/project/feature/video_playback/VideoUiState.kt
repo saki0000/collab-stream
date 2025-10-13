@@ -4,13 +4,14 @@ package org.example.project.feature.video_playback
 
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
-import org.example.project.domain.model.SearchResult
 import org.example.project.domain.model.VideoServiceType
 import org.example.project.feature.video_playback.player.PlayerState
 
 /**
- * Data class representing the UI state for video display components.
+ * Data class representing the UI state for video playback components.
  * Contains all necessary state information for video player rendering and sync functionality.
+ *
+ * Note: Search state has been moved to VideoSearchUiState for better separation of concerns.
  */
 data class VideoUiState(
     val videoId: String = "",
@@ -29,13 +30,6 @@ data class VideoUiState(
     // User seek tracking
     val lastUserSeekPosition: Float? = null,
     val lastUserSeekTime: String? = null,
-    // Search-related state
-    val searchQuery: String = "",
-    val searchResults: List<SearchResult> = emptyList(),
-    val isSearching: Boolean = false,
-    val searchError: String? = null,
-    val isSearchBottomSheetVisible: Boolean = false,
-    val searchNextPageToken: String? = null,
 )
 
 /**
