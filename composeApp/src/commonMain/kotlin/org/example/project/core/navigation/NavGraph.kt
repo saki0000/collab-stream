@@ -1,16 +1,13 @@
 package org.example.project.core.navigation
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
+import org.example.project.domain.model.VideoServiceType
 import org.example.project.feature.video_playback.ui.VideoContainer
 import org.example.project.feature.video_search.VideoSelectionResult
 import org.example.project.feature.video_search.ui.VideoSearchContainer
@@ -22,12 +19,15 @@ import org.example.project.feature.video_search.ui.VideoSearchContainer
  * - HomeRoute: Main video player screen
  * - VideoSearchRoute: Video search bottom sheet (managed as a navigation destination)
  *
- * Uses hybrid navigation approach:
+ * Uses type-safe navigation with kotlinx.serialization:
  * - Forward: Navigation Arguments (VideoSearchRoute with initialQuery)
- * - Backward: SavedStateHandle with VideoSelectionResult (managed at navigation layer)
+ * - Backward: Navigation Arguments (HomeRoute with selectedVideoId and selectedServiceType)
  *
  * Navigation result handling is centralized here to maintain proper separation of concerns.
  * Feature-level components (VideoContainer) remain unaware of navigation implementation details.
+ *
+ * Video selection results are passed as primitive types (String) to avoid NavType issues with custom classes.
+ * The VideoSelectionResult is reconstructed from primitives in the navigation layer.
  *
  * @param modifier Modifier to be applied to the NavHost
  * @param navController The NavHostController managing navigation state (default: rememberNavController)
@@ -39,24 +39,27 @@ fun AppNavGraph(
 ) {
     NavHost(
         navController = navController,
-        startDestination = HomeRoute,
+        startDestination = HomeRoute(),
         modifier = modifier,
     ) {
         // Main video player screen
         composable<HomeRoute> { backStackEntry ->
-            // Retrieve video selection result from SavedStateHandle (passed from VideoSearchContainer)
-            var videoSelectionResult by remember { mutableStateOf<VideoSelectionResult?>(null) }
+            // Retrieve video selection parameters from navigation arguments
+            val route = backStackEntry.toRoute<HomeRoute>()
 
-            LaunchedEffect(Unit) {
-                backStackEntry.savedStateHandle
-                    .getStateFlow<VideoSelectionResult?>("video_selection_result", null)
-                    .collect { result ->
-                        if (result != null) {
-                            videoSelectionResult = result
-                            // Clear the result from SavedStateHandle after consuming
-                            backStackEntry.savedStateHandle.remove<VideoSelectionResult>("video_selection_result")
-                        }
-                    }
+            // Reconstruct VideoSelectionResult from primitive types if both are present
+            val videoSelectionResult = if (route.selectedVideoId != null && route.selectedServiceType != null) {
+                try {
+                    VideoSelectionResult(
+                        videoId = route.selectedVideoId,
+                        serviceType = VideoServiceType.valueOf(route.selectedServiceType),
+                    )
+                } catch (e: IllegalArgumentException) {
+                    // Invalid service type, ignore
+                    null
+                }
+            } else {
+                null
             }
 
             VideoContainer(
@@ -73,11 +76,18 @@ fun AppNavGraph(
             VideoSearchContainer(
                 onDismiss = { navController.popBackStack() },
                 onVideoSelected = { result ->
-                    // Pass result back to previous screen via SavedStateHandle
-                    navController.previousBackStackEntry
-                        ?.savedStateHandle
-                        ?.set("video_selection_result", result)
-                    navController.popBackStack()
+                    // Navigate back to HomeRoute with individual primitive parameters
+                    navController.navigate(
+                        HomeRoute(
+                            selectedVideoId = result.videoId,
+                            selectedServiceType = result.serviceType.name,
+                        ),
+                    ) {
+                        // Pop up to the original HomeRoute and replace it
+                        popUpTo<HomeRoute> {
+                            inclusive = true
+                        }
+                    }
                 },
             )
         }

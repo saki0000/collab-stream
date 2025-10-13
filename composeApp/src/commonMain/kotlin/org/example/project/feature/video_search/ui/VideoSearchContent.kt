@@ -9,17 +9,21 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -37,7 +41,10 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import kotlinx.datetime.LocalDate
 import org.example.project.domain.model.SearchResult
+import org.example.project.domain.model.VideoServiceType
+import org.example.project.feature.video_search.SearchMode
 
 /**
  * Content (Business Logic) - Search form and results list
@@ -45,18 +52,25 @@ import org.example.project.domain.model.SearchResult
  */
 @Composable
 fun VideoSearchContent(
+    inputText: String,
     searchQuery: String,
     searchResults: List<SearchResult>,
     isSearching: Boolean,
     searchError: String?,
     hasMoreResults: Boolean,
-    onSearchQuery: (String) -> Unit,
+    selectedDate: LocalDate,
+    searchMode: SearchMode,
+    selectedServices: Set<VideoServiceType>,
+    onInputTextChange: (String) -> Unit,
+    onExecuteSearch: () -> Unit,
     onSelectResult: (SearchResult) -> Unit,
     onLoadMore: () -> Unit,
     onClearError: () -> Unit,
+    onDateChange: (LocalDate) -> Unit,
+    onSearchModeChange: (SearchMode) -> Unit,
+    onToggleService: (VideoServiceType) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    var localSearchQuery by remember(searchQuery) { mutableStateOf(searchQuery) }
     val keyboardController = LocalSoftwareKeyboardController.current
     val listState = rememberLazyListState()
 
@@ -66,17 +80,94 @@ fun VideoSearchContent(
     ) {
         // Title
         Text(
-            text = "Search YouTube Videos",
+            text = "Search Videos",
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.fillMaxWidth(),
         )
 
+        // Date Selection (Simple text display with icon for now)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Icon(
+                imageVector = Icons.Default.CalendarToday,
+                contentDescription = "Calendar",
+                tint = MaterialTheme.colorScheme.primary,
+            )
+            Text(
+                text = "Date: $selectedDate",
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Medium,
+            )
+            Spacer(modifier = Modifier.weight(1f))
+            Text(
+                text = "(Date picker - coming soon)",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+
+        // Service Selection
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = "Services:",
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Medium,
+            )
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Checkbox(
+                    checked = selectedServices.contains(VideoServiceType.YOUTUBE),
+                    onCheckedChange = { onToggleService(VideoServiceType.YOUTUBE) },
+                )
+                Text("YouTube")
+                Spacer(modifier = Modifier.width(8.dp))
+                Checkbox(
+                    checked = selectedServices.contains(VideoServiceType.TWITCH),
+                    onCheckedChange = { onToggleService(VideoServiceType.TWITCH) },
+                )
+                Text("Twitch")
+            }
+        }
+
+        // Search Mode Selection
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            FilterChip(
+                selected = searchMode == SearchMode.KEYWORD,
+                onClick = { onSearchModeChange(SearchMode.KEYWORD) },
+                label = { Text("Keyword Search") },
+            )
+            FilterChip(
+                selected = searchMode == SearchMode.CHANNEL_NAME,
+                onClick = { onSearchModeChange(SearchMode.CHANNEL_NAME) },
+                label = { Text("Channel Name") },
+            )
+        }
+
         // Search Field
         OutlinedTextField(
-            value = localSearchQuery,
-            onValueChange = { localSearchQuery = it },
-            label = { Text("Search for videos...") },
+            value = inputText,
+            onValueChange = onInputTextChange,
+            label = {
+                Text(
+                    when (searchMode) {
+                        SearchMode.KEYWORD -> "Search by keyword..."
+                        SearchMode.CHANNEL_NAME -> "Search by channel name..."
+                    },
+                )
+            },
             leadingIcon = {
                 Icon(
                     imageVector = Icons.Default.Search,
@@ -84,16 +175,16 @@ fun VideoSearchContent(
                 )
             },
             trailingIcon = {
-                if (localSearchQuery.isNotEmpty()) {
+                if (inputText.isNotEmpty()) {
                     IconButton(
                         onClick = {
-                            localSearchQuery = ""
-                            onSearchQuery("")
+                            onExecuteSearch()
+                            keyboardController?.hide()
                         },
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Clear,
-                            contentDescription = "Clear",
+                            imageVector = Icons.Default.Search,
+                            contentDescription = "Execute Search",
                         )
                     }
                 }
@@ -103,8 +194,8 @@ fun VideoSearchContent(
             ),
             keyboardActions = KeyboardActions(
                 onSearch = {
-                    if (localSearchQuery.isNotBlank()) {
-                        onSearchQuery(localSearchQuery.trim())
+                    if (inputText.isNotBlank()) {
+                        onExecuteSearch()
                         keyboardController?.hide()
                     }
                 },
