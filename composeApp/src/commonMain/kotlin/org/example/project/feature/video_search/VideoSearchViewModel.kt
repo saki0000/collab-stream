@@ -58,7 +58,7 @@ class VideoSearchViewModel(
             VideoSearchIntent.ClearSearchResults -> clearSearchResults()
             is VideoSearchIntent.ChangeSelectedDate -> changeSelectedDate(intent.date)
             is VideoSearchIntent.ChangeSearchMode -> changeSearchMode(intent.mode)
-            is VideoSearchIntent.ToggleService -> toggleService(intent.service)
+            is VideoSearchIntent.SelectService -> selectService(intent.service)
         }
     }
 
@@ -96,13 +96,21 @@ class VideoSearchViewModel(
 
         viewModelScope.launch {
             try {
+                // For Twitch, use channelId parameter; for YouTube, use query
+                val channelId = if (currentState.selectedService == VideoServiceType.TWITCH) {
+                    query
+                } else {
+                    null
+                }
+
                 val result = videoSearchUseCase.searchVideos(
                     query = query,
                     preferArchived = true,
                     publishedAfter = startOfDay,
                     publishedBefore = endOfDay,
                     order = SearchOrder.VIEW_COUNT,
-                    targetServices = currentState.selectedServices,
+                    targetServices = setOf(currentState.selectedService),
+                    channelId = channelId,
                 )
 
                 result.fold(
@@ -148,6 +156,13 @@ class VideoSearchViewModel(
 
         viewModelScope.launch {
             try {
+                // For Twitch, use channelId parameter; for YouTube, use query
+                val channelId = if (currentState.selectedService == VideoServiceType.TWITCH) {
+                    currentState.searchQuery
+                } else {
+                    null
+                }
+
                 val result = videoSearchUseCase.loadMoreResults(
                     query = currentState.searchQuery,
                     nextPageToken = nextPageToken,
@@ -155,7 +170,8 @@ class VideoSearchViewModel(
                     publishedAfter = startOfDay,
                     publishedBefore = endOfDay,
                     order = SearchOrder.VIEW_COUNT,
-                    targetServices = currentState.selectedServices,
+                    targetServices = setOf(currentState.selectedService),
+                    channelId = channelId,
                 )
 
                 result.fold(
@@ -227,17 +243,15 @@ class VideoSearchViewModel(
         _uiState.value = _uiState.value.copy(searchMode = mode)
     }
 
-    private fun toggleService(service: VideoServiceType) {
-        val currentServices = _uiState.value.selectedServices
-        val newServices = if (currentServices.contains(service)) {
-            if (currentServices.size > 1) {
-                currentServices - service
-            } else {
-                currentServices // Keep at least one service selected
-            }
-        } else {
-            currentServices + service
+    private fun selectService(service: VideoServiceType) {
+        // When switching to Twitch, force search mode to CHANNEL_NAME
+        val newSearchMode = when (service) {
+            VideoServiceType.YOUTUBE -> _uiState.value.searchMode // Keep current mode for YouTube
+            VideoServiceType.TWITCH -> SearchMode.CHANNEL_NAME // Force CHANNEL_NAME for Twitch
         }
-        _uiState.value = _uiState.value.copy(selectedServices = newServices)
+        _uiState.value = _uiState.value.copy(
+            selectedService = service,
+            searchMode = newSearchMode,
+        )
     }
 }

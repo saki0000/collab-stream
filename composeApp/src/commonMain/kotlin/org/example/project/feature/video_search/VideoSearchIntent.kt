@@ -60,9 +60,9 @@ sealed interface VideoSearchIntent {
     data class ChangeSearchMode(val mode: SearchMode) : VideoSearchIntent
 
     /**
-     * Intent to toggle a video service selection
+     * Intent to select a video service (single selection)
      */
-    data class ToggleService(val service: VideoServiceType) : VideoSearchIntent
+    data class SelectService(val service: VideoServiceType) : VideoSearchIntent
 }
 
 /**

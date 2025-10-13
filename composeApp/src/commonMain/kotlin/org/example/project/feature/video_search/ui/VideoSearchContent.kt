@@ -20,13 +20,13 @@ import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -57,7 +57,7 @@ fun VideoSearchContent(
     hasMoreResults: Boolean,
     selectedDate: LocalDate,
     searchMode: SearchMode,
-    selectedServices: Set<VideoServiceType>,
+    selectedService: VideoServiceType,
     onInputTextChange: (String) -> Unit,
     onExecuteSearch: () -> Unit,
     onSelectResult: (SearchResult) -> Unit,
@@ -65,7 +65,7 @@ fun VideoSearchContent(
     onClearError: () -> Unit,
     onDateChange: (LocalDate) -> Unit,
     onSearchModeChange: (SearchMode) -> Unit,
-    onToggleService: (VideoServiceType) -> Unit,
+    onSelectService: (VideoServiceType) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -114,7 +114,7 @@ fun VideoSearchContent(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                text = "Services:",
+                text = "Service:",
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Medium,
             )
@@ -122,35 +122,37 @@ fun VideoSearchContent(
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Checkbox(
-                    checked = selectedServices.contains(VideoServiceType.YOUTUBE),
-                    onCheckedChange = { onToggleService(VideoServiceType.YOUTUBE) },
+                RadioButton(
+                    selected = selectedService == VideoServiceType.YOUTUBE,
+                    onClick = { onSelectService(VideoServiceType.YOUTUBE) },
                 )
                 Text("YouTube")
                 Spacer(modifier = Modifier.width(8.dp))
-                Checkbox(
-                    checked = selectedServices.contains(VideoServiceType.TWITCH),
-                    onCheckedChange = { onToggleService(VideoServiceType.TWITCH) },
+                RadioButton(
+                    selected = selectedService == VideoServiceType.TWITCH,
+                    onClick = { onSelectService(VideoServiceType.TWITCH) },
                 )
                 Text("Twitch")
             }
         }
 
-        // Search Mode Selection
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            FilterChip(
-                selected = searchMode == SearchMode.KEYWORD,
-                onClick = { onSearchModeChange(SearchMode.KEYWORD) },
-                label = { Text("Keyword Search") },
-            )
-            FilterChip(
-                selected = searchMode == SearchMode.CHANNEL_NAME,
-                onClick = { onSearchModeChange(SearchMode.CHANNEL_NAME) },
-                label = { Text("Channel Name") },
-            )
+        // Search Mode Selection (Only for YouTube)
+        if (selectedService == VideoServiceType.YOUTUBE) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                FilterChip(
+                    selected = searchMode == SearchMode.KEYWORD,
+                    onClick = { onSearchModeChange(SearchMode.KEYWORD) },
+                    label = { Text("Keyword Search") },
+                )
+                FilterChip(
+                    selected = searchMode == SearchMode.CHANNEL_NAME,
+                    onClick = { onSearchModeChange(SearchMode.CHANNEL_NAME) },
+                    label = { Text("Channel Name") },
+                )
+            }
         }
 
         // Search Field
@@ -159,9 +161,10 @@ fun VideoSearchContent(
             onValueChange = onInputTextChange,
             label = {
                 Text(
-                    when (searchMode) {
-                        SearchMode.KEYWORD -> "Search by keyword..."
-                        SearchMode.CHANNEL_NAME -> "Search by channel name..."
+                    when {
+                        selectedService == VideoServiceType.TWITCH -> "Search by channel name..."
+                        searchMode == SearchMode.KEYWORD -> "Search by keyword..."
+                        else -> "Search by channel name..."
                     },
                 )
             },
