@@ -50,6 +50,7 @@ sealed interface VideoIntent {
     data object ClearSyncError : VideoIntent
 
     // Multi-video sync intents
+
     /**
      * Intent to load main video (primary video for sync)
      */
