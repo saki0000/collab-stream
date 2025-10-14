@@ -14,6 +14,8 @@ import org.example.project.feature.video_playback.VideoUiState
  * @param videoId The YouTube video ID to display
  * @param modifier Compose modifier for styling and layout
  * @param onError Callback for handling errors during video loading/playback
+ * @param isMainPlayer True if this is the main player, false if sub player
+ * @param onControllerReady Callback when the player controller is ready
  */
 @Composable
 expect fun VideoPlayerView(
@@ -22,4 +24,6 @@ expect fun VideoPlayerView(
     onIntent: (VideoIntent) -> Unit,
     modifier: Modifier = Modifier,
     onError: (String) -> Unit = {},
+    isMainPlayer: Boolean = true,
+    onControllerReady: (Any?) -> Unit = {},
 )

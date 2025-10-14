@@ -13,6 +13,7 @@ constructor(
     val channelTitle: String,
     val publishedAt: Instant,
     val isLiveBroadcast: Boolean,
+    val serviceType: VideoServiceType,
 )
 
 data class SearchQuery

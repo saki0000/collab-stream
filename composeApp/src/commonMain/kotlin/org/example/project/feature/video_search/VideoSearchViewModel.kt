@@ -198,7 +198,7 @@ class VideoSearchViewModel(
             _sideEffect.emit(
                 VideoSearchSideEffect.VideoSelected(
                     videoId = searchResult.videoId,
-                    serviceType = VideoServiceType.YOUTUBE,
+                    serviceType = searchResult.serviceType,
                 ),
             )
         }

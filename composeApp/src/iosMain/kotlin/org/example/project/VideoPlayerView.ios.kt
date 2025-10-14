@@ -1,17 +1,14 @@
 package org.example.project
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.UIKitInteropProperties
 import androidx.compose.ui.viewinterop.UIKitView
 import kotlinx.cinterop.ExperimentalForeignApi
@@ -23,7 +20,6 @@ import org.example.project.feature.video_playback.VideoUiState
 import org.example.project.feature.video_playback.player.IOSWebViewPlayerController
 import org.example.project.feature.video_playback.player.TwitchIframeTemplate
 import org.example.project.feature.video_playback.player.YouTubeIframeTemplate
-import org.example.project.video.ui.SyncControlsSection
 import platform.CoreGraphics.CGRectZero
 import platform.Foundation.NSError
 import platform.Foundation.NSNumber
@@ -105,6 +101,8 @@ actual fun VideoPlayerView(
     onIntent: (VideoIntent) -> Unit,
     modifier: Modifier,
     onError: (String) -> Unit,
+    isMainPlayer: Boolean,
+    onControllerReady: (Any?) -> Unit,
 ) {
     if (videoId.isBlank()) {
         onError("Video ID cannot be empty")
@@ -112,6 +110,11 @@ actual fun VideoPlayerView(
     }
 
     val controller = remember { IOSWebViewPlayerController() }
+
+    // Notify parent when controller is ready
+    remember(controller) {
+        onControllerReady(controller)
+    }
 
     Column(modifier = modifier) {
         var webView by remember { mutableStateOf<WKWebView?>(null) }
@@ -188,16 +191,6 @@ actual fun VideoPlayerView(
             },
             onRelease = {},
             properties = UIKitInteropProperties(isInteractive = true, isNativeAccessibilityEnabled = true),
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-        SyncControlsSection(
-            uiState = uiState,
-            onSync = {
-                controller.requestCurrentTime { currentTime ->
-                    onIntent(VideoIntent.SyncToAbsoluteTime(currentTime))
-                }
-            },
         )
     }
 }
