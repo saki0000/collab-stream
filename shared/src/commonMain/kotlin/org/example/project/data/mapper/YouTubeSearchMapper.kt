@@ -5,6 +5,7 @@ import kotlin.time.Instant
 import org.example.project.data.model.YouTubeSearchResponse
 import org.example.project.domain.model.SearchResponse
 import org.example.project.domain.model.SearchResult
+import org.example.project.domain.model.VideoServiceType
 
 object YouTubeSearchMapper {
 
@@ -22,6 +23,7 @@ object YouTubeSearchMapper {
                 channelTitle = item.snippet.channelTitle,
                 publishedAt = parseInstant(item.snippet.publishedAt),
                 isLiveBroadcast = item.snippet.liveBroadcastContent != "none",
+                serviceType = VideoServiceType.YOUTUBE,
             )
         }
 

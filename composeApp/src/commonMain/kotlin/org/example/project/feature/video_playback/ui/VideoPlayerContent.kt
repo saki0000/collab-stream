@@ -59,7 +59,7 @@ fun VideoPlayerContent(
                 when {
                     uiState.videoId.isEmpty() -> {
                         EmptyStateComponent(
-                            message = "Enter a YouTube video ID above to start",
+                            message = "Select a video to start playback",
                             modifier = Modifier,
                         )
                     }

@@ -5,6 +5,7 @@ import kotlin.time.Instant
 import org.example.project.data.model.TwitchSearchResponse
 import org.example.project.domain.model.SearchResponse
 import org.example.project.domain.model.SearchResult
+import org.example.project.domain.model.VideoServiceType
 
 object TwitchSearchMapper {
 
@@ -19,6 +20,7 @@ object TwitchSearchMapper {
                 channelTitle = item.userName,
                 publishedAt = parseInstant(item.publishedAt),
                 isLiveBroadcast = item.type == "live", // VODs are typically not live
+                serviceType = VideoServiceType.TWITCH,
             )
         }
 
