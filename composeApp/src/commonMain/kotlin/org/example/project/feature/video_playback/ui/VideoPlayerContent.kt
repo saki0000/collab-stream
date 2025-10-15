@@ -34,6 +34,13 @@ fun VideoPlayerContent(
     onIntent: (VideoIntent) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    // Use mainStream if available, otherwise fall back to legacy videoId
+    val mainStream = uiState.mainStream
+    val displayVideoId = mainStream?.streamId ?: uiState.videoId
+    val displayServiceType = mainStream?.serviceType?.name ?: uiState.serviceType.name
+    val displayChannelName = mainStream?.channelName ?: ""
+    val displayTitle = mainStream?.title ?: ""
+
     Card(
         modifier = modifier.wrapContentSize(),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
@@ -44,9 +51,11 @@ fun VideoPlayerContent(
         ) {
             // Video info header
             VideoInfoHeader(
-                videoId = uiState.videoId,
-                serviceType = uiState.serviceType.name,
+                videoId = displayVideoId,
+                serviceType = displayServiceType,
                 syncDateTime = uiState.syncDateTime,
+                channelName = displayChannelName,
+                title = displayTitle,
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -57,9 +66,9 @@ fun VideoPlayerContent(
                 contentAlignment = Alignment.Center,
             ) {
                 when {
-                    uiState.videoId.isEmpty() -> {
+                    displayVideoId.isEmpty() -> {
                         EmptyStateComponent(
-                            message = "Select a video to start playback",
+                            message = "Search and select a main streamer to start",
                             modifier = Modifier,
                         )
                     }
@@ -74,7 +83,7 @@ fun VideoPlayerContent(
 
                     else -> {
                         VideoPlayerView(
-                            videoId = uiState.videoId,
+                            videoId = displayVideoId,
                             onError = onVideoError,
                             uiState = uiState,
                             onIntent = onIntent,
@@ -94,24 +103,47 @@ private fun VideoInfoHeader(
     videoId: String,
     serviceType: String,
     syncDateTime: String,
+    channelName: String,
+    title: String,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier) {
         if (videoId.isNotEmpty()) {
+            // Channel name (if available from mainStream)
+            if (channelName.isNotEmpty()) {
+                Text(
+                    text = channelName,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+            }
+
+            // Title (if available from mainStream)
+            if (title.isNotEmpty()) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 Text(
                     text = "Video ID: $videoId",
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colorScheme.onSurface,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Text(
                     text = serviceType,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Medium,
                 )
             }
 

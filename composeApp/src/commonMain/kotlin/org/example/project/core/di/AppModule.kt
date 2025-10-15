@@ -1,5 +1,7 @@
 package org.example.project.core.di
 
+import org.example.project.feature.home.HomeViewModel
+import org.example.project.feature.streamer_search.StreamerSearchViewModel
 import org.example.project.feature.video_playback.VideoViewModel
 import org.example.project.feature.video_playback.player.PlayerStateManager
 import org.example.project.feature.video_search.VideoSearchViewModel
@@ -20,6 +22,17 @@ val appModule = module {
     single<PlayerStateManager> { PlayerStateManager() }
 
     // ViewModels
+    viewModel {
+        HomeViewModel()
+    }
+
+    viewModel {
+        StreamerSearchViewModel(
+            videoSearchUseCase = get(),
+            savedStateHandle = get(),
+        )
+    }
+
     viewModel {
         VideoViewModel(
             videoSyncUseCase = get(),

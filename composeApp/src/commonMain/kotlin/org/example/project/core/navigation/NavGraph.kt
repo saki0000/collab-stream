@@ -7,31 +7,29 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
+import kotlin.time.ExperimentalTime
+import org.example.project.domain.model.StreamInfo
 import org.example.project.domain.model.VideoServiceType
+import org.example.project.feature.home.ui.HomeContainer
+import org.example.project.feature.streamer_search.ui.StreamerSearchContainer
 import org.example.project.feature.video_playback.ui.VideoContainer
-import org.example.project.feature.video_search.VideoSelectionResult
 import org.example.project.feature.video_search.ui.VideoSearchContainer
 
 /**
  * Main navigation graph for the application.
  *
  * This sets up the NavHost with all app destinations:
- * - HomeRoute: Main video player screen
- * - VideoSearchRoute: Video search bottom sheet (managed as a navigation destination)
+ * - HomeRoute: Initial screen with group selection
+ * - StreamerSearchRoute: Streamer search bottom sheet (MAIN or SUB mode)
+ * - MainPlayerRoute: Main video player screen with sync functionality
+ * - VideoSearchRoute: (DEPRECATED) Legacy video search
  *
- * Uses type-safe navigation with kotlinx.serialization:
- * - Forward: Navigation Arguments (VideoSearchRoute with initialQuery)
- * - Backward: Navigation Arguments (HomeRoute with selectedVideoId and selectedServiceType)
- *
- * Navigation result handling is centralized here to maintain proper separation of concerns.
- * Feature-level components (VideoContainer) remain unaware of navigation implementation details.
- *
- * Video selection results are passed as primitive types (String) to avoid NavType issues with custom classes.
- * The VideoSelectionResult is reconstructed from primitives in the navigation layer.
+ * Uses type-safe navigation with kotlinx.serialization.
  *
  * @param modifier Modifier to be applied to the NavHost
  * @param navController The NavHostController managing navigation state (default: rememberNavController)
  */
+@OptIn(ExperimentalTime::class)
 @Composable
 fun AppNavGraph(
     modifier: Modifier = Modifier,
@@ -39,93 +37,111 @@ fun AppNavGraph(
 ) {
     NavHost(
         navController = navController,
-        startDestination = HomeRoute(),
+        startDestination = HomeRoute,
         modifier = modifier,
     ) {
-        // Main video player screen
-        composable<HomeRoute> { backStackEntry ->
-            // Retrieve video selection parameters from navigation arguments
-            val route = backStackEntry.toRoute<HomeRoute>()
-
-            // Reconstruct main video selection result
-            val mainVideoResult = if (route.mainVideoId != null && route.mainServiceType != null) {
-                try {
-                    VideoSelectionResult(
-                        videoId = route.mainVideoId,
-                        serviceType = VideoServiceType.valueOf(route.mainServiceType),
-                    )
-                } catch (e: IllegalArgumentException) {
-                    null
-                }
-            } else {
-                null
-            }
-
-            // Reconstruct sub video selection result
-            val subVideoResult = if (route.subVideoId != null && route.subServiceType != null) {
-                try {
-                    VideoSelectionResult(
-                        videoId = route.subVideoId,
-                        serviceType = VideoServiceType.valueOf(route.subServiceType),
-                    )
-                } catch (e: IllegalArgumentException) {
-                    null
-                }
-            } else {
-                null
-            }
-
-            VideoContainer(
-                onNavigateToSearch = { initialQuery, selectionTarget ->
-                    navController.navigate(
-                        VideoSearchRoute(
-                            initialQuery = initialQuery,
-                            selectionTarget = selectionTarget,
-                        ),
-                    )
+        // Home screen
+        composable<HomeRoute> {
+            HomeContainer(
+                onSearchMainStreamer = {
+                    navController.navigate(StreamerSearchRoute(searchMode = "MAIN"))
                 },
-                mainVideoResult = mainVideoResult,
-                subVideoResult = subVideoResult,
                 modifier = Modifier,
             )
         }
 
-        // Video search bottom sheet
-        bottomSheet<VideoSearchRoute> { backStackEntry ->
-            val route = backStackEntry.toRoute<VideoSearchRoute>()
-            val selectionTarget = route.selectionTarget
+        // Streamer search bottom sheet (Main or Sub)
+        bottomSheet<StreamerSearchRoute> { backStackEntry ->
+            val route = backStackEntry.toRoute<StreamerSearchRoute>()
 
+            StreamerSearchContainer(
+                onDismiss = { navController.popBackStack() },
+                onStreamerSelected = { searchResult, serviceType ->
+                    if (route.searchMode == "MAIN") {
+                        // Navigate to Main Player with selected main streamer
+                        navController.navigate(
+                            MainPlayerRoute(
+                                mainStreamId = searchResult.videoId,
+                                mainChannelId = searchResult.channelTitle, // TODO: Get actual channelId
+                                mainChannelName = searchResult.channelTitle,
+                                mainServiceType = serviceType.name,
+                                mainThumbnailUrl = searchResult.thumbnailUrl,
+                                mainTitle = searchResult.title,
+                                mainChannelIconUrl = "", // TODO: Get channel icon
+                                mainIsLive = searchResult.isLiveBroadcast,
+                                mainPublishedAt = searchResult.publishedAt.epochSeconds,
+                            ),
+                        ) {
+                            // Replace the entire back stack
+                            popUpTo<HomeRoute> {
+                                inclusive = false
+                            }
+                        }
+                    } else {
+                        // SUB mode: Pass sub stream result back via SavedStateHandle
+                        // Pass individual primitive fields (same pattern as MainPlayerRoute)
+                        navController.previousBackStackEntry?.savedStateHandle?.apply {
+                            set("sub_stream_id", searchResult.videoId)
+                            set("sub_title", searchResult.title)
+                            set("sub_thumbnail_url", searchResult.thumbnailUrl)
+                            set("sub_channel_id", searchResult.channelTitle) // TODO: Get actual channelId
+                            set("sub_channel_name", searchResult.channelTitle)
+                            set("sub_channel_icon_url", "") // TODO: Get channel icon
+                            set("sub_service_type", serviceType.name)
+                            set("sub_published_at", searchResult.publishedAt.epochSeconds)
+                            set("sub_is_live", searchResult.isLiveBroadcast)
+                        }
+
+                        navController.popBackStack()
+                    }
+                },
+                modifier = Modifier,
+            )
+        }
+
+        // Main Player screen
+        composable<MainPlayerRoute> { backStackEntry ->
+            val route = backStackEntry.toRoute<MainPlayerRoute>()
+
+            // Reconstruct StreamInfo from navigation parameters
+            @OptIn(ExperimentalTime::class)
+            val mainStreamInfo = StreamInfo(
+                streamId = route.mainStreamId,
+                title = route.mainTitle,
+                thumbnailUrl = route.mainThumbnailUrl,
+                channelId = route.mainChannelId,
+                channelName = route.mainChannelName,
+                channelIconUrl = route.mainChannelIconUrl,
+                serviceType = VideoServiceType.valueOf(route.mainServiceType),
+                publishedAt = kotlin.time.Instant.fromEpochSeconds(route.mainPublishedAt),
+                isLive = route.mainIsLive,
+                currentTime = 0f,
+                isSynced = true, // Main is always synced
+            )
+
+            VideoContainer(
+                onNavigateToSearch = { initialQuery ->
+                    // Legacy video search (DEPRECATED)
+                    navController.navigate(VideoSearchRoute(initialQuery = initialQuery))
+                },
+                videoSelectionResult = null, // Not used in new flow
+                modifier = Modifier,
+                onNavigateToSubSearch = {
+                    // Navigate to streamer search in SUB mode
+                    navController.navigate(StreamerSearchRoute(searchMode = "SUB"))
+                },
+                mainStreamInfo = mainStreamInfo,
+                savedStateHandle = backStackEntry.savedStateHandle,
+            )
+        }
+
+        // Legacy video search bottom sheet (DEPRECATED, kept for compatibility)
+        bottomSheet<VideoSearchRoute> {
             VideoSearchContainer(
                 onDismiss = { navController.popBackStack() },
                 onVideoSelected = { result ->
-                    // Get previous route parameters to preserve existing videos
-                    // previousBackStackEntry refers to the HomeRoute that opened this search
-                    val previousRoute = navController.previousBackStackEntry
-                        ?.toRoute<HomeRoute>() ?: HomeRoute()
-
-                    // Navigate back with updated parameters based on selection target
-                    val updatedRoute = if (selectionTarget == "SUB") {
-                        HomeRoute(
-                            mainVideoId = previousRoute.mainVideoId,
-                            mainServiceType = previousRoute.mainServiceType,
-                            subVideoId = result.videoId,
-                            subServiceType = result.serviceType.name,
-                        )
-                    } else {
-                        HomeRoute(
-                            mainVideoId = result.videoId,
-                            mainServiceType = result.serviceType.name,
-                            subVideoId = previousRoute.subVideoId,
-                            subServiceType = previousRoute.subServiceType,
-                        )
-                    }
-
-                    navController.navigate(updatedRoute) {
-                        // Pop up to the original HomeRoute and replace it
-                        popUpTo<HomeRoute> {
-                            inclusive = true
-                        }
-                    }
+                    // Legacy flow - just pop back
+                    navController.popBackStack()
                 },
             )
         }
