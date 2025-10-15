@@ -51,10 +51,11 @@ fun SubStreamItem(
             .clickable { onSwitchToMain() },
         elevation = CardDefaults.cardElevation(2.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (stream.isSynced)
+            containerColor = if (stream.isSynced) {
                 MaterialTheme.colorScheme.surfaceVariant
-            else
-                MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f),
+            } else {
+                MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
+            },
         ),
     ) {
         Row(
@@ -116,10 +117,11 @@ fun SubStreamItem(
                     Text(
                         text = formatTime(stream.currentTime),
                         style = MaterialTheme.typography.bodySmall,
-                        color = if (stream.isSynced)
+                        color = if (stream.isSynced) {
                             MaterialTheme.colorScheme.primary
-                        else
-                            MaterialTheme.colorScheme.error,
+                        } else {
+                            MaterialTheme.colorScheme.error
+                        },
                     )
 
                     if (!stream.isSynced) {
@@ -166,8 +168,8 @@ private fun formatTime(seconds: Float): String {
     val secs = totalSeconds % 60
 
     return if (hours > 0) {
-        "%d:%02d:%02d".format(hours, minutes, secs)
+        "$hours:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}"
     } else {
-        "%02d:%02d".format(minutes, secs)
+        "${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}"
     }
 }

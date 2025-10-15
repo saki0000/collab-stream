@@ -15,7 +15,6 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atTime
 import kotlinx.datetime.toInstant
-import org.example.project.core.navigation.StreamerSearchRoute
 import org.example.project.domain.model.SearchOrder
 import org.example.project.domain.model.SearchResult
 import org.example.project.domain.model.VideoServiceType
