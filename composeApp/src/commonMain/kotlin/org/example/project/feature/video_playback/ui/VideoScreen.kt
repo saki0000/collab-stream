@@ -14,12 +14,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.example.project.feature.video_playback.VideoIntent
 import org.example.project.feature.video_playback.VideoUiState
+import kotlin.time.ExperimentalTime
 
 /**
  * Screen Composable (Stateless) - Main Player Screen with 3-section hierarchical layout
  * Following design doc: MainPlayerSection + SyncControlBar + SubStreamsList
  * Receives UiState and Intent callbacks from Container, delegates to Content composables
  */
+@OptIn(ExperimentalTime::class)
 @Composable
 fun VideoScreen(
     uiState: VideoUiState,
@@ -61,6 +63,7 @@ fun VideoScreen(
 
                     SyncControlBar(
                         currentTime = uiState.currentTime,
+                        absoluteTime = uiState.mainAbsoluteTime,
                         syncedCount = syncedCount,
                         totalSubCount = totalSubCount,
                         isSyncing = uiState.isSyncing,

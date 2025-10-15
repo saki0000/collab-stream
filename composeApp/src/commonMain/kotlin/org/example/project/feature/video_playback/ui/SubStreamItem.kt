@@ -105,7 +105,7 @@ fun SubStreamItem(
                     overflow = TextOverflow.Ellipsis,
                 )
 
-                // Row 3: Time + delta
+                // Row 3: Target Seek Position (Sync Status)
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         imageVector = Icons.Default.PlayArrow,
@@ -114,25 +114,29 @@ fun SubStreamItem(
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = formatTime(stream.currentTime),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = if (stream.isSynced) {
-                            MaterialTheme.colorScheme.primary
-                        } else {
-                            MaterialTheme.colorScheme.error
-                        },
-                    )
 
-                    if (!stream.isSynced) {
-                        Spacer(modifier = Modifier.width(4.dp))
-                        val delta = mainTime - stream.currentTime
-                        val deltaSign = if (delta > 0) "+" else ""
+                    // Display target seek position if synced, otherwise show "Not synced"
+                    if (stream.isSynced && stream.targetSeekPosition != null) {
                         Text(
-                            text = "Δ $deltaSign${formatTime(kotlin.math.abs(delta))}",
-                            style = MaterialTheme.typography.labelSmall,
+                            text = "Seek → ${formatTime(stream.targetSeekPosition!!)}",
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                    } else {
+                        Text(
+                            text = "Not synced - ${formatTime(stream.currentTime)}",
+                            style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.error,
                         )
+                        if (stream.targetSeekPosition != null) {
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "(Would seek → ${formatTime(stream.targetSeekPosition!!)})",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
                     }
                 }
             }

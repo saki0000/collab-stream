@@ -27,6 +27,10 @@ data class StreamInfo(
     // Sync-related state (mutable during playback)
     val currentTime: Float = 0f,
     val isSynced: Boolean = false,
+
+    // Sync calculation results
+    val syncedAbsoluteTime: Instant? = null, // Absolute time calculated during sync
+    val targetSeekPosition: Float? = null, // Target playback position to seek to after sync
 )
 
 /**

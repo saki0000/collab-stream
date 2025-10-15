@@ -28,6 +28,7 @@ class VideoViewModel(
     private val videoSyncUseCase: VideoSyncUseCase,
 ) : ViewModel() {
 
+    @OptIn(ExperimentalTime::class)
     private val _uiState = MutableStateFlow(VideoUiState())
 
     // Combine UI state with player state for reactive updates
@@ -65,6 +66,7 @@ class VideoViewModel(
     /**
      * Handles errors from the video player component
      */
+    @OptIn(ExperimentalTime::class)
     fun handleVideoError(errorMessage: String) {
         _uiState.value = _uiState.value.copy(
             isLoading = false,
@@ -76,6 +78,7 @@ class VideoViewModel(
         }
     }
 
+    @OptIn(ExperimentalTime::class)
     private fun loadVideo(videoId: String) {
         if (videoId.isBlank()) {
             handleVideoError("Video ID cannot be empty")
@@ -102,6 +105,7 @@ class VideoViewModel(
         }
     }
 
+    @OptIn(ExperimentalTime::class)
     private fun loadVideoWithService(videoId: String, serviceType: VideoServiceType) {
         if (videoId.isBlank()) {
             handleVideoError("Video ID cannot be empty")
@@ -133,6 +137,7 @@ class VideoViewModel(
         }
     }
 
+    @OptIn(ExperimentalTime::class)
     private fun changeServiceType(serviceType: VideoServiceType) {
         _uiState.value = _uiState.value.copy(
             serviceType = serviceType,
@@ -153,6 +158,7 @@ class VideoViewModel(
         }
     }
 
+    @OptIn(ExperimentalTime::class)
     private fun clearError() {
         _uiState.value = _uiState.value.copy(errorMessage = null)
     }
@@ -227,6 +233,7 @@ class VideoViewModel(
     /**
      * Handles sync errors and updates state accordingly
      */
+    @OptIn(ExperimentalTime::class)
     private fun handleSyncError(errorMessage: String) {
         _uiState.value = _uiState.value.copy(
             isSyncing = false,
@@ -241,6 +248,7 @@ class VideoViewModel(
     /**
      * Clears sync error state
      */
+    @OptIn(ExperimentalTime::class)
     private fun clearSyncError() {
         _uiState.value = _uiState.value.copy(syncError = null)
     }
@@ -248,6 +256,7 @@ class VideoViewModel(
     /**
      * Handles user-initiated seek to specific position
      */
+    @OptIn(ExperimentalTime::class)
     private fun handleUserSeek(position: Float) {
         println("User seeked to position: $position seconds")
 
@@ -279,6 +288,7 @@ class VideoViewModel(
     /**
      * Loads main stream from StreamInfo
      */
+    @OptIn(ExperimentalTime::class)
     private fun loadMainStream(streamInfo: org.example.project.domain.model.StreamInfo) {
         _uiState.value = _uiState.value.copy(
             mainStream = streamInfo,
@@ -305,6 +315,7 @@ class VideoViewModel(
     /**
      * Adds a sub stream to the list
      */
+    @OptIn(ExperimentalTime::class)
     private fun addSubStream(streamInfo: org.example.project.domain.model.StreamInfo) {
         val currentSubs = _uiState.value.subStreams
 
@@ -328,6 +339,7 @@ class VideoViewModel(
     /**
      * Removes a sub stream from the list
      */
+    @OptIn(ExperimentalTime::class)
     private fun removeSubStream(streamId: String) {
         val currentSubs = _uiState.value.subStreams
         val updatedSubs = currentSubs.filterNot { it.streamId == streamId }
@@ -344,6 +356,7 @@ class VideoViewModel(
     /**
      * Switches main and sub streams
      */
+    @OptIn(ExperimentalTime::class)
     private fun switchMainSub(subStreamId: String) {
         val currentMain = _uiState.value.mainStream
         val currentSubs = _uiState.value.subStreams
@@ -378,7 +391,7 @@ class VideoViewModel(
     }
 
     /**
-     * Syncs all sub streams to main stream's current time
+     * Syncs all sub streams to main stream's current time using absolute time calculation
      */
     @OptIn(ExperimentalTime::class)
     private fun syncAllStreams() {
@@ -403,17 +416,72 @@ class VideoViewModel(
 
         viewModelScope.launch {
             try {
-                // TODO: Implement actual sync logic with player API
-                // For now, just update isSynced flag
                 val mainTime = _uiState.value.currentTime
-                val syncedSubs = subStreams.map { it.copy(currentTime = mainTime, isSynced = true) }
 
-                _uiState.value = _uiState.value.copy(
-                    subStreams = syncedSubs,
-                    isSyncing = false,
+                // 1. Calculate main stream's absolute time
+                val mainSyncResult = videoSyncUseCase.syncVideoToAbsoluteTime(
+                    mainStream.streamId,
+                    mainTime,
+                    mainStream.serviceType,
                 )
 
-                _sideEffect.emit(VideoSideEffect.ShowSuccess("${syncedSubs.size} streams synced"))
+                mainSyncResult.fold(
+                    onSuccess = { mainSyncInfo ->
+                        val mainAbsoluteTime = mainSyncInfo.absoluteTime
+
+                        // 2. Calculate target seek positions for each sub stream
+                        val syncedSubs = subStreams.map { subStream ->
+                            val subSyncResult = videoSyncUseCase.syncVideoToAbsoluteTime(
+                                subStream.streamId,
+                                0f, // We'll calculate the actual position based on absolute time
+                                subStream.serviceType,
+                            )
+
+                            subSyncResult.fold(
+                                onSuccess = { subSyncInfo ->
+                                    // Calculate how many seconds elapsed from sub stream start to main's absolute time
+                                    val elapsedSeconds = (mainAbsoluteTime - subSyncInfo.streamStartTime).inWholeSeconds.toFloat()
+
+                                    if (elapsedSeconds < 0) {
+                                        // Sub stream hasn't started yet when main is at current time
+                                        subStream.copy(
+                                            targetSeekPosition = 0f,
+                                            syncedAbsoluteTime = mainAbsoluteTime,
+                                            isSynced = false, // Can't sync to future
+                                        )
+                                    } else {
+                                        // Normal case: seek to calculated position
+                                        subStream.copy(
+                                            targetSeekPosition = elapsedSeconds,
+                                            syncedAbsoluteTime = mainAbsoluteTime,
+                                            isSynced = true,
+                                        )
+                                    }
+                                },
+                                onFailure = {
+                                    // Keep original if sync fails for this stream
+                                    subStream.copy(isSynced = false)
+                                },
+                            )
+                        }
+
+                        _uiState.value = _uiState.value.copy(
+                            subStreams = syncedSubs,
+                            mainAbsoluteTime = mainAbsoluteTime,
+                            isSyncing = false,
+                        )
+
+                        val syncedCount = syncedSubs.count { it.isSynced }
+                        _sideEffect.emit(
+                            VideoSideEffect.ShowSuccess(
+                                "$syncedCount/${syncedSubs.size} streams synced to ${formatAbsoluteTime(mainAbsoluteTime)}",
+                            ),
+                        )
+                    },
+                    onFailure = { error ->
+                        handleSyncError("Failed to calculate main stream time: ${error.message}")
+                    },
+                )
             } catch (e: Exception) {
                 handleSyncError("Failed to sync streams: ${e.message}")
             }

@@ -35,6 +35,7 @@ data class VideoUiState(
     val syncResult: VideoSyncUiState? = null,
     val syncError: String? = null,
     val currentTime: Float = 0L.toFloat(),
+    val mainAbsoluteTime: Instant? = null, // Main stream's current absolute time
 
     // User seek tracking
     val lastUserSeekPosition: Float? = null,
