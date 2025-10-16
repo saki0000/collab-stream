@@ -253,7 +253,6 @@ class VideoViewModel(
         _uiState.value = _uiState.value.copy(syncError = null)
     }
 
-
     /**
      * Handles user-initiated seek to specific position
      */
