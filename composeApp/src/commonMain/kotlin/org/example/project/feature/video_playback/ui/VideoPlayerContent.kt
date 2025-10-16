@@ -11,6 +11,10 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -18,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import org.example.project.VideoPlayerView
 import org.example.project.feature.video_playback.VideoIntent
 import org.example.project.feature.video_playback.VideoUiState
+import org.example.project.feature.video_playback.player.WebViewPlayerController
 
 /**
  * Content Composable (Stateless) - Represents the video player section
@@ -29,6 +34,7 @@ fun VideoPlayerContent(
     onVideoError: (String) -> Unit,
     onRetry: () -> Unit,
     onIntent: (VideoIntent) -> Unit,
+    onPlayerControllerReady: (WebViewPlayerController?) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     // Use mainStream if available, otherwise fall back to legacy videoId
@@ -85,7 +91,7 @@ fun VideoPlayerContent(
                             uiState = uiState,
                             onIntent = onIntent,
                             onPlayerControllerReady = { controller ->
-                                onIntent(VideoIntent.SetPlayerController(controller))
+                                onPlayerControllerReady(controller)
                             },
                         )
                     }

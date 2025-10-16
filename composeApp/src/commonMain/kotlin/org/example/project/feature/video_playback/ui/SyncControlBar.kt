@@ -43,7 +43,7 @@ fun SyncControlBar(
     syncedCount: Int,
     totalSubCount: Int,
     isSyncing: Boolean,
-    onSyncAll: () -> Unit,
+    onSyncAll: (onGetCurrentTime: (Float) -> Unit) -> Unit,
     onAddSub: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -106,7 +106,11 @@ fun SyncControlBar(
             ) {
                 if (totalSubCount > 0) {
                     Button(
-                        onClick = onSyncAll,
+                        onClick = {
+                            onSyncAll { currentTime ->
+                                // Callback will be invoked with current playback position
+                            }
+                        },
                         enabled = !isSyncing,
                         modifier = Modifier.weight(1f),
                     ) {

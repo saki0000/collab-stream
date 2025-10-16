@@ -2,7 +2,6 @@ package org.example.project.feature.video_playback
 
 import org.example.project.domain.model.StreamInfo
 import org.example.project.domain.model.VideoServiceType
-import org.example.project.feature.video_playback.player.WebViewPlayerController
 
 /**
  * Sealed interface defining all possible user intents for video playback functionality.
@@ -23,15 +22,12 @@ sealed interface VideoIntent {
     data class AddSubStream(val streamInfo: StreamInfo) : VideoIntent
     data class RemoveSubStream(val streamId: String) : VideoIntent
     data class SwitchMainSub(val subStreamId: String) : VideoIntent
-    data object SyncAllStreams : VideoIntent
+    data class SyncAllStreams(val currentPosition: Float) : VideoIntent
 
     // Sync intents
     data class SyncToAbsoluteTime(val currentTime: Float) : VideoIntent
     data class UserSeekToPosition(val position: Float) : VideoIntent
     data object ClearSyncError : VideoIntent
-
-    // Player controller intent
-    data class SetPlayerController(val controller: WebViewPlayerController) : VideoIntent
 }
 
 /**

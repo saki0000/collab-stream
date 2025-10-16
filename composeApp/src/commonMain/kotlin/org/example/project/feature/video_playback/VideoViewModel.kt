@@ -28,9 +28,6 @@ class VideoViewModel(
     private val videoSyncUseCase: VideoSyncUseCase,
 ) : ViewModel() {
 
-    // Player controller for accessing current playback position
-    private var playerController: org.example.project.feature.video_playback.player.WebViewPlayerController? = null
-
     @OptIn(ExperimentalTime::class)
     private val _uiState = MutableStateFlow(VideoUiState())
 
@@ -57,15 +54,12 @@ class VideoViewModel(
             is VideoIntent.AddSubStream -> addSubStream(intent.streamInfo)
             is VideoIntent.RemoveSubStream -> removeSubStream(intent.streamId)
             is VideoIntent.SwitchMainSub -> switchMainSub(intent.subStreamId)
-            VideoIntent.SyncAllStreams -> syncAllStreams()
 
             // Sync intents
             is VideoIntent.SyncToAbsoluteTime -> syncToAbsoluteTime(intent.currentTime)
             is VideoIntent.UserSeekToPosition -> handleUserSeek(intent.position)
             VideoIntent.ClearSyncError -> clearSyncError()
-
-            // Player controller intent
-            is VideoIntent.SetPlayerController -> setPlayerController(intent.controller)
+            is VideoIntent.SyncAllStreams -> syncAllStreams(intent.currentPosition)
         }
     }
 
@@ -259,13 +253,6 @@ class VideoViewModel(
         _uiState.value = _uiState.value.copy(syncError = null)
     }
 
-    /**
-     * Sets the player controller instance for accessing playback position
-     */
-    private fun setPlayerController(controller: org.example.project.feature.video_playback.player.WebViewPlayerController) {
-        playerController = controller
-        println("VideoViewModel: Player controller set and ready")
-    }
 
     /**
      * Handles user-initiated seek to specific position
@@ -406,10 +393,10 @@ class VideoViewModel(
 
     /**
      * Syncs all sub streams to main stream's current time using absolute time calculation.
-     * Gets current playback position from player controller to ensure accurate sync.
+     * Receives current playback position from UI layer via intent.
      */
     @OptIn(ExperimentalTime::class)
-    private fun syncAllStreams() {
+    private fun syncAllStreams(currentPosition: Float) {
         val mainStream = _uiState.value.mainStream
         val subStreams = _uiState.value.subStreams
 
@@ -427,30 +414,18 @@ class VideoViewModel(
             return
         }
 
-        if (playerController == null) {
-            viewModelScope.launch {
-                _sideEffect.emit(VideoSideEffect.ShowError("Player not initialized yet"))
-            }
-            return
-        }
-
         _uiState.value = _uiState.value.copy(isSyncing = true)
 
         viewModelScope.launch {
             try {
-                // Get current playback position from player controller
-                playerController?.requestCurrentTime { mainTime ->
-                    viewModelScope.launch {
-                        // 1. Calculate main stream's absolute time using actual playback position
-                        val mainSyncResult = videoSyncUseCase.syncVideoToAbsoluteTime(
-                            mainStream.streamId,
-                            mainTime,
-                            mainStream.serviceType,
-                        )
+                // 1. Calculate main stream's absolute time using provided playback position
+                val mainSyncResult = videoSyncUseCase.syncVideoToAbsoluteTime(
+                    mainStream.streamId,
+                    currentPosition,
+                    mainStream.serviceType,
+                )
 
-                        performSync(mainSyncResult, subStreams, mainTime)
-                    }
-                }
+                performSync(mainSyncResult, subStreams, currentPosition)
             } catch (e: Exception) {
                 handleSyncError("Failed to sync streams: ${e.message}")
             }
@@ -526,5 +501,4 @@ class VideoViewModel(
             },
         )
     }
-
 }

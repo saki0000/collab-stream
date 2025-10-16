@@ -10,11 +10,16 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlin.time.ExperimentalTime
 import org.example.project.feature.video_playback.VideoIntent
 import org.example.project.feature.video_playback.VideoUiState
+import org.example.project.feature.video_playback.player.WebViewPlayerController
 
 /**
  * Screen Composable (Stateless) - Main Player Screen with 3-section hierarchical layout
@@ -32,6 +37,9 @@ fun VideoScreen(
     onNavigateToSubSearch: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    // Store player controller reference at screen level
+    var playerController by remember { mutableStateOf<WebViewPlayerController?>(null) }
+
     Scaffold(
         modifier = modifier,
         snackbarHost = {
@@ -53,6 +61,9 @@ fun VideoScreen(
                         onVideoError = onVideoError,
                         onRetry = { onIntent(VideoIntent.RetryLoad) },
                         onIntent = onIntent,
+                        onPlayerControllerReady = { controller ->
+                            playerController = controller
+                        },
                     )
                 }
 
@@ -66,7 +77,17 @@ fun VideoScreen(
                         syncedCount = syncedCount,
                         totalSubCount = totalSubCount,
                         isSyncing = uiState.isSyncing,
-                        onSyncAll = { onIntent(VideoIntent.SyncAllStreams) },
+                        onSyncAll = { onGetCurrentTime ->
+                            // Get current playback position from player controller
+                            playerController?.requestCurrentTime { currentPosition ->
+                                onGetCurrentTime(currentPosition)
+                                // Send intent with current position
+                                onIntent(VideoIntent.SyncAllStreams(currentPosition))
+                            } ?: run {
+                                // Player not ready
+                                println("Player controller not ready for sync")
+                            }
+                        },
                         onAddSub = { onNavigateToSubSearch() },
                     )
                 }
