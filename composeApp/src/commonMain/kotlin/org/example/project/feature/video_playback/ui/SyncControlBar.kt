@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -40,7 +39,6 @@ import kotlinx.datetime.toLocalDateTime
 @OptIn(ExperimentalTime::class)
 @Composable
 fun SyncControlBar(
-    currentTime: Float,
     absoluteTime: Instant?,
     syncedCount: Int,
     totalSubCount: Int,
@@ -61,7 +59,7 @@ fun SyncControlBar(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            // Section 1: Time Display (Absolute Time + Playback Time)
+            // Section 1: Time Display (Absolute Time only)
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -72,22 +70,21 @@ fun SyncControlBar(
                     tint = MaterialTheme.colorScheme.primary,
                 )
                 Column(modifier = Modifier.weight(1f)) {
-                    // Absolute Time (ISO 8601 or readable format)
+                    // Absolute Time (Date and Time)
                     if (absoluteTime != null) {
                         Text(
                             text = "Sync Time: ${formatAbsoluteTime(absoluteTime)}",
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.Medium,
-                            color = MaterialTheme.colorScheme.primary,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                        )
+                    } else {
+                        Text(
+                            text = "Not synced yet",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
-
-                    // Playback Time (MM:SS)
-                    Text(
-                        text = "Playback: ${formatTime(currentTime)}",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                    )
 
                     // Sync Status
                     if (totalSubCount > 0) {
@@ -148,26 +145,13 @@ fun SyncControlBar(
 }
 
 /**
- * Formats time in seconds to MM:SS or HH:MM:SS
- */
-private fun formatTime(seconds: Float): String {
-    val totalSeconds = seconds.toInt()
-    val hours = totalSeconds / 3600
-    val minutes = (totalSeconds % 3600) / 60
-    val secs = totalSeconds % 60
-
-    return if (hours > 0) {
-        "$hours:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}"
-    } else {
-        "${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}"
-    }
-}
-
-/**
  * Formats absolute time to readable date-time string
  */
 @OptIn(ExperimentalTime::class)
 private fun formatAbsoluteTime(absoluteTime: Instant): String {
     val localDateTime = absoluteTime.toLocalDateTime(TimeZone.currentSystemDefault())
-    return "${localDateTime.date} ${localDateTime.hour.toString().padStart(2, '0')}:${localDateTime.minute.toString().padStart(2, '0')}:${localDateTime.second.toString().padStart(2, '0')}"
+    return "${localDateTime.date} ${localDateTime.hour.toString().padStart(
+        2,
+        '0',
+    )}:${localDateTime.minute.toString().padStart(2, '0')}:${localDateTime.second.toString().padStart(2, '0')}"
 }

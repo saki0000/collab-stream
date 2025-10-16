@@ -40,7 +40,7 @@ import org.example.project.domain.model.StreamInfo
 @Composable
 fun SubStreamItem(
     stream: StreamInfo,
-    mainTime: Float,
+    mainTime: Float, // Not used, can be removed in future refactor
     onSwitchToMain: () -> Unit,
     onRemove: () -> Unit,
     modifier: Modifier = Modifier,
@@ -105,7 +105,7 @@ fun SubStreamItem(
                     overflow = TextOverflow.Ellipsis,
                 )
 
-                // Row 3: Target Seek Position (Sync Status)
+                // Row 3: Playback Position (Target Seek Position)
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         imageVector = Icons.Default.PlayArrow,
@@ -115,28 +115,24 @@ fun SubStreamItem(
                     )
                     Spacer(modifier = Modifier.width(4.dp))
 
-                    // Display target seek position if synced, otherwise show "Not synced"
-                    if (stream.isSynced && stream.targetSeekPosition != null) {
+                    // Display target seek position (playback position)
+                    if (stream.targetSeekPosition != null) {
                         Text(
-                            text = "Seek → ${formatTime(stream.targetSeekPosition!!)}",
+                            text = formatTime(stream.targetSeekPosition!!),
                             style = MaterialTheme.typography.bodySmall,
                             fontWeight = FontWeight.Medium,
-                            color = MaterialTheme.colorScheme.primary,
+                            color = if (stream.isSynced) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                MaterialTheme.colorScheme.onSurfaceVariant
+                            },
                         )
                     } else {
                         Text(
-                            text = "Not synced - ${formatTime(stream.currentTime)}",
+                            text = "00:00",
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.error,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
-                        if (stream.targetSeekPosition != null) {
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                text = "(Would seek → ${formatTime(stream.targetSeekPosition!!)})",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
                     }
                 }
             }

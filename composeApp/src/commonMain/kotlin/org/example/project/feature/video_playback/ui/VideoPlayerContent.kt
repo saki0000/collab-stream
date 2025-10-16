@@ -84,6 +84,9 @@ fun VideoPlayerContent(
                             onError = onVideoError,
                             uiState = uiState,
                             onIntent = onIntent,
+                            onPlayerControllerReady = { controller ->
+                                onIntent(VideoIntent.SetPlayerController(controller))
+                            },
                         )
                     }
                 }

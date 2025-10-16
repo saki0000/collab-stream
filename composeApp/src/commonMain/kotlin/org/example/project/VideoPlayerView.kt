@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import org.example.project.feature.video_playback.VideoIntent
 import org.example.project.feature.video_playback.VideoUiState
+import org.example.project.feature.video_playback.player.WebViewPlayerController
 
 /**
  * Platform-specific video player component using expect/actual pattern.
@@ -14,8 +15,7 @@ import org.example.project.feature.video_playback.VideoUiState
  * @param videoId The YouTube video ID to display
  * @param modifier Compose modifier for styling and layout
  * @param onError Callback for handling errors during video loading/playback
- * @param isMainPlayer True if this is the main player, false if sub player
- * @param onControllerReady Callback when the player controller is ready
+ * @param onPlayerControllerReady Callback invoked when the player controller is initialized and ready
  */
 @Composable
 expect fun VideoPlayerView(
@@ -24,6 +24,5 @@ expect fun VideoPlayerView(
     onIntent: (VideoIntent) -> Unit,
     modifier: Modifier = Modifier,
     onError: (String) -> Unit = {},
-    isMainPlayer: Boolean = true,
-    onControllerReady: (Any?) -> Unit = {},
+    onPlayerControllerReady: (WebViewPlayerController) -> Unit = {},
 )

@@ -12,9 +12,9 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import kotlin.time.ExperimentalTime
 import org.example.project.feature.video_playback.VideoIntent
 import org.example.project.feature.video_playback.VideoUiState
-import kotlin.time.ExperimentalTime
 
 /**
  * Screen Composable (Stateless) - Main Player Screen with 3-section hierarchical layout
@@ -62,7 +62,6 @@ fun VideoScreen(
                     val totalSubCount = uiState.subStreams.size
 
                     SyncControlBar(
-                        currentTime = uiState.currentTime,
                         absoluteTime = uiState.mainAbsoluteTime,
                         syncedCount = syncedCount,
                         totalSubCount = totalSubCount,

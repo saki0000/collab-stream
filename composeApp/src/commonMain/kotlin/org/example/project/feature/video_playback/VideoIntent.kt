@@ -2,6 +2,7 @@ package org.example.project.feature.video_playback
 
 import org.example.project.domain.model.StreamInfo
 import org.example.project.domain.model.VideoServiceType
+import org.example.project.feature.video_playback.player.WebViewPlayerController
 
 /**
  * Sealed interface defining all possible user intents for video playback functionality.
@@ -29,37 +30,8 @@ sealed interface VideoIntent {
     data class UserSeekToPosition(val position: Float) : VideoIntent
     data object ClearSyncError : VideoIntent
 
-    // Multi-video sync intents
-
-    /**
-     * Intent to load main video (primary video for sync)
-     */
-    data class LoadMainVideo(val videoId: String, val serviceType: VideoServiceType) : VideoIntent
-
-    /**
-     * Intent to load sub video (secondary video to be synced)
-     */
-    data class LoadSubVideo(val videoId: String, val serviceType: VideoServiceType) : VideoIntent
-
-    /**
-     * Intent to synchronize main video's playback position to sub video
-     */
-    data object SyncMainToSub : VideoIntent
-
-    /**
-     * Intent to synchronize main video's playback position to sub video with explicit time
-     */
-    data class SyncMainToSubWithTime(val mainCurrentTime: Float) : VideoIntent
-
-    /**
-     * Intent to update main player's current time
-     */
-    data class UpdateMainPlayerTime(val currentTime: Float) : VideoIntent
-
-    /**
-     * Intent to update sub player's current time
-     */
-    data class UpdateSubPlayerTime(val currentTime: Float) : VideoIntent
+    // Player controller intent
+    data class SetPlayerController(val controller: WebViewPlayerController) : VideoIntent
 }
 
 /**
@@ -88,14 +60,4 @@ sealed interface VideoSideEffect {
      * Show sync error message
      */
     data class ShowSyncError(val message: String) : VideoSideEffect
-
-    /**
-     * Seek sub video to specific position (for sync operation)
-     */
-    data class SeekSubVideo(val seconds: Float) : VideoSideEffect
-
-    /**
-     * Request main player's current time (Container will handle this and send back SyncMainToSubWithTime)
-     */
-    data object RequestMainPlayerTime : VideoSideEffect
 }
