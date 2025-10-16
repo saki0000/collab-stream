@@ -57,7 +57,7 @@ fun VideoContainer(
     }
 
     // Process sub stream selection result from SavedStateHandle (new flow)
-    LaunchedEffect(savedStateHandle) {
+    LaunchedEffect(Unit) {
         savedStateHandle?.let { handle ->
             // Observe sub stream fields from navigation result
             handle.getStateFlow<String?>("sub_stream_id", null).collect { subStreamId ->
@@ -80,17 +80,6 @@ fun VideoContainer(
 
                     // Add sub stream to ViewModel
                     viewModel.handleIntent(VideoIntent.AddSubStream(streamInfo))
-
-                    // Clear all sub stream fields to prevent re-adding on recomposition
-                    handle.remove<String>("sub_stream_id")
-                    handle.remove<String>("sub_title")
-                    handle.remove<String>("sub_thumbnail_url")
-                    handle.remove<String>("sub_channel_id")
-                    handle.remove<String>("sub_channel_name")
-                    handle.remove<String>("sub_channel_icon_url")
-                    handle.remove<String>("sub_service_type")
-                    handle.remove<Long>("sub_published_at")
-                    handle.remove<Boolean>("sub_is_live")
                 }
             }
         }
