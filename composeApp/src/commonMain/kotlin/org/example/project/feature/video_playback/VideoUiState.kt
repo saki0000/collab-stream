@@ -4,44 +4,39 @@ package org.example.project.feature.video_playback
 
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
+import org.example.project.domain.model.StreamInfo
 import org.example.project.domain.model.VideoServiceType
 import org.example.project.feature.video_playback.player.PlayerState
-
-/**
- * Data class representing a single video player's information.
- * This structure allows for easy extension to support multiple videos.
- */
-data class VideoPlayerInfo(
-    val videoId: String = "",
-    val serviceType: VideoServiceType = VideoServiceType.YOUTUBE,
-    val playerState: PlayerState = PlayerState.NotInitialized,
-    val currentTime: Float = 0f,
-    val isPlayerReady: Boolean = false,
-)
 
 /**
  * Data class representing the UI state for video playback components.
  * Contains all necessary state information for video player rendering and sync functionality.
  *
- * Note: Search state has been moved to VideoSearchUiState for better separation of concerns.
+ * Supports multi-stream sync with Main and Sub streams.
  */
 data class VideoUiState(
-    // Multi-video support
-    val mainVideo: VideoPlayerInfo = VideoPlayerInfo(),
-    val subVideo: VideoPlayerInfo = VideoPlayerInfo(),
+    // Legacy single video state (kept for backward compatibility)
     val videoId: String = "",
     val serviceType: VideoServiceType = VideoServiceType.YOUTUBE,
     val syncDateTime: String = "",
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
+
+    // Multi-stream state (new)
+    val mainStream: StreamInfo? = null,
+    val subStreams: List<StreamInfo> = emptyList(),
+
     // Player state integration
     val playerState: PlayerState = PlayerState.NotInitialized,
     val isPlayerReady: Boolean = false,
+
     // Sync-related state
     val isSyncing: Boolean = false,
     val syncResult: VideoSyncUiState? = null,
     val syncError: String? = null,
     val currentTime: Float = 0L.toFloat(),
+    val mainAbsoluteTime: Instant? = null, // Main stream's current absolute time
+
     // User seek tracking
     val lastUserSeekPosition: Float? = null,
     val lastUserSeekTime: String? = null,

@@ -101,8 +101,7 @@ actual fun VideoPlayerView(
     onIntent: (VideoIntent) -> Unit,
     modifier: Modifier,
     onError: (String) -> Unit,
-    isMainPlayer: Boolean,
-    onControllerReady: (Any?) -> Unit,
+    onPlayerControllerReady: (org.example.project.feature.video_playback.player.WebViewPlayerController) -> Unit,
 ) {
     if (videoId.isBlank()) {
         onError("Video ID cannot be empty")
@@ -111,17 +110,16 @@ actual fun VideoPlayerView(
 
     val controller = remember { IOSWebViewPlayerController() }
 
-    // Notify parent when controller is ready
-    remember(controller) {
-        onControllerReady(controller)
-    }
-
     Column(modifier = modifier) {
         var webView by remember { mutableStateOf<WKWebView?>(null) }
 
         // Set the WebView instance in the controller when available
         remember(webView, controller) {
             controller.setWebView(webView)
+            // Notify that controller is ready when WebView is set
+            if (webView != null) {
+                onPlayerControllerReady(controller)
+            }
         }
 
         UIKitView(

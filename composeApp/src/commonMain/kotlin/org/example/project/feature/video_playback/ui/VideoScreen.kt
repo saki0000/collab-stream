@@ -2,46 +2,44 @@ package org.example.project.feature.video_playback.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Sync
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import org.example.project.VideoPlayerView
+import kotlin.time.ExperimentalTime
 import org.example.project.feature.video_playback.VideoIntent
 import org.example.project.feature.video_playback.VideoUiState
+import org.example.project.feature.video_playback.player.WebViewPlayerController
 
 /**
- * Screen Composable (Stateless) - Defines overall screen layout and structure
+ * Screen Composable (Stateless) - Main Player Screen with 3-section hierarchical layout
+ * Following design doc: MainPlayerSection + SyncControlBar + SubStreamsList
  * Receives UiState and Intent callbacks from Container, delegates to Content composables
  */
+@OptIn(ExperimentalTime::class)
 @Composable
 fun VideoScreen(
     uiState: VideoUiState,
     onIntent: (VideoIntent) -> Unit,
     onVideoError: (String) -> Unit,
     snackbarHostState: SnackbarHostState,
-    onNavigateToSearch: (initialQuery: String, selectionTarget: String) -> Unit,
-    onMainControllerReady: (Any?) -> Unit,
-    onSubControllerReady: (Any?) -> Unit,
+    onNavigateToSearch: (initialQuery: String) -> Unit,
+    onNavigateToSubSearch: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    // Store player controller reference at screen level
+    var playerController by remember { mutableStateOf<WebViewPlayerController?>(null) }
+
     Scaffold(
         modifier = modifier,
         snackbarHost = {
@@ -52,146 +50,61 @@ fun VideoScreen(
             modifier = Modifier
                 .padding(paddingValues),
         ) {
-            Column(
+            LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(16.dp),
-                modifier = Modifier.padding(16.dp),
+                contentPadding = PaddingValues(16.dp),
             ) {
-                // Video Sync Mode - Always show
-                Text(
-                    text = "Video Sync Mode",
-                    style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.padding(bottom = 8.dp),
-                )
-
-                val hasMainVideo = uiState.mainVideo.videoId.isNotBlank()
-                val hasSubVideo = uiState.subVideo.videoId.isNotBlank()
-
-                // Main Video Section (always show)
-                VideoPlayerSection(
-                    title = "Main Video (主動画)",
-                    videoInfo = uiState.mainVideo,
-                    onVideoError = onVideoError,
-                    onIntent = onIntent,
-                    onAddVideo = {
-                        onNavigateToSearch("", "MAIN")
-                    },
-                    isMain = true,
-                    onControllerReady = onMainControllerReady,
-                )
-
-                // Sync Button (show only when both videos are loaded)
-                if (hasMainVideo && hasSubVideo) {
-                    Button(
-                        onClick = { onIntent(VideoIntent.SyncMainToSub) },
-                        enabled = uiState.mainVideo.isPlayerReady && uiState.subVideo.isPlayerReady && !uiState.isSyncing,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 8.dp),
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Sync,
-                            contentDescription = null,
-                            modifier = Modifier.padding(end = 8.dp),
-                        )
-                        Text(if (uiState.isSyncing) "Syncing..." else "Sync Main → Sub")
-                    }
+                // Section 1: Main Player Section
+                item {
+                    VideoPlayerContent(
+                        uiState = uiState,
+                        onVideoError = onVideoError,
+                        onRetry = { onIntent(VideoIntent.RetryLoad) },
+                        onIntent = onIntent,
+                        onPlayerControllerReady = { controller ->
+                            playerController = controller
+                        },
+                    )
                 }
 
-                // Sub Video Section (always show)
-                VideoPlayerSection(
-                    title = "Sub Video (副動画)",
-                    videoInfo = uiState.subVideo,
-                    onVideoError = onVideoError,
-                    onIntent = onIntent,
-                    onAddVideo = {
-                        onNavigateToSearch("", "SUB")
-                    },
-                    isMain = false,
-                    onControllerReady = onSubControllerReady,
-                )
-            }
-        }
-    }
-}
+                // Section 2: Sync Control Bar
+                item {
+                    val syncedCount = uiState.subStreams.count { it.isSynced }
+                    val totalSubCount = uiState.subStreams.size
 
-/**
- * VideoPlayerSection - Displays a single video player with title
- */
-@Composable
-private fun VideoPlayerSection(
-    title: String,
-    videoInfo: org.example.project.feature.video_playback.VideoPlayerInfo,
-    onVideoError: (String) -> Unit,
-    onIntent: (VideoIntent) -> Unit,
-    onAddVideo: () -> Unit,
-    isMain: Boolean,
-    onControllerReady: (Any?) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            // Title
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium,
-            )
-
-            // Check if video is selected
-            if (videoInfo.videoId.isBlank()) {
-                // No video selected - Show Add button
-                OutlinedButton(
-                    onClick = onAddVideo,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(200.dp),
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center,
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Add,
-                            contentDescription = null,
-                            modifier = Modifier.padding(bottom = 8.dp),
-                        )
-                        Text(
-                            text = "Add ${if (isMain) "Main" else "Sub"} Video",
-                            style = MaterialTheme.typography.bodyLarge,
-                        )
-                    }
+                    SyncControlBar(
+                        absoluteTime = uiState.mainAbsoluteTime,
+                        syncedCount = syncedCount,
+                        totalSubCount = totalSubCount,
+                        isSyncing = uiState.isSyncing,
+                        onSyncAll = { onGetCurrentTime ->
+                            // Get current playback position from player controller
+                            playerController?.requestCurrentTime { currentPosition ->
+                                onGetCurrentTime(currentPosition)
+                                // Send intent with current position
+                                onIntent(VideoIntent.SyncAllStreams(currentPosition))
+                            } ?: run {
+                                // Player not ready
+                                println("Player controller not ready for sync")
+                            }
+                        },
+                        onAddSub = { onNavigateToSubSearch() },
+                    )
                 }
-            } else {
-                // Video selected - Show video player
-                // Create temporary VideoUiState for this video
-                val videoUiState = VideoUiState(
-                    videoId = videoInfo.videoId,
-                    serviceType = videoInfo.serviceType,
-                    playerState = videoInfo.playerState,
-                    currentTime = videoInfo.currentTime,
-                    isPlayerReady = videoInfo.isPlayerReady,
-                    // Copy main/sub video info for proper state management
-                    mainVideo = if (isMain) videoInfo else org.example.project.feature.video_playback.VideoPlayerInfo(),
-                    subVideo = if (!isMain) videoInfo else org.example.project.feature.video_playback.VideoPlayerInfo(),
-                )
 
-                // Actual Video Player
-                VideoPlayerView(
-                    videoId = videoInfo.videoId,
-                    uiState = videoUiState,
-                    onIntent = onIntent,
-                    onError = onVideoError,
-                    isMainPlayer = isMain,
-                    onControllerReady = onControllerReady,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(200.dp),
-                )
+                // Section 3: Sub Streams List
+                items(uiState.subStreams) { subStream ->
+                    SubStreamItem(
+                        stream = subStream,
+                        mainTime = uiState.currentTime,
+                        onSwitchToMain = {
+                            onIntent(VideoIntent.SwitchMainSub(subStream.streamId))
+                        },
+                        onRemove = {
+                            onIntent(VideoIntent.RemoveSubStream(subStream.streamId))
+                        },
+                    )
+                }
             }
         }
     }

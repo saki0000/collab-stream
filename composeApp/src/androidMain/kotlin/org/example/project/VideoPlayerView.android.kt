@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.view.ViewGroup
 import android.webkit.WebChromeClient
 import android.webkit.WebView
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
@@ -33,8 +34,7 @@ actual fun VideoPlayerView(
     onIntent: (VideoIntent) -> Unit,
     modifier: Modifier,
     onError: (String) -> Unit,
-    isMainPlayer: Boolean,
-    onControllerReady: (Any?) -> Unit,
+    onPlayerControllerReady: (org.example.project.feature.video_playback.player.WebViewPlayerController) -> Unit,
 ) {
     if (videoId.isBlank()) {
         onError("Video ID cannot be empty")
@@ -42,22 +42,21 @@ actual fun VideoPlayerView(
     }
     val controller = remember { AndroidWebViewPlayerController() }
     var webView by remember { mutableStateOf<WebView?>(null) }
-
-    // Set the WebView instance in the controller when available
-    LaunchedEffect(webView, controller) {
-        controller.setWebView(webView)
+    Column(modifier = Modifier) {
+        // Set the WebView instance in the controller when available
+        LaunchedEffect(webView, controller) {
+            controller.setWebView(webView)
+            // Notify that controller is ready when WebView is set
+            if (webView != null) {
+                onPlayerControllerReady(controller)
+            }
+        }
+        VideoPlayer(
+            videoId = videoId,
+            serviceType = uiState.serviceType,
+            onChangeWebView = { webView = it },
+        )
     }
-
-    // Notify parent when controller is ready
-    LaunchedEffect(controller) {
-        onControllerReady(controller)
-    }
-
-    VideoPlayer(
-        videoId = videoId,
-        serviceType = uiState.serviceType,
-        onChangeWebView = { webView = it },
-    )
 }
 
 @SuppressLint("SetJavaScriptEnabled")

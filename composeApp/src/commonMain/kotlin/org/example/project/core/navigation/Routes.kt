@@ -10,29 +10,61 @@ import kotlinx.serialization.Serializable
  */
 
 /**
- * Home route - Main video player screen with multi-video sync support
- *
- * @param mainVideoId Main video ID (primary video for sync)
- * @param mainServiceType Main video service type (YOUTUBE or TWITCH)
- * @param subVideoId Sub video ID (secondary video to be synced)
- * @param subServiceType Sub video service type (YOUTUBE or TWITCH)
+ * Home route - Initial screen with group selection and search options
  */
 @Serializable
-data class HomeRoute(
-    val mainVideoId: String? = null,
-    val mainServiceType: String? = null,
-    val subVideoId: String? = null,
-    val subServiceType: String? = null,
+data object HomeRoute
+
+/**
+ * Streamer search route - Bottom sheet for searching streamers (Main or Sub)
+ *
+ * @param searchMode Mode indicating whether searching for MAIN or SUB streamer
+ */
+@Serializable
+data class StreamerSearchRoute(
+    val searchMode: String, // "MAIN" or "SUB"
 )
 
 /**
- * Video search route - Bottom sheet for searching videos
+ * Main player route - Main video player screen with sync functionality
+ *
+ * @param mainStreamId Video ID of the main stream
+ * @param mainChannelId Channel ID of the main streamer
+ * @param mainChannelName Channel name of the main streamer
+ * @param mainServiceType Service type (YOUTUBE or TWITCH)
+ * @param mainThumbnailUrl Thumbnail URL
+ * @param mainTitle Video title
+ * @param mainChannelIconUrl Channel icon URL
+ * @param mainIsLive Whether stream is live
+ * @param mainPublishedAt Published timestamp (epoch seconds)
+ */
+@Serializable
+data class MainPlayerRoute(
+    val mainStreamId: String,
+    val mainChannelId: String,
+    val mainChannelName: String,
+    val mainServiceType: String,
+    val mainThumbnailUrl: String = "",
+    val mainTitle: String = "",
+    val mainChannelIconUrl: String = "",
+    val mainIsLive: Boolean = false,
+    val mainPublishedAt: Long = 0L, // epoch seconds
+)
+
+/**
+ * Video search route - Bottom sheet for searching videos (DEPRECATED, use StreamerSearchRoute)
  *
  * @param initialQuery Optional initial search query to populate the search field
- * @param selectionTarget Target for video selection: "MAIN" for main video, "SUB" for sub video
  */
 @Serializable
 data class VideoSearchRoute(
     val initialQuery: String = "",
-    val selectionTarget: String = "MAIN", // "MAIN" or "SUB"
 )
+
+/**
+ * Enum representing streamer search mode
+ */
+enum class StreamerSearchMode {
+    MAIN,
+    SUB,
+}

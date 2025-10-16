@@ -1,0 +1,49 @@
+package org.example.project.feature.streamer_search.ui
+
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import org.example.project.feature.streamer_search.StreamerSearchIntent
+import org.example.project.feature.streamer_search.StreamerSearchUiState
+
+/**
+ * Streamer Search Screen (BottomSheet)
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun StreamerSearchScreen(
+    uiState: StreamerSearchUiState,
+    onIntent: (StreamerSearchIntent) -> Unit,
+    onDismiss: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        modifier = modifier,
+    ) {
+        StreamerSearchContent(
+            searchMode = uiState.searchMode,
+            inputText = uiState.inputText,
+            searchQuery = uiState.searchQuery,
+            searchResults = uiState.searchResults,
+            isSearching = uiState.isSearching,
+            searchError = uiState.searchError,
+            hasMoreResults = uiState.searchNextPageToken != null,
+            selectedDate = uiState.selectedDate,
+            selectedService = uiState.selectedService,
+            onInputTextChange = { text -> onIntent(StreamerSearchIntent.UpdateInputText(text)) },
+            onExecuteSearch = { onIntent(StreamerSearchIntent.ExecuteSearch) },
+            onSelectResult = { result -> onIntent(StreamerSearchIntent.SelectSearchResult(result)) },
+            onLoadMore = { onIntent(StreamerSearchIntent.LoadMoreSearchResults) },
+            onClearError = { onIntent(StreamerSearchIntent.ClearSearchError) },
+            onSelectService = { service -> onIntent(StreamerSearchIntent.SelectService(service)) },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+        )
+    }
+}

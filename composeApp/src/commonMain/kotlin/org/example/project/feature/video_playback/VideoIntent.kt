@@ -1,85 +1,33 @@
 package org.example.project.feature.video_playback
 
+import org.example.project.domain.model.StreamInfo
 import org.example.project.domain.model.VideoServiceType
 
 /**
  * Sealed interface defining all possible user intents for video playback functionality.
  * Following MVI architecture pattern for state management.
  *
- * Note: Search intents have been moved to VideoSearchIntent.
+ * Supports both legacy single video and new multi-stream functionality.
  */
 sealed interface VideoIntent {
-    /**
-     * Intent to load a video with the specified video ID (legacy)
-     */
+    // Legacy single video intents
     data class LoadVideo(val videoId: String) : VideoIntent
-
-    /**
-     * Intent to load a video with the specified video ID and service type
-     */
     data class LoadVideoWithService(val videoId: String, val serviceType: VideoServiceType) : VideoIntent
-
-    /**
-     * Intent to change the service type
-     */
     data class ChangeServiceType(val serviceType: VideoServiceType) : VideoIntent
-
-    /**
-     * Intent to clear any error state
-     */
     data object ClearError : VideoIntent
-
-    /**
-     * Intent to retry loading the current video
-     */
     data object RetryLoad : VideoIntent
 
-    /**
-     * Intent to synchronize video playback position to absolute time
-     */
+    // Multi-stream intents (new)
+    data class LoadMainStream(val streamInfo: StreamInfo) : VideoIntent
+    data class AddSubStream(val streamInfo: StreamInfo) : VideoIntent
+    data class RemoveSubStream(val streamId: String) : VideoIntent
+    data class SwitchMainSub(val subStreamId: String) : VideoIntent
+    data class SyncAllStreams(val currentPosition: Float) : VideoIntent
+
+    // Sync intents
     data class SyncToAbsoluteTime(val currentTime: Float) : VideoIntent
-
-    /**
-     * Intent to handle user-initiated seek to specific position
-     */
     data class UserSeekToPosition(val position: Float) : VideoIntent
-
-    /**
-     * Intent to clear sync error state
-     */
     data object ClearSyncError : VideoIntent
-
-    // Multi-video sync intents
-
-    /**
-     * Intent to load main video (primary video for sync)
-     */
-    data class LoadMainVideo(val videoId: String, val serviceType: VideoServiceType) : VideoIntent
-
-    /**
-     * Intent to load sub video (secondary video to be synced)
-     */
-    data class LoadSubVideo(val videoId: String, val serviceType: VideoServiceType) : VideoIntent
-
-    /**
-     * Intent to synchronize main video's playback position to sub video
-     */
-    data object SyncMainToSub : VideoIntent
-
-    /**
-     * Intent to synchronize main video's playback position to sub video with explicit time
-     */
-    data class SyncMainToSubWithTime(val mainCurrentTime: Float) : VideoIntent
-
-    /**
-     * Intent to update main player's current time
-     */
-    data class UpdateMainPlayerTime(val currentTime: Float) : VideoIntent
-
-    /**
-     * Intent to update sub player's current time
-     */
-    data class UpdateSubPlayerTime(val currentTime: Float) : VideoIntent
 }
 
 /**
@@ -108,14 +56,4 @@ sealed interface VideoSideEffect {
      * Show sync error message
      */
     data class ShowSyncError(val message: String) : VideoSideEffect
-
-    /**
-     * Seek sub video to specific position (for sync operation)
-     */
-    data class SeekSubVideo(val seconds: Float) : VideoSideEffect
-
-    /**
-     * Request main player's current time (Container will handle this and send back SyncMainToSubWithTime)
-     */
-    data object RequestMainPlayerTime : VideoSideEffect
 }
