@@ -29,6 +29,7 @@ val appModule = module {
     viewModel {
         StreamerSearchViewModel(
             videoSearchUseCase = get(),
+            channelSearchUseCase = get(),
             savedStateHandle = get(),
         )
     }

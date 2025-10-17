@@ -6,6 +6,7 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.minus
 import kotlinx.datetime.toLocalDateTime
+import org.example.project.domain.model.ChannelInfo
 import org.example.project.domain.model.SearchResult
 import org.example.project.domain.model.VideoServiceType
 import org.example.project.feature.video_search.SearchMode
@@ -28,4 +29,7 @@ constructor(
         .minus(1, DateTimeUnit.DAY),
     val channelSearchMode: SearchMode = SearchMode.CHANNEL_NAME,
     val selectedService: VideoServiceType = VideoServiceType.YOUTUBE,
+    val channelSuggestions: List<ChannelInfo> = emptyList(),
+    val isSearchingChannels: Boolean = false,
+    val selectedChannel: ChannelInfo? = null,
 )

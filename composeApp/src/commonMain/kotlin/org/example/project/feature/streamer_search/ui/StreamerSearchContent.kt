@@ -1,5 +1,6 @@
 package org.example.project.feature.streamer_search.ui
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -34,6 +35,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import kotlinx.datetime.LocalDate
+import org.example.project.domain.model.ChannelInfo
 import org.example.project.domain.model.SearchResult
 import org.example.project.domain.model.VideoServiceType
 import org.example.project.feature.video_search.ui.SearchResultItem
@@ -52,12 +54,16 @@ fun StreamerSearchContent(
     hasMoreResults: Boolean,
     selectedDate: LocalDate,
     selectedService: VideoServiceType,
+    channelSuggestions: List<ChannelInfo>,
+    isSearchingChannels: Boolean,
     onInputTextChange: (String) -> Unit,
     onExecuteSearch: () -> Unit,
     onSelectResult: (SearchResult) -> Unit,
     onLoadMore: () -> Unit,
     onClearError: () -> Unit,
     onSelectService: (VideoServiceType) -> Unit,
+    onSearchChannels: (String) -> Unit,
+    onSelectChannel: (ChannelInfo) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -102,45 +108,79 @@ fun StreamerSearchContent(
             }
         }
 
-        // Search Field
-        OutlinedTextField(
-            value = inputText,
-            onValueChange = onInputTextChange,
-            label = { Text("Search by channel name...") },
-            leadingIcon = {
-                Icon(
-                    imageVector = Icons.Default.Search,
-                    contentDescription = "Search",
-                )
-            },
-            trailingIcon = {
-                if (inputText.isNotEmpty()) {
-                    IconButton(
-                        onClick = {
-                            onExecuteSearch()
-                            keyboardController?.hide()
-                        },
-                    ) {
+        // Search Field with Dropdown
+        Box {
+            Column {
+                OutlinedTextField(
+                    value = inputText,
+                    onValueChange = { newText ->
+                        onInputTextChange(newText)
+                        // Trigger channel search for Twitch only
+                        if (selectedService == VideoServiceType.TWITCH) {
+                            onSearchChannels(newText)
+                        }
+                    },
+                    label = { Text("Search by channel name...") },
+                    leadingIcon = {
                         Icon(
                             imageVector = Icons.Default.Search,
-                            contentDescription = "Execute Search",
+                            contentDescription = "Search",
                         )
+                    },
+                    trailingIcon = {
+                        if (inputText.isNotEmpty()) {
+                            IconButton(
+                                onClick = {
+                                    onExecuteSearch()
+                                    keyboardController?.hide()
+                                },
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Search,
+                                    contentDescription = "Execute Search",
+                                )
+                            }
+                        }
+                    },
+                    keyboardOptions = KeyboardOptions(
+                        imeAction = ImeAction.Search,
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onSearch = {
+                            if (inputText.isNotBlank()) {
+                                onExecuteSearch()
+                                keyboardController?.hide()
+                            }
+                        },
+                    ),
+                    modifier = Modifier.fillMaxWidth(),
+                )
+
+                // Channel Suggestions Dropdown (for Twitch only)
+                if (selectedService == VideoServiceType.TWITCH && channelSuggestions.isNotEmpty()) {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 4.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                    ) {
+                        LazyColumn(
+                            modifier = Modifier.height(200.dp),
+                        ) {
+                            items(channelSuggestions) { channel ->
+                                ChannelSuggestionItem(
+                                    channel = channel,
+                                    onSelect = {
+                                        onSelectChannel(channel)
+                                        keyboardController?.hide()
+                                    },
+                                )
+                            }
+                        }
                     }
                 }
-            },
-            keyboardOptions = KeyboardOptions(
-                imeAction = ImeAction.Search,
-            ),
-            keyboardActions = KeyboardActions(
-                onSearch = {
-                    if (inputText.isNotBlank()) {
-                        onExecuteSearch()
-                        keyboardController?.hide()
-                    }
-                },
-            ),
-            modifier = Modifier.fillMaxWidth(),
-        )
+            }
+        }
 
         // Error display
         searchError?.let { error ->
@@ -256,5 +296,39 @@ fun StreamerSearchContent(
         }
 
         Spacer(modifier = Modifier.height(16.dp))
+    }
+}
+
+/**
+ * Channel suggestion item for dropdown menu
+ */
+@Composable
+private fun ChannelSuggestionItem(
+    channel: ChannelInfo,
+    onSelect: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable { onSelect() }
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = channel.displayName,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Medium,
+            )
+            channel.gameName?.let { gameName ->
+                Text(
+                    text = gameName,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
     }
 }
