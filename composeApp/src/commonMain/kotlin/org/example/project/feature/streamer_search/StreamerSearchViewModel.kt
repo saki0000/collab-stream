@@ -4,6 +4,8 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlin.time.ExperimentalTime
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -15,9 +17,11 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atTime
 import kotlinx.datetime.toInstant
+import org.example.project.domain.model.ChannelInfo
 import org.example.project.domain.model.SearchOrder
 import org.example.project.domain.model.SearchResult
 import org.example.project.domain.model.VideoServiceType
+import org.example.project.domain.usecase.ChannelSearchUseCase
 import org.example.project.domain.usecase.VideoSearchUseCase
 import org.example.project.feature.video_search.SearchMode
 
@@ -26,10 +30,12 @@ import org.example.project.feature.video_search.SearchMode
  */
 class StreamerSearchViewModel(
     private val videoSearchUseCase: VideoSearchUseCase,
+    private val channelSearchUseCase: ChannelSearchUseCase,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
     private val searchMode: String = savedStateHandle.get<String>("searchMode") ?: "MAIN"
+    private var channelSearchJob: Job? = null
 
     private val _uiState = MutableStateFlow(
         StreamerSearchUiState(
@@ -52,6 +58,8 @@ class StreamerSearchViewModel(
             is StreamerSearchIntent.ChangeSelectedDate -> changeSelectedDate(intent.date)
             is StreamerSearchIntent.ChangeSearchMode -> changeSearchMode(intent.mode)
             is StreamerSearchIntent.SelectService -> selectService(intent.service)
+            is StreamerSearchIntent.SearchChannels -> searchChannelsDebounced(intent.query)
+            is StreamerSearchIntent.SelectChannel -> selectChannel(intent.channel)
         }
     }
 
@@ -217,7 +225,90 @@ class StreamerSearchViewModel(
         _uiState.value = _uiState.value.copy(
             selectedService = service,
             channelSearchMode = newSearchMode,
+            channelSuggestions = emptyList(),
+            selectedChannel = null,
         )
+    }
+
+    /**
+     * Search for channels with debouncing (500ms delay).
+     * Used for real-time channel suggestions as the user types.
+     */
+    private fun searchChannelsDebounced(query: String) {
+        // Cancel previous search job
+        channelSearchJob?.cancel()
+
+        // Clear suggestions if query is empty
+        if (query.isBlank()) {
+            _uiState.value = _uiState.value.copy(
+                channelSuggestions = emptyList(),
+                isSearchingChannels = false,
+            )
+            return
+        }
+
+        // Only search for Twitch channels
+        if (_uiState.value.selectedService != VideoServiceType.TWITCH) {
+            return
+        }
+
+        // Launch new debounced search
+        channelSearchJob = viewModelScope.launch {
+            delay(500) // Debounce delay
+            searchChannels(query)
+        }
+    }
+
+    /**
+     * Execute channel search immediately.
+     */
+    private fun searchChannels(query: String) {
+        _uiState.value = _uiState.value.copy(
+            isSearchingChannels = true,
+        )
+
+        viewModelScope.launch {
+            try {
+                val result = channelSearchUseCase.searchTwitchChannels(
+                    query = query,
+                    maxResults = 5,
+                )
+
+                result.fold(
+                    onSuccess = { channels ->
+                        _uiState.value = _uiState.value.copy(
+                            channelSuggestions = channels,
+                            isSearchingChannels = false,
+                        )
+                    },
+                    onFailure = { error ->
+                        _uiState.value = _uiState.value.copy(
+                            channelSuggestions = emptyList(),
+                            isSearchingChannels = false,
+                        )
+                    },
+                )
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    channelSuggestions = emptyList(),
+                    isSearchingChannels = false,
+                )
+            }
+        }
+    }
+
+    /**
+     * Select a channel from the suggestions and immediately search for videos.
+     */
+    private fun selectChannel(channel: ChannelInfo) {
+        _uiState.value = _uiState.value.copy(
+            selectedChannel = channel,
+            inputText = channel.displayName,
+            channelSuggestions = emptyList(), // Close dropdown
+        )
+
+        // Immediately search for videos for this channel
+        searchStreamers(channel.displayName)
     }
 }
 

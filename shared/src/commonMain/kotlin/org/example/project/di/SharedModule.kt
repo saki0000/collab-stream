@@ -8,6 +8,7 @@ import org.example.project.data.repository.VideoSearchRepositoryImpl
 import org.example.project.data.repository.VideoSyncRepositoryImpl
 import org.example.project.domain.repository.VideoSearchRepository
 import org.example.project.domain.repository.VideoSyncRepository
+import org.example.project.domain.usecase.ChannelSearchUseCase
 import org.example.project.domain.usecase.VideoSearchUseCase
 import org.example.project.domain.usecase.VideoSyncUseCase
 import org.example.project.domain.usecase.VideoSyncUseCaseImpl
@@ -45,5 +46,9 @@ val sharedModule = module {
 
     single<VideoSearchUseCase> {
         VideoSearchUseCase(get())
+    }
+
+    single<ChannelSearchUseCase> {
+        ChannelSearchUseCase(get())
     }
 }

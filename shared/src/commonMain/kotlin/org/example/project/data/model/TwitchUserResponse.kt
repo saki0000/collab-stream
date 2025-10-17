@@ -32,4 +32,16 @@ data class TwitchUser(
 
     @SerialName("display_name")
     val displayName: String,
+
+    @SerialName("thumbnail_url")
+    val thumbnailUrl: String? = null,
+
+    @SerialName("broadcaster_language")
+    val broadcasterLanguage: String? = null,
+
+    @SerialName("game_id")
+    val gameId: String? = null,
+
+    @SerialName("game_name")
+    val gameName: String? = null,
 )

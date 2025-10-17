@@ -35,12 +35,16 @@ fun StreamerSearchScreen(
             hasMoreResults = uiState.searchNextPageToken != null,
             selectedDate = uiState.selectedDate,
             selectedService = uiState.selectedService,
+            channelSuggestions = uiState.channelSuggestions,
+            isSearchingChannels = uiState.isSearchingChannels,
             onInputTextChange = { text -> onIntent(StreamerSearchIntent.UpdateInputText(text)) },
             onExecuteSearch = { onIntent(StreamerSearchIntent.ExecuteSearch) },
             onSelectResult = { result -> onIntent(StreamerSearchIntent.SelectSearchResult(result)) },
             onLoadMore = { onIntent(StreamerSearchIntent.LoadMoreSearchResults) },
             onClearError = { onIntent(StreamerSearchIntent.ClearSearchError) },
             onSelectService = { service -> onIntent(StreamerSearchIntent.SelectService(service)) },
+            onSearchChannels = { query -> onIntent(StreamerSearchIntent.SearchChannels(query)) },
+            onSelectChannel = { channel -> onIntent(StreamerSearchIntent.SelectChannel(channel)) },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),

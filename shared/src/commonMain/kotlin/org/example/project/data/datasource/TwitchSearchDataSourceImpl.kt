@@ -23,6 +23,44 @@ class TwitchSearchDataSourceImpl(
     }
 
     /**
+     * Search for channels by query.
+     * Calls the /search/channels endpoint to find matching channels.
+     *
+     * @param query The search query (e.g., "shroud")
+     * @param maxResults Maximum number of results to return (default: 5)
+     * @return TwitchUserResponse containing matching channels
+     */
+    override suspend fun searchChannels(query: String, maxResults: Int): Result<TwitchUserResponse> {
+        return try {
+            if (BuildKonfig.TWITCH_CLIENT_ID.isBlank() || BuildKonfig.TWITCH_API_KEY.isBlank()) {
+                return Result.failure(IllegalStateException("Twitch API credentials are not configured"))
+            }
+
+            val response = httpClient.get(TWITCH_USERS_ENDPOINT) {
+                header("Client-ID", BuildKonfig.TWITCH_CLIENT_ID)
+                header("Authorization", "Bearer ${BuildKonfig.TWITCH_API_KEY}")
+                parameter("query", query)
+                parameter("first", maxResults.coerceIn(1, 20))
+            }
+
+            val userResponse: TwitchUserResponse = response.body()
+
+            // Check for API error response
+            if (!userResponse.error.isNullOrBlank()) {
+                return Result.failure(
+                    RuntimeException("Twitch API error: ${userResponse.error} - ${userResponse.message ?: "Unknown error"}"),
+                )
+            }
+
+            Result.success(userResponse)
+        } catch (e: Exception) {
+            Result.failure(
+                RuntimeException("Failed to search Twitch channels for query '$query': ${e.message}", e),
+            )
+        }
+    }
+
+    /**
      * Get Twitch user ID from login name.
      * Calls the /users endpoint to convert login name to user ID.
      *
@@ -35,6 +73,7 @@ class TwitchSearchDataSourceImpl(
                 header("Client-ID", BuildKonfig.TWITCH_CLIENT_ID)
                 header("Authorization", "Bearer ${BuildKonfig.TWITCH_API_KEY}")
                 parameter("query", query)
+                parameter("first", 1)
             }
 
             val userResponse: TwitchUserResponse = response.body()
