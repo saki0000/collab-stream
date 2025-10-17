@@ -20,4 +20,6 @@ sealed interface StreamerSearchIntent {
     data class SelectService(val service: VideoServiceType) : StreamerSearchIntent
     data class SearchChannels(val query: String) : StreamerSearchIntent
     data class SelectChannel(val channel: ChannelInfo) : StreamerSearchIntent
+    data class ToggleResultSelection(val result: SearchResult) : StreamerSearchIntent
+    data object ClearSelectedResults : StreamerSearchIntent
 }

@@ -60,6 +60,8 @@ class StreamerSearchViewModel(
             is StreamerSearchIntent.SelectService -> selectService(intent.service)
             is StreamerSearchIntent.SearchChannels -> searchChannelsDebounced(intent.query)
             is StreamerSearchIntent.SelectChannel -> selectChannel(intent.channel)
+            is StreamerSearchIntent.ToggleResultSelection -> toggleResultSelection(intent.result)
+            StreamerSearchIntent.ClearSelectedResults -> clearSelectedResults()
         }
     }
 
@@ -309,6 +311,51 @@ class StreamerSearchViewModel(
 
         // Immediately search for videos for this channel
         searchStreamers(channel.displayName)
+    }
+
+    /**
+     * Toggles the selection state of a search result (for multi-selection in SUB mode)
+     */
+    private fun toggleResultSelection(result: SearchResult) {
+        val currentState = _uiState.value
+
+        if (currentState.searchMode != "SUB") {
+            // If not in SUB mode, behave like normal selection
+            selectSearchResult(result)
+            return
+        }
+
+        val selectedResults = currentState.selectedResults
+        val isCurrentlySelected = selectedResults.any { it.videoId == result.videoId }
+
+        val updatedSelection = if (isCurrentlySelected) {
+            // Remove from selection
+            selectedResults.filterNot { it.videoId == result.videoId }
+        } else {
+            // Add to selection
+            selectedResults + result
+        }
+
+        _uiState.value = currentState.copy(selectedResults = updatedSelection)
+
+        // In SUB mode, emit side effect immediately when adding
+        if (!isCurrentlySelected) {
+            viewModelScope.launch {
+                _sideEffect.emit(
+                    StreamerSearchSideEffect.StreamerSelected(
+                        searchResult = result,
+                        serviceType = currentState.selectedService,
+                    ),
+                )
+            }
+        }
+    }
+
+    /**
+     * Clears all selected results
+     */
+    private fun clearSelectedResults() {
+        _uiState.value = _uiState.value.copy(selectedResults = emptyList())
     }
 }
 

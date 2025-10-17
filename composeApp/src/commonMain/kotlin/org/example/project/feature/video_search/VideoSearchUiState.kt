@@ -27,6 +27,8 @@ constructor(
         .minus(1, DateTimeUnit.DAY),
     val searchMode: SearchMode = SearchMode.KEYWORD,
     val selectedService: VideoServiceType = VideoServiceType.YOUTUBE,
+    val isSubSearchMode: Boolean = false,
+    val selectedResults: List<SearchResult> = emptyList(),
 )
 
 /**

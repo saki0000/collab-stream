@@ -1,11 +1,15 @@
 package org.example.project.feature.streamer_search.ui
 
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import org.example.project.feature.streamer_search.StreamerSearchIntent
 import org.example.project.feature.streamer_search.StreamerSearchUiState
@@ -23,7 +27,10 @@ fun StreamerSearchScreen(
 ) {
     ModalBottomSheet(
         onDismissRequest = onDismiss,
-        modifier = modifier,
+        modifier = modifier
+            .fillMaxSize()
+            .windowInsetsPadding(WindowInsets.statusBars),
+        sheetMaxWidth = Dp.Unspecified,
     ) {
         StreamerSearchContent(
             searchMode = uiState.searchMode,
@@ -37,16 +44,24 @@ fun StreamerSearchScreen(
             selectedService = uiState.selectedService,
             channelSuggestions = uiState.channelSuggestions,
             isSearchingChannels = uiState.isSearchingChannels,
+            selectedResults = uiState.selectedResults,
             onInputTextChange = { text -> onIntent(StreamerSearchIntent.UpdateInputText(text)) },
             onExecuteSearch = { onIntent(StreamerSearchIntent.ExecuteSearch) },
-            onSelectResult = { result -> onIntent(StreamerSearchIntent.SelectSearchResult(result)) },
+            onSelectResult = { result ->
+                if (uiState.searchMode == "SUB") {
+                    onIntent(StreamerSearchIntent.ToggleResultSelection(result))
+                } else {
+                    onIntent(StreamerSearchIntent.SelectSearchResult(result))
+                }
+            },
             onLoadMore = { onIntent(StreamerSearchIntent.LoadMoreSearchResults) },
             onClearError = { onIntent(StreamerSearchIntent.ClearSearchError) },
             onSelectService = { service -> onIntent(StreamerSearchIntent.SelectService(service)) },
             onSearchChannels = { query -> onIntent(StreamerSearchIntent.SearchChannels(query)) },
             onSelectChannel = { channel -> onIntent(StreamerSearchIntent.SelectChannel(channel)) },
+            onDismiss = onDismiss,
             modifier = Modifier
-                .fillMaxWidth()
+                .fillMaxSize()
                 .padding(16.dp),
         )
     }

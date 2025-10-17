@@ -63,6 +63,16 @@ sealed interface VideoSearchIntent {
      * Intent to select a video service (single selection)
      */
     data class SelectService(val service: VideoServiceType) : VideoSearchIntent
+
+    /**
+     * Intent to toggle selection of a search result (for multi-selection in sub search mode)
+     */
+    data class ToggleResultSelection(val result: SearchResult) : VideoSearchIntent
+
+    /**
+     * Intent to clear all selected results
+     */
+    data object ClearSelectedResults : VideoSearchIntent
 }
 
 /**

@@ -32,4 +32,5 @@ constructor(
     val channelSuggestions: List<ChannelInfo> = emptyList(),
     val isSearchingChannels: Boolean = false,
     val selectedChannel: ChannelInfo? = null,
+    val selectedResults: List<SearchResult> = emptyList(),
 )

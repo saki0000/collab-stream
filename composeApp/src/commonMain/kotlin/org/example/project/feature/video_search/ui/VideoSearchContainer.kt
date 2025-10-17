@@ -21,10 +21,16 @@ import org.koin.compose.viewmodel.koinViewModel
 fun VideoSearchContainer(
     onDismiss: () -> Unit,
     onVideoSelected: (VideoSelectionResult) -> Unit,
+    isSubSearchMode: Boolean = false,
     modifier: Modifier = Modifier,
     viewModel: VideoSearchViewModel = koinViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
+
+    // Set sub search mode when container is created
+    LaunchedEffect(isSubSearchMode) {
+        viewModel.setSubSearchMode(isSubSearchMode)
+    }
 
     // Handle side effects with LaunchedEffect and Intent pattern
     LaunchedEffect(Unit) {
@@ -38,6 +44,10 @@ fun VideoSearchContainer(
                             serviceType = effect.serviceType,
                         ),
                     )
+                    // Don't dismiss in sub search mode, allow multiple selections
+                    if (!isSubSearchMode) {
+                        onDismiss()
+                    }
                 }
                 is VideoSearchSideEffect.ShowSearchError -> {
                     // Error is already shown in UI state, no additional action needed
