@@ -55,6 +55,11 @@ class VideoViewModel(
             is VideoIntent.RemoveSubStream -> removeSubStream(intent.streamId)
             is VideoIntent.SwitchMainSub -> switchMainSub(intent.subStreamId)
 
+            // Bottom Sheet intents
+            is VideoIntent.ShowSwitchConfirmBottomSheet -> showSwitchConfirmBottomSheet(intent.streamInfo)
+            is VideoIntent.ConfirmSwitchAndPlay -> confirmSwitchAndPlay(intent.syncPosition)
+            VideoIntent.DismissSwitchBottomSheet -> dismissSwitchBottomSheet()
+
             // Sync intents
             is VideoIntent.SyncToAbsoluteTime -> syncToAbsoluteTime(intent.currentTime)
             is VideoIntent.UserSeekToPosition -> handleUserSeek(intent.position)
@@ -498,6 +503,80 @@ class VideoViewModel(
             onFailure = { error ->
                 handleSyncError("Failed to calculate main stream time: ${error.message}")
             },
+        )
+    }
+
+    // Bottom Sheet methods
+
+    /**
+     * Shows the switch confirmation bottom sheet with the selected stream
+     */
+    @OptIn(ExperimentalTime::class)
+    private fun showSwitchConfirmBottomSheet(streamInfo: org.example.project.domain.model.StreamInfo) {
+        _uiState.value = _uiState.value.copy(
+            showSwitchConfirmBottomSheet = true,
+            streamToSwitch = streamInfo,
+        )
+    }
+
+    /**
+     * Confirms the switch and plays the stream at the synced position
+     */
+    @OptIn(ExperimentalTime::class)
+    private fun confirmSwitchAndPlay(syncPosition: Float?) {
+        val streamToSwitch = _uiState.value.streamToSwitch
+
+        if (streamToSwitch == null) {
+            viewModelScope.launch {
+                _sideEffect.emit(VideoSideEffect.ShowError("No stream to switch"))
+            }
+            dismissSwitchBottomSheet()
+            return
+        }
+
+        val currentMain = _uiState.value.mainStream
+        val currentSubs = _uiState.value.subStreams
+
+        // Swap: Sub becomes Main, old Main becomes Sub
+        val updatedSubs = if (currentMain != null) {
+            currentSubs.filterNot { it.streamId == streamToSwitch.streamId } + currentMain
+        } else {
+            currentSubs.filterNot { it.streamId == streamToSwitch.streamId }
+        }
+
+        // Update the streamToSwitch with the sync position if provided
+        val updatedStreamToSwitch = if (syncPosition != null) {
+            streamToSwitch.copy(
+                targetSeekPosition = syncPosition,
+                isSynced = true,
+            )
+        } else {
+            streamToSwitch
+        }
+
+        _uiState.value = _uiState.value.copy(
+            mainStream = updatedStreamToSwitch,
+            videoId = updatedStreamToSwitch.streamId,
+            serviceType = updatedStreamToSwitch.serviceType,
+            subStreams = updatedSubs,
+            syncDateTime = getCurrentDateTime(),
+            showSwitchConfirmBottomSheet = false,
+            streamToSwitch = null,
+        )
+
+        viewModelScope.launch {
+            _sideEffect.emit(VideoSideEffect.ShowSuccess("Switched to ${updatedStreamToSwitch.channelName}"))
+        }
+    }
+
+    /**
+     * Dismisses the switch confirmation bottom sheet
+     */
+    @OptIn(ExperimentalTime::class)
+    private fun dismissSwitchBottomSheet() {
+        _uiState.value = _uiState.value.copy(
+            showSwitchConfirmBottomSheet = false,
+            streamToSwitch = null,
         )
     }
 }

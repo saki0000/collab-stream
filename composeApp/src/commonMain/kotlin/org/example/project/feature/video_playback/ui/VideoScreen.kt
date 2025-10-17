@@ -17,9 +17,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlin.time.ExperimentalTime
+import org.example.project.domain.usecase.VideoSyncUseCase
 import org.example.project.feature.video_playback.VideoIntent
 import org.example.project.feature.video_playback.VideoUiState
 import org.example.project.feature.video_playback.player.WebViewPlayerController
+import org.koin.compose.koinInject
 
 /**
  * Screen Composable (Stateless) - Main Player Screen with 3-section hierarchical layout
@@ -39,6 +41,9 @@ fun VideoScreen(
 ) {
     // Store player controller reference at screen level
     var playerController by remember { mutableStateOf<WebViewPlayerController?>(null) }
+
+    // Inject VideoSyncUseCase for Bottom Sheet
+    val videoSyncUseCase: VideoSyncUseCase = koinInject()
 
     Scaffold(
         modifier = modifier,
@@ -98,7 +103,7 @@ fun VideoScreen(
                         stream = subStream,
                         mainTime = uiState.currentTime,
                         onSwitchToMain = {
-                            onIntent(VideoIntent.SwitchMainSub(subStream.streamId))
+                            onIntent(VideoIntent.ShowSwitchConfirmBottomSheet(subStream))
                         },
                         onRemove = {
                             onIntent(VideoIntent.RemoveSubStream(subStream.streamId))
@@ -107,5 +112,18 @@ fun VideoScreen(
                 }
             }
         }
+    }
+
+    // Sub Stream Playback Bottom Sheet (WebView only)
+    if (uiState.showSwitchConfirmBottomSheet && uiState.streamToSwitch != null) {
+        SwitchConfirmBottomSheet(
+            streamToSwitch = uiState.streamToSwitch!!,
+            mainStreamCurrentTime = uiState.currentTime,
+            mainStream = uiState.mainStream,
+            videoSyncUseCase = videoSyncUseCase,
+            onDismiss = {
+                onIntent(VideoIntent.DismissSwitchBottomSheet)
+            },
+        )
     }
 }
