@@ -525,7 +525,7 @@ class VideoViewModel(
     @OptIn(ExperimentalTime::class)
     private fun confirmSwitchAndPlay(syncPosition: Float?) {
         val streamToSwitch = _uiState.value.streamToSwitch
-        
+
         if (streamToSwitch == null) {
             viewModelScope.launch {
                 _sideEffect.emit(VideoSideEffect.ShowError("No stream to switch"))

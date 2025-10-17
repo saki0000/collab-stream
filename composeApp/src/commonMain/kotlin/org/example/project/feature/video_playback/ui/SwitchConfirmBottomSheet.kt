@@ -13,7 +13,6 @@ import kotlin.time.ExperimentalTime
 import org.example.project.VideoPlayerView
 import org.example.project.domain.model.StreamInfo
 import org.example.project.domain.usecase.VideoSyncUseCase
-import org.example.project.feature.video_playback.VideoIntent
 import org.example.project.feature.video_playback.VideoUiState
 import org.example.project.feature.video_playback.player.WebViewPlayerController
 
@@ -70,13 +69,13 @@ fun SwitchConfirmBottomSheet(
                             onFailure = {
                                 // On error, start from beginning
                                 syncPosition = 0f
-                            }
+                            },
                         )
                     },
                     onFailure = {
                         // On error, start from beginning
                         syncPosition = 0f
-                    }
+                    },
                 )
             } catch (e: Exception) {
                 // On error, start from beginning
