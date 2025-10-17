@@ -40,6 +40,10 @@ data class VideoUiState(
     // User seek tracking
     val lastUserSeekPosition: Float? = null,
     val lastUserSeekTime: String? = null,
+
+    // Bottom Sheet state for switch confirmation
+    val showSwitchConfirmBottomSheet: Boolean = false,
+    val streamToSwitch: StreamInfo? = null,
 )
 
 /**

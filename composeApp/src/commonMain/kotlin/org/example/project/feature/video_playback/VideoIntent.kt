@@ -24,6 +24,11 @@ sealed interface VideoIntent {
     data class SwitchMainSub(val subStreamId: String) : VideoIntent
     data class SyncAllStreams(val currentPosition: Float) : VideoIntent
 
+    // Bottom Sheet intents for switch confirmation
+    data class ShowSwitchConfirmBottomSheet(val streamInfo: StreamInfo) : VideoIntent
+    data class ConfirmSwitchAndPlay(val syncPosition: Float?) : VideoIntent
+    data object DismissSwitchBottomSheet : VideoIntent
+
     // Sync intents
     data class SyncToAbsoluteTime(val currentTime: Float) : VideoIntent
     data class UserSeekToPosition(val position: Float) : VideoIntent
