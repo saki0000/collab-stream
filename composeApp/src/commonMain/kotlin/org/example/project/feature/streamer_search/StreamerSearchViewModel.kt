@@ -116,11 +116,27 @@ class StreamerSearchViewModel(
 
                 result.fold(
                     onSuccess = { searchResponse ->
+                        // Filter out main stream ID from results
+                        val filteredResults = searchResponse.results.filterNot { result ->
+                            result.videoId == currentState.mainStreamId
+                        }
+
+                        // Mark existing sub streams as selected
+                        val existingIds = currentState.existingSubStreamIds
+                        val selectedResults = if (existingIds.isNotEmpty()) {
+                            filteredResults.filter { result ->
+                                existingIds.contains(result.videoId)
+                            }
+                        } else {
+                            emptyList()
+                        }
+
                         _uiState.value = _uiState.value.copy(
                             isSearching = false,
-                            searchResults = searchResponse.results,
+                            searchResults = filteredResults,
                             searchNextPageToken = searchResponse.nextPageToken,
                             searchError = null,
+                            selectedResults = selectedResults,
                         )
                     },
                     onFailure = { error ->
@@ -172,11 +188,27 @@ class StreamerSearchViewModel(
 
                 result.fold(
                     onSuccess = { searchResponse ->
+                        // Filter out main stream ID from new results
+                        val filteredNewResults = searchResponse.results.filterNot { result ->
+                            result.videoId == currentState.mainStreamId
+                        }
+
+                        // Mark existing sub streams in new results as selected
+                        val existingIds = currentState.existingSubStreamIds
+                        val newSelectedResults = if (existingIds.isNotEmpty()) {
+                            filteredNewResults.filter { result ->
+                                existingIds.contains(result.videoId)
+                            }
+                        } else {
+                            emptyList()
+                        }
+
                         _uiState.value = _uiState.value.copy(
                             isSearching = false,
-                            searchResults = currentState.searchResults + searchResponse.results,
+                            searchResults = currentState.searchResults + filteredNewResults,
                             searchNextPageToken = searchResponse.nextPageToken,
                             searchError = null,
+                            selectedResults = currentState.selectedResults + newSelectedResults,
                         )
                     },
                     onFailure = { error ->
@@ -338,13 +370,21 @@ class StreamerSearchViewModel(
 
         _uiState.value = currentState.copy(selectedResults = updatedSelection)
 
-        // In SUB mode, emit side effect immediately when adding
-        if (!isCurrentlySelected) {
-            viewModelScope.launch {
+        // Emit side effect for both adding and removing
+        viewModelScope.launch {
+            if (!isCurrentlySelected) {
+                // Adding stream
                 _sideEffect.emit(
                     StreamerSearchSideEffect.StreamerSelected(
                         searchResult = result,
                         serviceType = currentState.selectedService,
+                    ),
+                )
+            } else {
+                // Removing stream
+                _sideEffect.emit(
+                    StreamerSearchSideEffect.StreamerRemoved(
+                        videoId = result.videoId,
                     ),
                 )
             }
@@ -357,6 +397,19 @@ class StreamerSearchViewModel(
     private fun clearSelectedResults() {
         _uiState.value = _uiState.value.copy(selectedResults = emptyList())
     }
+
+    /**
+     * Initializes existing sub stream IDs and main stream ID
+     * Used when reopening search modal in SUB mode to show already added streams as selected
+     * and to exclude main stream from search results
+     * The actual selection happens after search results are loaded
+     */
+    fun initializeExistingSubStreams(existingSubStreamIds: List<String>, mainStreamId: String? = null) {
+        _uiState.value = _uiState.value.copy(
+            existingSubStreamIds = existingSubStreamIds,
+            mainStreamId = mainStreamId,
+        )
+    }
 }
 
 /**
@@ -366,5 +419,9 @@ sealed interface StreamerSearchSideEffect {
     data class StreamerSelected(
         val searchResult: SearchResult,
         val serviceType: VideoServiceType,
+    ) : StreamerSearchSideEffect
+
+    data class StreamerRemoved(
+        val videoId: String,
     ) : StreamerSearchSideEffect
 }

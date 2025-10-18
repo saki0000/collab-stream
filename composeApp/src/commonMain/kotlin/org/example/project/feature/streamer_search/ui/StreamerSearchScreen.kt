@@ -30,6 +30,7 @@ fun StreamerSearchScreen(
         sheetState = rememberModalBottomSheetState(
             skipPartiallyExpanded = true,
         ),
+        containerColor = MaterialTheme.colorScheme.surface,
     ) {
         Surface(
             modifier = Modifier

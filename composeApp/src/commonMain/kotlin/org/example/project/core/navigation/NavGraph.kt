@@ -52,8 +52,24 @@ fun AppNavGraph(
         bottomSheet<StreamerSearchRoute> { backStackEntry ->
             val route = backStackEntry.toRoute<StreamerSearchRoute>()
 
+            // Get existing sub streams and main stream ID from previous backstack entry if in SUB mode
+            val existingSubStreamIds = if (route.searchMode == "SUB") {
+                navController.previousBackStackEntry?.savedStateHandle?.get<List<String>>(
+                    "existing_sub_stream_ids",
+                ) ?: emptyList()
+            } else {
+                emptyList()
+            }
+            val mainStreamId = if (route.searchMode == "SUB") {
+                navController.previousBackStackEntry?.savedStateHandle?.get<String>("main_stream_id")
+            } else {
+                null
+            }
+
             StreamerSearchContainer(
                 onDismiss = { navController.popBackStack() },
+                existingSubStreamIds = existingSubStreamIds,
+                mainStreamId = mainStreamId,
                 onStreamerSelected = { searchResult, serviceType ->
                     if (route.searchMode == "MAIN") {
                         // Navigate to Main Player with selected main streamer
@@ -92,6 +108,12 @@ fun AppNavGraph(
 
                         // Don't close the modal - allow multiple selections
                         // User can close it manually using the Close button in TopAppBar
+                    }
+                },
+                onStreamRemoved = { videoId ->
+                    // SUB mode: Notify removal via SavedStateHandle
+                    navController.previousBackStackEntry?.savedStateHandle?.apply {
+                        set("remove_sub_stream_id", videoId)
                     }
                 },
                 modifier = Modifier,

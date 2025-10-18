@@ -100,6 +100,7 @@ fun SwitchConfirmBottomSheet(
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         modifier = modifier,
+        containerColor = MaterialTheme.colorScheme.surface,
     ) {
         Surface(
             modifier = Modifier

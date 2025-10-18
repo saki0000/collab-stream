@@ -147,8 +147,11 @@ fun VideoScreen(
                     SubStreamItem(
                         stream = subStream,
                         mainTime = uiState.currentTime,
-                        onSwitchToMain = {
+                        onPlayInModal = {
                             onIntent(VideoIntent.ShowSwitchConfirmBottomSheet(subStream))
+                        },
+                        onSwitchToMain = {
+                            onIntent(VideoIntent.SwitchMainSub(subStream.streamId))
                         },
                         onRemove = {
                             onIntent(VideoIntent.RemoveSubStream(subStream.streamId))
@@ -211,7 +214,7 @@ fun VideoScreen(
     // Sub Stream Playback Bottom Sheet (WebView only)
     if (uiState.showSwitchConfirmBottomSheet && uiState.streamToSwitch != null) {
         SwitchConfirmBottomSheet(
-            streamToSwitch = uiState.streamToSwitch!!,
+            streamToSwitch = uiState.streamToSwitch,
             mainStreamCurrentTime = uiState.currentTime,
             mainStream = uiState.mainStream,
             videoSyncUseCase = videoSyncUseCase,

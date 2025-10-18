@@ -33,4 +33,6 @@ constructor(
     val isSearchingChannels: Boolean = false,
     val selectedChannel: ChannelInfo? = null,
     val selectedResults: List<SearchResult> = emptyList(),
+    val existingSubStreamIds: List<String> = emptyList(), // IDs of already added sub streams
+    val mainStreamId: String? = null, // Main stream ID to exclude from search results
 )

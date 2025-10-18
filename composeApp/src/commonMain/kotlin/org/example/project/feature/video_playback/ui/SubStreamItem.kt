@@ -1,5 +1,6 @@
 package org.example.project.feature.video_playback.ui
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -44,6 +45,7 @@ import org.example.project.domain.model.StreamInfo
 fun SubStreamItem(
     stream: StreamInfo,
     mainTime: Float, // Not used, can be removed in future refactor
+    onPlayInModal: () -> Unit,
     onSwitchToMain: () -> Unit,
     onRemove: () -> Unit,
     modifier: Modifier = Modifier,
@@ -53,6 +55,7 @@ fun SubStreamItem(
     Row(
         modifier = modifier
             .fillMaxWidth()
+            .clickable { onPlayInModal() }
             .padding(horizontal = 8.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {

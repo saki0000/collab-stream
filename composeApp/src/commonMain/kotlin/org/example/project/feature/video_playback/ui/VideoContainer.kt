@@ -72,6 +72,21 @@ fun VideoContainer(
         }
     }
 
+    // Process sub stream removal from SavedStateHandle
+    LaunchedEffect(Unit) {
+        savedStateHandle?.let { handle ->
+            // Observe removal requests
+            handle.getStateFlow<String?>("remove_sub_stream_id", null).collect { removeId ->
+                removeId?.let { streamId ->
+                    // Remove sub stream from ViewModel
+                    viewModel.handleIntent(VideoIntent.RemoveSubStream(streamId))
+                    // Clear the removal request after processing
+                    handle.set("remove_sub_stream_id", null as String?)
+                }
+            }
+        }
+    }
+
     // Handle side effects
     LaunchedEffect(Unit) {
         viewModel.sideEffect.collect { sideEffect ->
@@ -116,7 +131,14 @@ fun VideoContainer(
         onIntent = viewModel::handleIntent,
         onVideoError = viewModel::handleVideoError,
         snackbarHostState = snackBarHostState,
-        onNavigateToSubSearch = onNavigateToSubSearch,
+        onNavigateToSubSearch = {
+            // Set existing sub stream IDs and main stream ID in SavedStateHandle before navigation
+            savedStateHandle?.apply {
+                set("existing_sub_stream_ids", uiState.subStreams.map { it.streamId })
+                set("main_stream_id", uiState.mainStream?.streamId)
+            }
+            onNavigateToSubSearch()
+        },
         modifier = modifier,
     )
 }
