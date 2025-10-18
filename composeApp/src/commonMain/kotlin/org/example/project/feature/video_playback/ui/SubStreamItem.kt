@@ -26,7 +26,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -85,7 +84,7 @@ fun SubStreamItem(
                     Icon(
                         imageVector = if (stream.isSynced) Icons.Default.CheckCircle else Icons.Default.Warning,
                         contentDescription = null,
-                        tint = if (stream.isSynced) Color(0xFF4CAF50) else MaterialTheme.colorScheme.error,
+                        tint = if (stream.isSynced) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.error,
                         modifier = Modifier.size(16.dp),
                     )
                     Spacer(modifier = Modifier.width(4.dp))

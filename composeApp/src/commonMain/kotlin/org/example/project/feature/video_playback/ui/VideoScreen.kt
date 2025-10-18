@@ -56,7 +56,7 @@ fun VideoScreen(
         ) {
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(16.dp),
-                contentPadding = PaddingValues(8.dp,16.dp),
+                contentPadding = PaddingValues(8.dp, 16.dp),
             ) {
                 // Section 1: Main Player Section
                 item {
