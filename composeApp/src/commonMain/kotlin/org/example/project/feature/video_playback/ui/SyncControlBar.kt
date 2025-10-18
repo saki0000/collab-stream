@@ -33,7 +33,7 @@ import kotlinx.datetime.toLocalDateTime
 
 /**
  * Sync Control Bar
- * Displays absolute time, playback time, sync status, and action buttons
+ * Displays channel info, absolute time, sync status, and action buttons
  * Layout: Vertical (Column) to avoid horizontal space constraints
  */
 @OptIn(ExperimentalTime::class)
@@ -43,6 +43,8 @@ fun SyncControlBar(
     syncedCount: Int,
     totalSubCount: Int,
     isSyncing: Boolean,
+    channelName: String,
+    title: String,
     onSyncAll: (onGetCurrentTime: (Float) -> Unit) -> Unit,
     onAddSub: () -> Unit,
     modifier: Modifier = Modifier,
@@ -50,7 +52,7 @@ fun SyncControlBar(
     Card(
         modifier = modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+            containerColor = MaterialTheme.colorScheme.primaryContainer,
         ),
     ) {
         Column(
@@ -59,7 +61,30 @@ fun SyncControlBar(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            // Section 1: Time Display (Absolute Time only)
+            // Section 1: Channel Info (if available)
+            if (channelName.isNotEmpty()) {
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(
+                        text = channelName,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    )
+                    if (title.isNotEmpty()) {
+                        Text(
+                            text = title,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        )
+                    }
+                }
+
+                HorizontalDivider(
+                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.12f),
+                )
+            }
+
+            // Section 2: Time Display (Absolute Time only)
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -67,7 +92,7 @@ fun SyncControlBar(
                 Icon(
                     imageVector = Icons.Default.Schedule,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
                 )
                 Column(modifier = Modifier.weight(1f)) {
                     // Absolute Time (Date and Time)
@@ -76,13 +101,14 @@ fun SyncControlBar(
                             text = "Sync Time: ${formatAbsoluteTime(absoluteTime)}",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
                         )
                     } else {
                         Text(
                             text = "Not synced yet",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f),
                         )
                     }
 
@@ -91,13 +117,15 @@ fun SyncControlBar(
                         Text(
                             text = "$syncedCount/$totalSubCount streams synced",
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f),
                         )
                     }
                 }
             }
 
-            HorizontalDivider()
+            HorizontalDivider(
+                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.12f),
+            )
 
             // Section 2: Action Buttons
             Row(

@@ -75,12 +75,15 @@ fun VideoScreen(
                 item {
                     val syncedCount = uiState.subStreams.count { it.isSynced }
                     val totalSubCount = uiState.subStreams.size
+                    val mainStream = uiState.mainStream
 
                     SyncControlBar(
                         absoluteTime = uiState.mainAbsoluteTime,
                         syncedCount = syncedCount,
                         totalSubCount = totalSubCount,
                         isSyncing = uiState.isSyncing,
+                        channelName = mainStream?.channelName ?: "",
+                        title = mainStream?.title ?: "",
                         onSyncAll = { onGetCurrentTime ->
                             // Get current playback position from player controller
                             playerController?.requestCurrentTime { currentPosition ->
