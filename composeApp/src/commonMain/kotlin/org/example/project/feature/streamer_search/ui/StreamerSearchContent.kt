@@ -81,20 +81,11 @@ fun StreamerSearchContent(
         // Top App Bar with close button and selection count
         TopAppBar(
             title = {
-                Column {
-                    Text(
-                        text = if (searchMode == "MAIN") "Select Main Streamer" else "Add Sub Streamer",
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold,
-                    )
-                    if (searchMode == "SUB" && selectedResults.isNotEmpty()) {
-                        Text(
-                            text = "${selectedResults.size} selected",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.primary,
-                        )
-                    }
-                }
+                Text(
+                    text = if (searchMode == "MAIN") "Select Main Streamer" else "Add Sub Streamer",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                )
             },
             navigationIcon = {
                 IconButton(onClick = onDismiss) {
@@ -240,8 +231,7 @@ fun StreamerSearchContent(
         // Search Results
         Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .height(400.dp),
+                .fillMaxSize(),
         ) {
             when {
                 isSearching && searchResults.isEmpty() -> {
@@ -324,8 +314,6 @@ fun StreamerSearchContent(
                 }
             }
         }
-
-        Spacer(modifier = Modifier.height(16.dp))
     }
 }
 

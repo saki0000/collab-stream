@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
@@ -31,6 +32,9 @@ fun StreamerSearchScreen(
             .fillMaxSize()
             .windowInsetsPadding(WindowInsets.statusBars),
         sheetMaxWidth = Dp.Unspecified,
+        sheetState = rememberModalBottomSheetState(
+            skipPartiallyExpanded = true,
+        ),
     ) {
         StreamerSearchContent(
             searchMode = uiState.searchMode,
