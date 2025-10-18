@@ -29,6 +29,9 @@ fun StreamerSearchContainer(
             when (sideEffect) {
                 is StreamerSearchSideEffect.StreamerSelected -> {
                     onStreamerSelected(sideEffect.searchResult, sideEffect.serviceType)
+                    // NavGraph handles navigation for both MAIN and SUB modes
+                    // - MAIN: navController.navigate() removes BottomSheet from backstack
+                    // - SUB: navController.popBackStack() closes BottomSheet
                 }
             }
         }

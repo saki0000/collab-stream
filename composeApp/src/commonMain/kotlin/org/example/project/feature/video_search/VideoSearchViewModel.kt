@@ -59,6 +59,8 @@ class VideoSearchViewModel(
             is VideoSearchIntent.ChangeSelectedDate -> changeSelectedDate(intent.date)
             is VideoSearchIntent.ChangeSearchMode -> changeSearchMode(intent.mode)
             is VideoSearchIntent.SelectService -> selectService(intent.service)
+            is VideoSearchIntent.ToggleResultSelection -> toggleResultSelection(intent.result)
+            VideoSearchIntent.ClearSelectedResults -> clearSelectedResults()
         }
     }
 
@@ -252,6 +254,61 @@ class VideoSearchViewModel(
         _uiState.value = _uiState.value.copy(
             selectedService = service,
             searchMode = newSearchMode,
+        )
+    }
+
+    /**
+     * Toggles the selection state of a search result (for multi-selection in sub search mode)
+     */
+    private fun toggleResultSelection(result: SearchResult) {
+        val currentState = _uiState.value
+
+        if (!currentState.isSubSearchMode) {
+            // If not in sub search mode, behave like normal selection
+            selectSearchResult(result)
+            return
+        }
+
+        val selectedResults = currentState.selectedResults
+        val isCurrentlySelected = selectedResults.any { it.videoId == result.videoId }
+
+        val updatedSelection = if (isCurrentlySelected) {
+            // Remove from selection
+            selectedResults.filterNot { it.videoId == result.videoId }
+        } else {
+            // Add to selection
+            selectedResults + result
+        }
+
+        _uiState.value = currentState.copy(selectedResults = updatedSelection)
+
+        // In sub search mode, emit side effect immediately when adding
+        if (!isCurrentlySelected) {
+            viewModelScope.launch {
+                _sideEffect.emit(
+                    VideoSearchSideEffect.VideoSelected(
+                        videoId = result.videoId,
+                        serviceType = result.serviceType,
+                    ),
+                )
+            }
+        }
+    }
+
+    /**
+     * Clears all selected results
+     */
+    private fun clearSelectedResults() {
+        _uiState.value = _uiState.value.copy(selectedResults = emptyList())
+    }
+
+    /**
+     * Sets the search mode (main or sub)
+     */
+    fun setSubSearchMode(isSubMode: Boolean) {
+        _uiState.value = _uiState.value.copy(
+            isSubSearchMode = isSubMode,
+            selectedResults = emptyList(), // Clear selection when mode changes
         )
     }
 }

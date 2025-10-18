@@ -17,10 +17,12 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -29,6 +31,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
@@ -47,6 +50,7 @@ import org.example.project.feature.video_search.SearchMode
  * Content (Business Logic) - Search form and results list
  * Handles user input and displays search results
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun VideoSearchContent(
     inputText: String,
@@ -58,6 +62,8 @@ fun VideoSearchContent(
     selectedDate: LocalDate,
     searchMode: SearchMode,
     selectedService: VideoServiceType,
+    isSubSearchMode: Boolean,
+    selectedResults: List<SearchResult>,
     onInputTextChange: (String) -> Unit,
     onExecuteSearch: () -> Unit,
     onSelectResult: (SearchResult) -> Unit,
@@ -66,6 +72,7 @@ fun VideoSearchContent(
     onDateChange: (LocalDate) -> Unit,
     onSearchModeChange: (SearchMode) -> Unit,
     onSelectService: (VideoServiceType) -> Unit,
+    onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -75,12 +82,32 @@ fun VideoSearchContent(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        // Title
-        Text(
-            text = "Search Videos",
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.fillMaxWidth(),
+        // Top App Bar with close button and selection count
+        TopAppBar(
+            title = {
+                Column {
+                    Text(
+                        text = if (isSubSearchMode) "Add Sub Streams" else "Search Videos",
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    if (isSubSearchMode && selectedResults.isNotEmpty()) {
+                        Text(
+                            text = "${selectedResults.size} selected",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                    }
+                }
+            },
+            navigationIcon = {
+                IconButton(onClick = onDismiss) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Close",
+                    )
+                }
+            },
         )
 
         // Date Selection (Simple text display with icon for now)
@@ -292,8 +319,11 @@ fun VideoSearchContent(
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         items(searchResults) { result ->
+                            val isSelected = selectedResults.any { it.videoId == result.videoId }
                             SearchResultItem(
                                 result = result,
+                                isSelected = isSelected,
+                                isSubSearchMode = isSubSearchMode,
                                 onSelect = { onSelectResult(result) },
                             )
                         }

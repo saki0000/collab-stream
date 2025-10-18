@@ -16,10 +16,12 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -27,6 +29,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -43,6 +46,7 @@ import org.example.project.feature.video_search.ui.SearchResultItem
 /**
  * Content for Streamer Search
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StreamerSearchContent(
     searchMode: String,
@@ -56,6 +60,7 @@ fun StreamerSearchContent(
     selectedService: VideoServiceType,
     channelSuggestions: List<ChannelInfo>,
     isSearchingChannels: Boolean,
+    selectedResults: List<SearchResult>,
     onInputTextChange: (String) -> Unit,
     onExecuteSearch: () -> Unit,
     onSelectResult: (SearchResult) -> Unit,
@@ -64,6 +69,7 @@ fun StreamerSearchContent(
     onSelectService: (VideoServiceType) -> Unit,
     onSearchChannels: (String) -> Unit,
     onSelectChannel: (ChannelInfo) -> Unit,
+    onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -72,11 +78,23 @@ fun StreamerSearchContent(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        // Title
-        Text(
-            text = if (searchMode == "MAIN") "Select Main Streamer" else "Add Sub Streamer",
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold,
+        // Top App Bar with close button and selection count
+        TopAppBar(
+            title = {
+                Text(
+                    text = if (searchMode == "MAIN") "Select Main Streamer" else "Add Sub Streamer",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                )
+            },
+            navigationIcon = {
+                IconButton(onClick = onDismiss) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Close",
+                    )
+                }
+            },
         )
 
         // Service Selection
@@ -213,8 +231,7 @@ fun StreamerSearchContent(
         // Search Results
         Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .height(400.dp),
+                .fillMaxSize(),
         ) {
             when {
                 isSearching && searchResults.isEmpty() -> {
@@ -266,8 +283,11 @@ fun StreamerSearchContent(
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         items(searchResults) { result ->
+                            val isSelected = selectedResults.any { it.videoId == result.videoId }
                             SearchResultItem(
                                 result = result,
+                                isSelected = isSelected,
+                                isSubSearchMode = searchMode == "SUB",
                                 onSelect = { onSelectResult(result) },
                             )
                         }
@@ -294,8 +314,6 @@ fun StreamerSearchContent(
                 }
             }
         }
-
-        Spacer(modifier = Modifier.height(16.dp))
     }
 }
 

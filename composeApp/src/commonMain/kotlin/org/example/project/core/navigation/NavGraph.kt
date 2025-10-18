@@ -92,7 +92,8 @@ fun AppNavGraph(
                             set("sub_is_live", searchResult.isLiveBroadcast)
                         }
 
-                        navController.popBackStack()
+                        // Don't close the modal - allow multiple selections
+                        // User can close it manually using the Close button in TopAppBar
                     }
                 },
                 modifier = Modifier,
@@ -136,13 +137,33 @@ fun AppNavGraph(
         }
 
         // Legacy video search bottom sheet (DEPRECATED, kept for compatibility)
-        bottomSheet<VideoSearchRoute> {
+        bottomSheet<VideoSearchRoute> { backStackEntry ->
+            val route = backStackEntry.toRoute<VideoSearchRoute>()
+            val isSubMode = route.initialQuery == "SUB_SEARCH_MODE" // Special flag for sub search mode
+
             VideoSearchContainer(
                 onDismiss = { navController.popBackStack() },
                 onVideoSelected = { result ->
-                    // Legacy flow - just pop back
-                    navController.popBackStack()
+                    if (isSubMode) {
+                        // SUB mode: Pass sub stream result back via SavedStateHandle
+                        navController.previousBackStackEntry?.savedStateHandle?.apply {
+                            set("sub_stream_id", result.videoId)
+                            set("sub_title", "") // TODO: Get from result if available
+                            set("sub_thumbnail_url", "")
+                            set("sub_channel_id", "")
+                            set("sub_channel_name", "")
+                            set("sub_channel_icon_url", "")
+                            set("sub_service_type", result.serviceType.name)
+                            set("sub_published_at", 0L)
+                            set("sub_is_live", false)
+                        }
+                        // Don't pop back in sub mode - allow multiple selections
+                    } else {
+                        // Legacy flow - just pop back
+                        navController.popBackStack()
+                    }
                 },
+                isSubSearchMode = isSubMode,
             )
         }
     }
