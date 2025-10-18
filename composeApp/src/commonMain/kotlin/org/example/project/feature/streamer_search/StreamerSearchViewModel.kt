@@ -13,10 +13,13 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atTime
+import kotlinx.datetime.minus
 import kotlinx.datetime.toInstant
+import kotlinx.datetime.toLocalDateTime
 import org.example.project.domain.model.ChannelInfo
 import org.example.project.domain.model.SearchOrder
 import org.example.project.domain.model.SearchResult
@@ -62,6 +65,7 @@ class StreamerSearchViewModel(
             is StreamerSearchIntent.SelectChannel -> selectChannel(intent.channel)
             is StreamerSearchIntent.ToggleResultSelection -> toggleResultSelection(intent.result)
             StreamerSearchIntent.ClearSelectedResults -> clearSelectedResults()
+            StreamerSearchIntent.ToggleDatePicker -> toggleDatePicker()
         }
     }
 
@@ -399,15 +403,39 @@ class StreamerSearchViewModel(
     }
 
     /**
+     * Toggles the date picker visibility
+     */
+    private fun toggleDatePicker() {
+        _uiState.value = _uiState.value.copy(showDatePicker = !_uiState.value.showDatePicker)
+    }
+
+    /**
      * Initializes existing sub stream IDs and main stream ID
      * Used when reopening search modal in SUB mode to show already added streams as selected
      * and to exclude main stream from search results
      * The actual selection happens after search results are loaded
      */
-    fun initializeExistingSubStreams(existingSubStreamIds: List<String>, mainStreamId: String? = null) {
+    @OptIn(ExperimentalTime::class)
+    fun initializeExistingSubStreams(
+        existingSubStreamIds: List<String>,
+        mainStreamId: String? = null,
+        mainPublishedAt: Long? = null,
+    ) {
+        // Convert mainPublishedAt (epoch seconds) to LocalDate if provided
+        val initialDate = if (mainPublishedAt != null) {
+            val instant = kotlin.time.Instant.fromEpochSeconds(mainPublishedAt)
+            instant.toLocalDateTime(TimeZone.currentSystemDefault()).date
+        } else {
+            // Default: yesterday
+            kotlin.time.Clock.System.now()
+                .toLocalDateTime(TimeZone.currentSystemDefault()).date
+                .minus(1, DateTimeUnit.DAY)
+        }
+
         _uiState.value = _uiState.value.copy(
             existingSubStreamIds = existingSubStreamIds,
             mainStreamId = mainStreamId,
+            selectedDate = initialDate,
         )
     }
 }

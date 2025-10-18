@@ -21,4 +21,5 @@ sealed interface StreamerSearchIntent {
     data class SelectChannel(val channel: ChannelInfo) : StreamerSearchIntent
     data class ToggleResultSelection(val result: SearchResult) : StreamerSearchIntent
     data object ClearSelectedResults : StreamerSearchIntent
+    data object ToggleDatePicker : StreamerSearchIntent
 }

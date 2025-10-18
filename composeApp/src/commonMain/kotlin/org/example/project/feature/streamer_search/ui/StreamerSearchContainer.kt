@@ -24,14 +24,15 @@ fun StreamerSearchContainer(
     modifier: Modifier = Modifier,
     existingSubStreamIds: List<String> = emptyList(),
     mainStreamId: String? = null,
+    mainPublishedAt: Long? = null,
     viewModel: StreamerSearchViewModel = koinViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val localDensity = LocalDensity.current
 
     // Initialize existing sub stream selection and main stream ID
-    LaunchedEffect(existingSubStreamIds, mainStreamId) {
-        viewModel.initializeExistingSubStreams(existingSubStreamIds, mainStreamId)
+    LaunchedEffect(existingSubStreamIds, mainStreamId, mainPublishedAt) {
+        viewModel.initializeExistingSubStreams(existingSubStreamIds, mainStreamId, mainPublishedAt)
     }
 
     // Handle side effects

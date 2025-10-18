@@ -65,11 +65,17 @@ fun AppNavGraph(
             } else {
                 null
             }
+            val mainPublishedAt = if (route.searchMode == "SUB") {
+                navController.previousBackStackEntry?.savedStateHandle?.get<Long>("main_published_at")
+            } else {
+                null
+            }
 
             StreamerSearchContainer(
                 onDismiss = { navController.popBackStack() },
                 existingSubStreamIds = existingSubStreamIds,
                 mainStreamId = mainStreamId,
+                mainPublishedAt = mainPublishedAt,
                 onStreamerSelected = { searchResult, serviceType ->
                     if (route.searchMode == "MAIN") {
                         // Navigate to Main Player with selected main streamer
@@ -143,6 +149,10 @@ fun AppNavGraph(
             VideoContainer(
                 modifier = Modifier,
                 onNavigateToSubSearch = {
+                    // Set main stream info for SUB search to use
+                    backStackEntry.savedStateHandle.apply {
+                        set("main_published_at", route.mainPublishedAt)
+                    }
                     // Navigate to streamer search in SUB mode
                     navController.navigate(StreamerSearchRoute(searchMode = "SUB"))
                 },

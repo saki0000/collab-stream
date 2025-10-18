@@ -50,6 +50,7 @@ fun StreamerSearchScreen(
                 channelSuggestions = uiState.channelSuggestions,
                 isSearchingChannels = uiState.isSearchingChannels,
                 selectedResults = uiState.selectedResults,
+                showDatePicker = uiState.showDatePicker,
                 onInputTextChange = { text -> onIntent(StreamerSearchIntent.UpdateInputText(text)) },
                 onExecuteSearch = { onIntent(StreamerSearchIntent.ExecuteSearch) },
                 onSelectResult = { result ->
@@ -64,6 +65,8 @@ fun StreamerSearchScreen(
                 onSelectService = { service -> onIntent(StreamerSearchIntent.SelectService(service)) },
                 onSearchChannels = { query -> onIntent(StreamerSearchIntent.SearchChannels(query)) },
                 onSelectChannel = { channel -> onIntent(StreamerSearchIntent.SelectChannel(channel)) },
+                onToggleDatePicker = { onIntent(StreamerSearchIntent.ToggleDatePicker) },
+                onDateSelected = { date -> onIntent(StreamerSearchIntent.ChangeSelectedDate(date)) },
                 onDismiss = onDismiss,
                 modifier = Modifier
                     .fillMaxSize()

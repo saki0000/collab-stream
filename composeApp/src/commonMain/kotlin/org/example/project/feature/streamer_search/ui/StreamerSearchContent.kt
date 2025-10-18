@@ -20,22 +20,34 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import kotlin.time.ExperimentalTime
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atStartOfDayIn
+import kotlinx.datetime.minus
+import kotlinx.datetime.toLocalDateTime
 import org.example.project.domain.model.ChannelInfo
 import org.example.project.domain.model.SearchResult
 import org.example.project.domain.model.VideoServiceType
@@ -59,6 +71,7 @@ fun StreamerSearchContent(
     channelSuggestions: List<ChannelInfo>,
     isSearchingChannels: Boolean,
     selectedResults: List<SearchResult>,
+    showDatePicker: Boolean,
     onInputTextChange: (String) -> Unit,
     onExecuteSearch: () -> Unit,
     onSelectResult: (SearchResult) -> Unit,
@@ -67,6 +80,8 @@ fun StreamerSearchContent(
     onSelectService: (VideoServiceType) -> Unit,
     onSearchChannels: (String) -> Unit,
     onSelectChannel: (ChannelInfo) -> Unit,
+    onToggleDatePicker: () -> Unit,
+    onDateSelected: (LocalDate) -> Unit,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -76,35 +91,6 @@ fun StreamerSearchContent(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        // Service Selection
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                text = "Service:",
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Medium,
-            )
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                RadioButton(
-                    selected = selectedService == VideoServiceType.YOUTUBE,
-                    onClick = { onSelectService(VideoServiceType.YOUTUBE) },
-                )
-                Text("YouTube")
-                Spacer(modifier = Modifier.width(8.dp))
-                RadioButton(
-                    selected = selectedService == VideoServiceType.TWITCH,
-                    onClick = { onSelectService(VideoServiceType.TWITCH) },
-                )
-                Text("Twitch")
-            }
-        }
-
         // Search Field with Dropdown
         Box {
             Column {
@@ -177,6 +163,41 @@ fun StreamerSearchContent(
                     }
                 }
             }
+        }
+
+        // Service Selection (FilterChips)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            FilterChip(
+                selected = selectedService == VideoServiceType.YOUTUBE,
+                onClick = { onSelectService(VideoServiceType.YOUTUBE) },
+                label = { Text("YouTube") },
+            )
+            FilterChip(
+                selected = selectedService == VideoServiceType.TWITCH,
+                onClick = { onSelectService(VideoServiceType.TWITCH) },
+                label = { Text("Twitch") },
+            )
+            FilterChip(
+                selected = true,
+                onClick = onToggleDatePicker,
+                label = { Text(formatDateLabel(selectedDate)) },
+            )
+        }
+
+        // DatePicker Dialog
+        if (showDatePicker) {
+            DatePickerModal(
+                selectedDate = selectedDate,
+                onDateSelected = { date ->
+                    onDateSelected(date)
+                    onToggleDatePicker()
+                },
+                onDismiss = onToggleDatePicker,
+            )
         }
 
         // Error display
@@ -293,6 +314,61 @@ fun StreamerSearchContent(
                 }
             }
         }
+    }
+}
+
+/**
+ * Formats the selected date as a label for the UI.
+ * Shows "昨日" if the date is yesterday, otherwise shows the date in YYYY-MM-DD format.
+ */
+@OptIn(ExperimentalTime::class)
+private fun formatDateLabel(date: LocalDate): String {
+    val today = kotlin.time.Clock.System.now()
+        .toLocalDateTime(TimeZone.currentSystemDefault()).date
+    val yesterday = today.minus(1, DateTimeUnit.DAY)
+
+    return when (date) {
+        yesterday -> "昨日"
+        today -> "今日"
+        else -> "${date.year}-${date.monthNumber.toString().padStart(2, '0')}-${date.dayOfMonth.toString().padStart(2, '0')}"
+    }
+}
+
+/**
+ * DatePicker dialog for selecting a date
+ */
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalTime::class)
+@Composable
+private fun DatePickerModal(
+    selectedDate: LocalDate,
+    onDateSelected: (LocalDate) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val initialSelectedDateMillis = selectedDate.atStartOfDayIn(TimeZone.UTC).toEpochMilliseconds()
+    val datePickerState = rememberDatePickerState(initialSelectedDateMillis = initialSelectedDateMillis)
+
+    DatePickerDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    datePickerState.selectedDateMillis?.let { millis ->
+                        val instant = Instant.fromEpochMilliseconds(millis)
+                        val localDate = instant.toLocalDateTime(TimeZone.UTC).date
+                        onDateSelected(localDate)
+                    }
+                },
+            ) {
+                Text("OK")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("キャンセル")
+            }
+        },
+    ) {
+        DatePicker(state = datePickerState)
     }
 }
 
