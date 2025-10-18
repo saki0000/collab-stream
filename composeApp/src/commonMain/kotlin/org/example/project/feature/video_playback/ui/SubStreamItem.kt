@@ -15,8 +15,6 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -40,6 +38,7 @@ import org.example.project.domain.model.StreamInfo
 /**
  * Sub Stream Item
  * Displays sub stream info with sync status and actions
+ * Simple layout without card background
  */
 @Composable
 fun SubStreamItem(
@@ -51,19 +50,12 @@ fun SubStreamItem(
 ) {
     var showMenu by remember { mutableStateOf(false) }
 
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(2.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer,
-        ),
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 8.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
             // Thumbnail
             AsyncImage(
                 model = stream.thumbnailUrl,
@@ -95,7 +87,7 @@ fun SubStreamItem(
                         text = "${stream.channelName} • ${stream.title}",
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Medium,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        color = MaterialTheme.colorScheme.onSurface,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
@@ -110,68 +102,67 @@ fun SubStreamItem(
                         imageVector = Icons.Default.PlayArrow,
                         contentDescription = null,
                         modifier = Modifier.size(14.dp),
-                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     Text(
                         text = stream.targetSeekPosition?.let { formatTime(it) } ?: "00:00",
                         style = MaterialTheme.typography.bodySmall,
                         fontWeight = FontWeight.Medium,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
 
-            // Menu button
-            IconButton(onClick = { showMenu = true }) {
-                Icon(
-                    imageVector = Icons.Default.MoreVert,
-                    contentDescription = "More options",
-                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                )
-            }
+        // Menu button
+        IconButton(onClick = { showMenu = true }) {
+            Icon(
+                imageVector = Icons.Default.MoreVert,
+                contentDescription = "More options",
+                tint = MaterialTheme.colorScheme.onSurface,
+            )
+        }
 
-            // Dropdown menu
-            DropdownMenu(
-                expanded = showMenu,
-                onDismissRequest = { showMenu = false },
-            ) {
-                DropdownMenuItem(
-                    text = {
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.PlayArrow,
-                                contentDescription = null,
-                            )
-                            Text("メインに切り替え")
-                        }
-                    },
-                    onClick = {
-                        showMenu = false
-                        onSwitchToMain()
-                    },
-                )
-                DropdownMenuItem(
-                    text = {
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Delete,
-                                contentDescription = null,
-                            )
-                            Text("削除")
-                        }
-                    },
-                    onClick = {
-                        showMenu = false
-                        onRemove()
-                    },
-                )
-            }
+        // Dropdown menu
+        DropdownMenu(
+            expanded = showMenu,
+            onDismissRequest = { showMenu = false },
+        ) {
+            DropdownMenuItem(
+                text = {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.PlayArrow,
+                            contentDescription = null,
+                        )
+                        Text("メインに切り替え")
+                    }
+                },
+                onClick = {
+                    showMenu = false
+                    onSwitchToMain()
+                },
+            )
+            DropdownMenuItem(
+                text = {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = null,
+                        )
+                        Text("削除")
+                    }
+                },
+                onClick = {
+                    showMenu = false
+                    onRemove()
+                },
+            )
         }
     }
 }
