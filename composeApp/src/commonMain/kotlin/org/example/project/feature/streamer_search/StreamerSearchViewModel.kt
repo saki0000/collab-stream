@@ -23,7 +23,7 @@ import org.example.project.domain.model.SearchResult
 import org.example.project.domain.model.VideoServiceType
 import org.example.project.domain.usecase.ChannelSearchUseCase
 import org.example.project.domain.usecase.VideoSearchUseCase
-import org.example.project.feature.video_search.SearchMode
+import org.example.project.feature.streamer_search.SearchMode
 
 /**
  * ViewModel for streamer search (Main or Sub)

@@ -1,7 +1,11 @@
 package org.example.project.feature.video_playback.ui
 
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -97,18 +101,25 @@ fun SwitchConfirmBottomSheet(
         onDismissRequest = onDismiss,
         modifier = modifier,
     ) {
-        // Display WebView only
-        VideoPlayerView(
-            videoId = streamToSwitch.streamId,
-            uiState = VideoUiState(
+        Surface(
+            modifier = Modifier
+                .fillMaxSize()
+                .statusBarsPadding(),
+            color = MaterialTheme.colorScheme.surface,
+        ) {
+            // Display WebView only
+            VideoPlayerView(
                 videoId = streamToSwitch.streamId,
-                serviceType = streamToSwitch.serviceType,
-                mainStream = streamToSwitch,
-            ),
-            onIntent = { /* No intent handling needed */ },
-            onPlayerControllerReady = { controller ->
-                playerController = controller
-            },
-        )
+                uiState = VideoUiState(
+                    videoId = streamToSwitch.streamId,
+                    serviceType = streamToSwitch.serviceType,
+                    mainStream = streamToSwitch,
+                ),
+                onIntent = { /* No intent handling needed */ },
+                onPlayerControllerReady = { controller ->
+                    playerController = controller
+                },
+            )
+        }
     }
 }

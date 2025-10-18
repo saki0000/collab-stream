@@ -1,10 +1,16 @@
 package org.example.project.feature.streamer_search.ui
 
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.dp
 import org.example.project.domain.model.SearchResult
 import org.example.project.domain.model.VideoServiceType
 import org.example.project.feature.streamer_search.StreamerSearchSideEffect
@@ -22,6 +28,7 @@ fun StreamerSearchContainer(
     viewModel: StreamerSearchViewModel = koinViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val localDensity = LocalDensity.current
 
     // Handle side effects
     LaunchedEffect(Unit) {
@@ -41,6 +48,6 @@ fun StreamerSearchContainer(
         uiState = uiState,
         onIntent = viewModel::handleIntent,
         onDismiss = onDismiss,
-        modifier = modifier,
+        modifier = modifier.statusBarsPadding(),
     )
 }

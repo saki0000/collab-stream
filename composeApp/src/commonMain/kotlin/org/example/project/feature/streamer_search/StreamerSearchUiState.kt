@@ -9,7 +9,7 @@ import kotlinx.datetime.toLocalDateTime
 import org.example.project.domain.model.ChannelInfo
 import org.example.project.domain.model.SearchResult
 import org.example.project.domain.model.VideoServiceType
-import org.example.project.feature.video_search.SearchMode
+import org.example.project.feature.streamer_search.SearchMode
 
 /**
  * UI state for streamer search screen

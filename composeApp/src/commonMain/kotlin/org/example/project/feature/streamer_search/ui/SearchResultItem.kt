@@ -1,4 +1,4 @@
-package org.example.project.feature.video_search.ui
+package org.example.project.feature.streamer_search.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border

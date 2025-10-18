@@ -35,7 +35,6 @@ fun VideoScreen(
     onIntent: (VideoIntent) -> Unit,
     onVideoError: (String) -> Unit,
     snackbarHostState: SnackbarHostState,
-    onNavigateToSearch: (initialQuery: String) -> Unit,
     onNavigateToSubSearch: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -57,7 +56,7 @@ fun VideoScreen(
         ) {
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(16.dp),
-                contentPadding = PaddingValues(16.dp),
+                contentPadding = PaddingValues(8.dp,16.dp),
             ) {
                 // Section 1: Main Player Section
                 item {

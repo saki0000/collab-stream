@@ -15,7 +15,6 @@ import org.example.project.domain.model.VideoServiceType
 import org.example.project.feature.video_playback.VideoIntent
 import org.example.project.feature.video_playback.VideoSideEffect
 import org.example.project.feature.video_playback.VideoViewModel
-import org.example.project.feature.video_search.VideoSelectionResult
 import org.koin.compose.viewmodel.koinViewModel
 
 /**
@@ -23,40 +22,28 @@ import org.koin.compose.viewmodel.koinViewModel
  * This is the only stateful composable in the hierarchy following the 4-tier pattern:
  * Container -> Screen -> Content -> Component
  *
- * Receives video selection results from navigation layer (passed as parameter).
+ * Receives main stream info and handles sub stream selection through SavedStateHandle.
  * Navigation handling is managed by the NavGraph layer for proper separation of concerns.
  */
 @Composable
 fun VideoContainer(
-    onNavigateToSearch: (initialQuery: String) -> Unit,
-    videoSelectionResult: VideoSelectionResult?,
     modifier: Modifier = Modifier,
-    onNavigateToSubSearch: () -> Unit = {}, // New parameter for sub search
-    mainStreamInfo: StreamInfo? = null, // New parameter for main stream
-    savedStateHandle: SavedStateHandle? = null, // For receiving sub stream results
+    onNavigateToSubSearch: () -> Unit = {},
+    mainStreamInfo: StreamInfo? = null,
+    savedStateHandle: SavedStateHandle? = null,
     viewModel: VideoViewModel = koinViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val snackBarHostState = remember { SnackbarHostState() }
 
-    // Process main stream info when received from navigation layer (new flow)
+    // Process main stream info when received from navigation layer
     LaunchedEffect(mainStreamInfo) {
         mainStreamInfo?.let { streamInfo ->
             viewModel.handleIntent(VideoIntent.LoadMainStream(streamInfo))
         }
     }
 
-    // Process video selection result when received from navigation layer (legacy flow)
-    LaunchedEffect(videoSelectionResult) {
-        videoSelectionResult?.let { result ->
-            // Load the selected video
-            viewModel.handleIntent(
-                VideoIntent.LoadVideoWithService(result.videoId, result.serviceType),
-            )
-        }
-    }
-
-    // Process sub stream selection result from SavedStateHandle (new flow)
+    // Process sub stream selection result from SavedStateHandle
     LaunchedEffect(Unit) {
         savedStateHandle?.let { handle ->
             // Observe sub stream fields from navigation result
@@ -129,7 +116,6 @@ fun VideoContainer(
         onIntent = viewModel::handleIntent,
         onVideoError = viewModel::handleVideoError,
         snackbarHostState = snackBarHostState,
-        onNavigateToSearch = onNavigateToSearch,
         onNavigateToSubSearch = onNavigateToSubSearch,
         modifier = modifier,
     )

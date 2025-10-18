@@ -41,7 +41,7 @@ import kotlinx.datetime.LocalDate
 import org.example.project.domain.model.ChannelInfo
 import org.example.project.domain.model.SearchResult
 import org.example.project.domain.model.VideoServiceType
-import org.example.project.feature.video_search.ui.SearchResultItem
+import org.example.project.feature.streamer_search.ui.SearchResultItem
 
 /**
  * Content for Streamer Search
@@ -78,25 +78,6 @@ fun StreamerSearchContent(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        // Top App Bar with close button and selection count
-        TopAppBar(
-            title = {
-                Text(
-                    text = if (searchMode == "MAIN") "Select Main Streamer" else "Add Sub Streamer",
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold,
-                )
-            },
-            navigationIcon = {
-                IconButton(onClick = onDismiss) {
-                    Icon(
-                        imageVector = Icons.Default.Close,
-                        contentDescription = "Close",
-                    )
-                }
-            },
-        )
-
         // Service Selection
         Row(
             modifier = Modifier.fillMaxWidth(),

@@ -4,7 +4,6 @@ import kotlinx.datetime.LocalDate
 import org.example.project.domain.model.ChannelInfo
 import org.example.project.domain.model.SearchResult
 import org.example.project.domain.model.VideoServiceType
-import org.example.project.feature.video_search.SearchMode
 
 /**
  * User intents for streamer search
