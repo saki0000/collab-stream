@@ -1,34 +1,34 @@
-# CollabStream - App-wide Screen Navigation
+# CollabStream - アプリ全体の画面ナビゲーション
 
-> **Purpose**: High-level overview of all screens and navigation flows in CollabStream
-> **Last Updated**: 2025-12-30
-> **Maintenance**: Updated during Phase 1 when adding new features
+> **目的**: CollabStreamのすべての画面とナビゲーションフローの概要
+> **最終更新**: 2025-12-30
+> **メンテナンス**: 新機能追加時のPhase 1で更新
 
 ---
 
-## Navigation Overview
+## ナビゲーション概要
 
 ```mermaid
 graph LR
-    Start([App Launch])
+    Start([アプリ起動])
 
-    Start --> App[CollabStream App]
+    Start --> App[CollabStream アプリ]
 
-    App --> VideoPlayback[Video Playback Screen]
-    App --> StreamerSearch[Streamer Search Screen]
+    App --> VideoPlayback[動画再生画面]
+    App --> StreamerSearch[配信者検索画面]
 
-    %% Video Playback Feature
-    VideoPlayback --> VideoPlayer[Video Player]
-    VideoPlayer --> VideoSync[Video Sync Modal]
-    VideoPlayer --> SubStreamModal[Sub Stream Selection]
+    %% 動画再生機能
+    VideoPlayback --> VideoPlayer[動画プレイヤー]
+    VideoPlayer --> VideoSync[動画同期モーダル]
+    VideoPlayer --> SubStreamModal[サブストリーム選択]
 
-    %% Search Feature
-    StreamerSearch --> SearchModal[Search Modal]
-    SearchModal --> SearchResults[Search Results]
-    SearchResults --> StreamDetail[Stream Detail]
+    %% 検索機能
+    StreamerSearch --> SearchModal[検索モーダル]
+    SearchModal --> SearchResults[検索結果]
+    SearchResults --> StreamDetail[ストリーム詳細]
     StreamDetail --> VideoPlayer
 
-    %% Styling by feature area
+    %% 機能領域別のスタイリング
     style App fill:#e1f5ff,stroke:#0277bd,stroke-width:3px
     style VideoPlayback fill:#fff4e1,stroke:#f57c00,stroke-width:2px
     style StreamerSearch fill:#e8f5e9,stroke:#388e3c,stroke-width:2px
@@ -47,116 +47,81 @@ graph LR
 
 ---
 
-## Feature List
+## 機能一覧
 
-### Video Playback Feature (Orange)
+### 動画再生機能（オレンジ）
 
-| Screen | Type | Description | Documentation |
-|--------|------|-------------|---------------|
-| **Video Playback Screen** | Main | Main screen showing active video playback | [REQUIREMENTS.md](../composeApp/src/commonMain/kotlin/org/example/project/feature/video_playback/REQUIREMENTS.md) |
-| **Video Player** | Component | Core video player with controls and state management | - |
-| **Video Sync Modal** | Modal | Modal for synchronizing video playback time across viewers | - |
-| **Sub Stream Selection** | Bottom Sheet | Bottom sheet for selecting and managing multiple streams | - |
+| 画面 | タイプ | 説明 | ドキュメント |
+|--------|------|-------------|-----------------|
+| **動画再生画面** | メイン | アクティブな動画再生を表示するメイン画面 | [REQUIREMENTS.md](../composeApp/src/commonMain/kotlin/org/example/project/feature/video_playback/REQUIREMENTS.md) |
+| **動画プレイヤー** | コンポーネント | コントロールと状態管理を備えたコア動画プレイヤー | - |
+| **動画同期モーダル** | モーダル | 視聴者間で動画再生時刻を同期するモーダル | - |
+| **サブストリーム選択** | ボトムシート | 複数のストリームを選択・管理するボトムシート | - |
 
-**Module Navigation (Level 2)**: TODO: [video-module.md](./navigation/video-module.md)
-**Behavior (Level 3)**: TODO: [screen-transition.md](../composeApp/src/commonMain/kotlin/org/example/project/feature/video_playback/screen-transition.md)
+**モジュールナビゲーション（Level 2）**: [video-module.md](./navigation/video-module.md)
+**振る舞い（Level 3）**: [screen-transition.md](../composeApp/src/commonMain/kotlin/org/example/project/feature/video_playback/screen-transition.md)
 
-**Key Features**:
-- YouTube and Twitch video playback
-- Absolute time synchronization (e.g., "Start at 2024-01-01 10:00:00")
-- Multiple sub-stream management
-- Scroll-based animation and player controls
-
----
-
-### Streamer Search Feature (Green)
-
-| Screen | Type | Description | Documentation |
-|--------|------|-------------|---------------|
-| **Streamer Search Screen** | Main | Main search interface with platform selection | [REQUIREMENTS.md](../composeApp/src/commonMain/kotlin/org/example/project/feature/streamer_search/REQUIREMENTS.md) |
-| **Search Modal** | Modal | Modal with search input, date picker, and filter chips | - |
-| **Search Results** | List | Filtered search results with platform-specific data | - |
-| **Stream Detail** | Detail | Detailed information about a stream (TODO: Future feature) | - |
-
-**Module Navigation (Level 2)**: TODO: [search-module.md](./navigation/search-module.md)
-**Behavior (Level 3)**: TODO: [screen-transition.md](../composeApp/src/commonMain/kotlin/org/example/project/feature/streamer_search/screen-transition.md)
-
-**Key Features**:
-- Multi-platform search (YouTube, Twitch)
-- Date range filtering
-- Client-side date filtering for Twitch results
-- Platform-specific search criteria
+**主要機能**:
+- YouTubeとTwitchの動画再生
+- 絶対時刻同期（例: "2024-01-01 10:00:00から開始"）
+- 複数のサブストリーム管理
+- スクロールベースのアニメーションとプレイヤーコントロール
 
 ---
 
-## Adding New Features
+### 配信者検索機能（グリーン）
 
-When adding a new feature with screens:
+| 画面 | タイプ | 説明 | ドキュメント |
+|--------|------|-------------|-----------------|
+| **配信者検索画面** | メイン | プラットフォーム選択を備えたメイン検索インターフェース | [REQUIREMENTS.md](../composeApp/src/commonMain/kotlin/org/example/project/feature/streamer_search/REQUIREMENTS.md) |
+| **検索モーダル** | モーダル | 検索入力、日付ピッカー、フィルターチップを備えたモーダル | - |
+| **検索結果** | リスト | プラットフォーム固有データを含むフィルター済み検索結果 | - |
+| **ストリーム詳細** | 詳細 | ストリームの詳細情報（TODO: 将来の機能） | - |
 
-### 1. Update This Diagram
+**モジュールナビゲーション（Level 2）**: [video-module.md](./navigation/video-module.md)
+**振る舞い（Level 3）**: [screen-transition.md](../composeApp/src/commonMain/kotlin/org/example/project/feature/streamer_search/screen-transition.md)
 
-Add your feature area to the Navigation Overview diagram with consistent color coding (see Color Coding Reference below).
-
-### 2. Create Feature Documentation (Phase 1)
-
-Create the following documents in `feature/{feature_name}/`:
-- **REQUIREMENTS.md** - Feature specifications
-- **navigation.md** - Feature-level screen transitions (use [module-navigation-template.md](./design-doc/template/module-navigation-template.md))
-- **screen-transition.md** - Screen-internal behavior (use [screen-transition-template.md](./design-doc/template/screen-transition-template.md))
-
-### 3. Update Feature List Table
-
-Add a new feature section with:
-- Feature name and color scheme
-- Screen list table with links to navigation.md
-- Key features summary
+**主要機能**:
+- マルチプラットフォーム検索（YouTube、Twitch）
+- 日付範囲フィルタリング
+- Twitch結果のクライアント側日付フィルタリング
+- プラットフォーム固有の検索条件
 
 ---
 
-## Color Coding Reference
+## 色分けリファレンス
 
-| Feature Area | Fill Color | Border Color | Usage |
-|--------------|------------|--------------|-------|
-| **App/Main** | Light Blue (`#e1f5ff`) | Dark Blue (`#0277bd`) | Main app screens, core navigation |
-| **Video Playback** | Light Orange (`#fff4e1`) | Dark Orange (`#f57c00`) | Video player, sync, sub-streams |
-| **Search** | Light Green (`#e8f5e9`) | Dark Green (`#388e3c`) | Streamer search, results, filters |
-| **Modals** | Light Amber (`#ffe0b2`) | Dark Amber (`#e65100`, dashed) | Modal overlays, bottom sheets |
+| 機能領域 | 塗りつぶし色 | 枠線色 | 用途 |
+|--------------|------------|--------------|----------|
+| **アプリ/メイン** | ライトブルー（`#e1f5ff`） | ダークブルー（`#0277bd`） | メインアプリ画面、コアナビゲーション |
+| **動画再生** | ライトオレンジ（`#fff4e1`） | ダークオレンジ（`#f57c00`） | 動画プレイヤー、同期、サブストリーム |
+| **検索** | ライトグリーン（`#e8f5e9`） | ダークグリーン（`#388e3c`） | 配信者検索、結果、フィルター |
+| **モーダル** | ライトアンバー（`#ffe0b2`） | ダークアンバー（`#e65100`、破線） | モーダルオーバーレイ、ボトムシート |
 
-### Future Feature Colors (Reserved)
+### 将来の機能用色（予約済み）
 
-| Feature Area | Fill Color | Border Color | Planned Use |
-|--------------|------------|--------------|-------------|
-| **Library** | Light Purple (`#f3e5f5`) | Dark Purple (`#7b1fa2`) | Saved streams, history |
-| **Settings** | Light Pink (`#fce4ec`) | Dark Pink (`#c2185b`) | App configuration |
-| **Social** | Light Cyan (`#e0f7fa`) | Dark Cyan (`#00838f`) | Friends, chat, community |
-
----
-
-## Current Implementation Status
-
-| Feature | Phase 1 (Spec) | Phase 2 (Implementation) | Phase 3 (Review) |
-|---------|----------------|--------------------------|------------------|
-| **Video Playback** | ✅ Complete | ✅ Complete | ✅ Complete |
-| **Video Sync** | ✅ Complete | ✅ Complete | ✅ Complete |
-| **Streamer Search** | ✅ Complete | ✅ Complete | ✅ Complete |
-| **Sub Stream Selection** | ✅ Complete | ✅ Complete | ✅ Complete |
+| 機能領域 | 塗りつぶし色 | 枠線色 | 予定用途 |
+|--------------|------------|--------------|---------------|
+| **ライブラリ** | ライトパープル（`#f3e5f5`） | ダークパープル（`#7b1fa2`） | 保存済みストリーム、履歴 |
+| **設定** | ライトピンク（`#fce4ec`） | ダークピンク（`#c2185b`） | アプリ設定 |
+| **ソーシャル** | ライトシアン（`#e0f7fa`） | ダークシアン（`#00838f`） | フレンド、チャット、コミュニティ |
 
 ---
 
-## Related Documentation
+## 関連ドキュメント
 
-- **Templates**:
-  - [module-navigation-template.md](./design-doc/template/module-navigation-template.md) - Level 2: Feature-level navigation
-  - [screen-transition-template.md](./design-doc/template/screen-transition-template.md) - Level 3: Screen-internal behavior
-- **Architecture**: [docs/architecture/system-architecture.md](./architecture/system-architecture.md)
-- **Development Workflow**: [docs/guides/development-workflow.md](./guides/development-workflow.md)
-- **ADRs**:
+- **テンプレート**:
+  - [module-navigation-template.md](./design-doc/template/module-navigation-template.md) - Level 2: モジュールレベルナビゲーション
+  - [screen-transition-template.md](./design-doc/template/screen-transition-template.md) - Level 3: 画面内部の振る舞い
+- **アーキテクチャ**: [docs/architecture/system-architecture.md](./architecture/system-architecture.md)
+- **開発ワークフロー**: [docs/guides/development-workflow.md](./guides/development-workflow.md)
+- **ADR**:
   - [ADR-001: Clean Architecture](./adr/001-clean-architecture-adoption.md)
   - [ADR-002: MVI Pattern](./adr/002-mvi-pattern-for-state-management.md)
   - [ADR-003: 4-Layer Component](./adr/003-four-layer-component-structure.md)
 
 ---
 
-**Document Version**: 1.0
-**Maintained By**: Development Team
-**Review Schedule**: Updated in Phase 1 of each new feature
+**ドキュメントバージョン**: 1.0
+**管理者**: 開発チーム
+**レビュースケジュール**: 各新機能のPhase 1で更新

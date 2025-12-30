@@ -1,37 +1,37 @@
-# {Module Name} - Screen Navigation
+# {モジュール名} - 画面ナビゲーション
 
-> **Location**: `docs/navigation/{module_name}-module.md`
-> **Purpose**: Screen transitions within {module name} module
-> **Level**: Module-level navigation (Level 2)
-
----
-
-## Purpose
-
-This document visualizes the screen transitions within a module or domain area. It shows which screens exist in the module, how they connect to each other, and under what conditions transitions occur. A module encompasses multiple related features, not just a single feature.
-
-**Module Examples**:
-- **Video Module**: Video Playback + Video Sync + Sub Stream Selection
-- **Search Module**: Streamer Search + Search Results + Stream Detail
-- **User Module**: Profile + Settings + Authentication (future)
+> **配置場所**: `docs/navigation/{module_name}-module.md`
+> **目的**: {モジュール名}モジュール内の画面遷移
+> **レベル**: モジュールレベルナビゲーション（Level 2）
 
 ---
 
-## Mermaid Example
+## 目的
 
-Replace placeholders (`{...}`) with your module's actual content.
+このドキュメントは、モジュールまたはドメイン領域内の画面遷移を可視化します。モジュール内にどの画面が存在し、それらがどのように接続され、どのような条件で遷移が発生するかを示します。モジュールは単一の機能ではなく、複数の関連する機能を包含します。
+
+**モジュールの例**:
+- **Videoモジュール**: 動画再生 + 動画同期 + サブストリーム選択
+- **検索モジュール**: 配信者検索 + 検索結果 + ストリーム詳細
+- **ユーザーモジュール**: プロフィール + 設定 + 認証（将来）
+
+---
+
+## Mermaid例
+
+プレースホルダー（`{...}`）をモジュールの実際の内容に置き換えてください。
 
 ```mermaid
 graph TB
-    ModuleEntry[Module Entry Point]
+    ModuleEntry[モジュールエントリーポイント]
 
-    ModuleEntry --> ScreenA[Screen A]
-    ScreenA --> ScreenB[Screen B]
-    ScreenA -->|Condition 1| ScreenC[Screen C]
-    ScreenB -->|No data| EmptyState[Empty State]
-    ScreenB -->|Error| ErrorScreen[Error Screen]
+    ModuleEntry --> ScreenA[画面A]
+    ScreenA --> ScreenB[画面B]
+    ScreenA -->|条件1| ScreenC[画面C]
+    ScreenB -->|データなし| EmptyState[空状態]
+    ScreenB -->|エラー| ErrorScreen[エラー画面]
 
-    ErrorScreen -->|Retry| ScreenA
+    ErrorScreen -->|リトライ| ScreenA
 
     style ModuleEntry fill:#e1f5ff,stroke:#0277bd,stroke-width:2px
     style ScreenA fill:#fff4e1,stroke:#f57c00
@@ -43,45 +43,45 @@ graph TB
 
 ---
 
-## Guidelines
+## ガイドライン
 
-### What to Include
+### 含めるべき内容
 
-- **Screen transitions only**: Show which screen leads to which screen
-- **Conditions**: Include conditions when transition depends on state
-  - Example: `SearchResults -->|No results| Empty`
-  - Example: `APICall -->|Error| ErrorScreen`
-  - Example: `Login -->|Authenticated| Home`
-- **Module scope**: Include screens from multiple related features in this module
-- **NO screen-internal state transitions**: Do not include state changes within a single screen
+- **画面遷移のみ**: どの画面がどの画面に遷移するかを示す
+- **条件**: 遷移が状態に依存する場合は条件を含める
+  - 例: `SearchResults -->|結果なし| Empty`
+  - 例: `APICall -->|エラー| ErrorScreen`
+  - 例: `Login -->|認証済み| Home`
+- **モジュールスコープ**: このモジュール内の複数の関連機能の画面を含める
+- **画面内部の状態遷移は含めない**: 単一画面内の状態変化は含めない
 
-### What NOT to Include
+### 含めるべきでない内容
 
-- **User actions**: Do not include "User taps", "User selects" on transitions
-- **Implementation details**: No class names, ViewModel references, or layer information
-- **Screen-internal behavior**: Detailed behavior goes to screen-transition.md (Level 3)
+- **ユーザーアクション**: 遷移に「ユーザーがタップ」「ユーザーが選択」を含めない
+- **実装詳細**: クラス名、ViewModel参照、レイヤー情報を含めない
+- **画面内部の振る舞い**: 詳細な振る舞いはscreen-transition.md（Level 3）へ
 
-### Color Coding
+### 色分け
 
-Use consistent colors by screen type:
+画面タイプごとに一貫した色を使用：
 
-| Screen Type | Fill Color | Border Color | Usage |
+| 画面タイプ | 塗りつぶし色 | 枠線色 | 用途 |
 |-------------|------------|--------------|-------|
-| **Entry Point** | `#e1f5ff` | `#0277bd` | Module entry screen |
-| **Main Screens** | `#fff4e1` | `#f57c00` | Primary module screens |
-| **Empty State** | `#ffe0b2` | `#e65100` | Empty or no-data states |
-| **Error Screen** | `#ffcdd2` | `#c62828` | Error states |
-| **Modal/Sheet** | `#f3e5f5` | `#7b1fa2` | Modals, bottom sheets (dashed border) |
+| **エントリーポイント** | `#e1f5ff` | `#0277bd` | モジュールエントリー画面 |
+| **メイン画面** | `#fff4e1` | `#f57c00` | 主要なモジュール画面 |
+| **空状態** | `#ffe0b2` | `#e65100` | 空またはデータなし状態 |
+| **エラー画面** | `#ffcdd2` | `#c62828` | エラー状態 |
+| **モーダル/シート** | `#f3e5f5` | `#7b1fa2` | モーダル、ボトムシート（破線枠） |
 
 ---
 
-## Related Documents
+## 関連ドキュメント
 
-- **Parent**: [screen-navigation.md](../../../screen-navigation.md) - App-wide navigation index (Level 1)
-- **Child**: `feature/{feature_name}/screen-transition.md` - Screen-internal behavior (Level 3)
+- **親**: [screen-navigation.md](../../../screen-navigation.md) - アプリ全体のナビゲーション索引（Level 1）
+- **子**: `feature/{feature_name}/screen-transition.md` - 画面内部の振る舞い（Level 3）
 
 ---
 
-**Template Version**: 1.0
-**Last Updated**: 2025-12-30
-**Related**: [screen-transition-template.md](./screen-transition-template.md), [requirements-template.md](./requirements-template.md)
+**テンプレートバージョン**: 1.0
+**最終更新**: 2025-12-30
+**関連**: [screen-transition-template.md](./screen-transition-template.md), [requirements-template.md](./requirements-template.md)

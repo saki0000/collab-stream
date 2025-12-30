@@ -1,153 +1,150 @@
-# Screen Transition Diagram: {Feature Name}
+# 画面遷移図: {機能名}
 
-> **Location**: `composeApp/src/commonMain/kotlin/org/example/project/feature/{feature_name}/screen-transition.md`
-> **Purpose**: Visual representation of screen state lifecycle, user actions, and behavioral transitions
-> **Level**: Screen-internal behavior (Level 3)
-
----
-
-## Purpose
-
-This diagram visualizes the **detailed behavior** within a screen, showing:
-- Screen states (Loading, Content, Error, Empty)
-- User actions that trigger state changes (with Intent names)
-- Conditions that determine state transitions
-- Nested states for complex behaviors
-
-This helps AI understand the feature's behavior requirements for Phase 2 implementation and ensures alignment between design and code through ubiquitous language.
+> **配置場所**: `composeApp/src/commonMain/kotlin/org/example/project/feature/{feature_name}/screen-transition.md`
+> **目的**: 画面状態ライフサイクル、ユーザーアクション、振る舞い遷移の視覚的表現
+> **レベル**: 画面内部の振る舞い（Level 3）
 
 ---
 
-## Mermaid Example
+## 目的
 
-Replace placeholders (`{...}`) with your feature's actual content.
+この図は、画面の**詳細な振る舞い**を可視化し、以下を示します：
+- 画面の状態（読み込み中、コンテンツ表示、エラー、空状態）
+- 状態変更をトリガーするユーザーアクション
+- 状態遷移を決定する条件
+- 複雑な振る舞いのためのネスト状態
+
+これにより、実装時に機能の振る舞い要件を理解し、仕様とコード間の整合性を確保できます。
+
+---
+
+## Mermaid例
+
+プレースホルダー（`{...}`）を機能の実際の内容に置き換えてください。
 
 ```mermaid
 stateDiagram-v2
-    [*] --> Initializing
+    [*] --> 初期化中
 
-    Initializing --> Loading: Screen opened (OnScreenOpened)
+    初期化中 --> 読み込み中: 画面が開かれた
 
-    Loading --> Content: API returns results (results.isNotEmpty())
-    Loading --> Error: API returns error (error != null)
-    Loading --> Empty: API returns empty list (results.isEmpty())
+    読み込み中 --> コンテンツ表示: APIが結果を返す（結果あり）
+    読み込み中 --> エラー: APIがエラーを返す
+    読み込み中 --> 空状態: APIが空リストを返す
 
-    Content --> Loading: User taps refresh button (ExecuteSearch)
-    Content --> Detail: User selects item from list (SelectSearchResult)
+    コンテンツ表示 --> 読み込み中: ユーザーが更新ボタンをタップ
+    コンテンツ表示 --> 詳細: ユーザーがリストからアイテムを選択
 
-    Error --> Loading: User taps "Retry Search" button (ExecuteSearch)
-    Error --> [*]: User closes screen (DismissScreen)
+    エラー --> 読み込み中: ユーザーが「再検索」ボタンをタップ
+    エラー --> [*]: ユーザーが画面を閉じる
 
-    Empty --> Loading: User taps "Try Again" button (ExecuteSearch)
+    空状態 --> 読み込み中: ユーザーが「再試行」ボタンをタップ
 
-    Detail --> Content: User navigates back (NavigateBack)
+    詳細 --> コンテンツ表示: ユーザーが戻る
 
-    state Content {
-        [*] --> ListMode
-        ListMode --> GridMode: User toggles to grid view (ChangeViewMode)
-        GridMode --> ListMode: User toggles to list view (ChangeViewMode)
+    state コンテンツ表示 {
+        [*] --> リスト表示
+        リスト表示 --> グリッド表示: ユーザーがグリッド表示に切り替え
+        グリッド表示 --> リスト表示: ユーザーがリスト表示に切り替え
     }
 
-    note right of Loading
-        Loading state (isLoading = true)
-        Shows spinner while fetching data
+    note right of 読み込み中
+        読み込み中フラグ: true
+        データ取得中、スピナーを表示
     end note
 
-    note right of Error
-        Error state (errorMessage != null)
-        Displays error message and retry button
+    note right of エラー
+        エラーメッセージが存在
+        エラーメッセージとリトライボタンを表示
     end note
 
-    note right of Content
-        Content state (data != null)
-        Displays search results
+    note right of コンテンツ表示
+        データが存在
+        検索結果を表示
     end note
 ```
 
 ---
 
-## Guidelines
+## ガイドライン
 
-### User Actions (REQUIRED)
+### ユーザーアクション（必須）
 
-- **Always include user actions**: Describe what the user does to trigger transitions
-  - Good: `User taps "Retry Search" button (ExecuteSearch)`
-  - Bad: `Data fetch success` (no user action, condition only)
-- **Include Intent names**: Add Intent name in parentheses after action description
-  - Format: `User action description (IntentName)`
-  - Examples: `(ExecuteSearch)`, `(LoadVideo)`, `(SyncToAbsoluteTime)`
+- **常にユーザーアクションを含める**: 遷移をトリガーするユーザーの行動を記述
+  - 良い例: `ユーザーが「再検索」ボタンをタップ`
+  - 悪い例: `データ取得成功`（ユーザーアクションなし、条件のみ）
+- **コメントと整合性を持たせる**: コード内のコメントと同じ用語を使用
+  - フォーマット: `ユーザーアクション説明`
 
-### Conditions (REQUIRED)
+### 条件（必須）
 
-- **State transition conditions**: Clearly state what determines the next state
-  - API result: `API returns results (results.isNotEmpty())`
-  - Error: `API returns error (error != null)`
-  - Empty: `API returns empty list (results.isEmpty())`
-- **Include UiState properties**: Reference actual UiState properties when relevant
-  - Examples: `(isLoading = true)`, `(errorMessage != null)`, `(data.isEmpty())`
+- **状態遷移条件**: 次の状態を決定するものを明確に記述
+  - API結果: `APIが結果を返す（結果あり）`
+  - エラー: `APIがエラーを返す`
+  - 空: `APIが空リストを返す`
+- **状態プロパティを含める**: 関連する状態プロパティを参照
+  - 例: `（読み込み中フラグ = true）`、`（エラーメッセージが存在）`、`（データが空）`
 
-### States
+### 状態
 
-- **Recommended states**: 5-10 states for most screens
-- **Core states**: Always include Loading, Content, Error, and Empty states
-- **Nested states**: Use for variations within a state (e.g., List/Grid view modes)
-- **All states must have exits**: Avoid dead-end states except final state `[*]`
+- **推奨状態数**: ほとんどの画面で5〜10状態
+- **コア状態**: 読み込み中、コンテンツ表示、エラー、空状態を常に含める
+- **ネスト状態**: 状態内のバリエーションに使用（例: リスト/グリッド表示モード）
+- **すべての状態に出口を持たせる**: 最終状態`[*]`以外は行き止まり状態を避ける
 
-### Notes
+### 注記
 
-- **State descriptions**: Add notes to explain what each state represents
-- **Include UiState references**: Mention relevant UiState properties
-  - Example: `Loading state (isLoading = true)`
-  - Example: `Error state (errorMessage != null)`
+- **状態説明**: 各状態が何を表すかを説明する注記を追加
+- **状態参照を含める**: 関連する状態プロパティを言及
+  - 例: `読み込み中状態（読み込み中フラグ = true）`
+  - 例: `エラー状態（エラーメッセージが存在）`
 
-### Ubiquitous Language
+### 用語
 
-Use the same terminology as in code:
-- **Intent names**: Match the actual sealed interface Intent class
-- **UiState properties**: Reference actual data class properties
-- **Domain models**: Use same names as domain layer (StreamInfo, SearchResult, etc.)
+コード内のコメントと同じ用語を使用：
+- **状態プロパティ**: 実際のデータクラスプロパティを参照
+- **ドメインモデル**: ドメイン層と同じ名前を使用（StreamInfo、SearchResult等）
 
-### What NOT to Include
+### 含めるべきでない内容
 
-- **Implementation details**: No ViewModel, UseCase, Repository mentions
-- **Layer information**: No Presentation/Domain/Data layer subgraphs
-- **Code structure**: No class names or method signatures
+- **実装詳細**: ViewModel、UseCase、Repositoryへの言及なし
+- **レイヤー情報**: Presentation/Domain/Dataレイヤーのサブグラフなし
+- **コード構造**: クラス名やメソッドシグネチャなし
 
 ---
 
-## Examples by Feature Type
+## 機能タイプ別の例
 
-### Search Feature
+### 検索機能
 ```mermaid
-Loading --> Content: API returns search results (results.isNotEmpty())
-Content --> Loading: User taps search button (ExecuteSearch)
-Empty --> Loading: User changes search query (UpdateInputText)
+読み込み中 --> コンテンツ表示: APIが検索結果を返す（結果あり）
+コンテンツ表示 --> 読み込み中: ユーザーが検索ボタンをタップ
+空状態 --> 読み込み中: ユーザーが検索クエリを変更
 ```
 
-### Video Playback Feature
+### 動画再生機能
 ```mermaid
-Loading --> Playing: Video loaded successfully (playerState = Ready)
-Playing --> Paused: User taps pause button (PauseVideo)
-Paused --> Playing: User taps play button (PlayVideo)
+読み込み中 --> 再生中: 動画の読み込み成功（プレイヤー状態 = 準備完了）
+再生中 --> 一時停止中: ユーザーが一時停止ボタンをタップ
+一時停止中 --> 再生中: ユーザーが再生ボタンをタップ
 ```
 
-### Authentication Feature
+### 認証機能
 ```mermaid
-Idle --> Authenticating: User taps login button (SubmitLogin)
-Authenticating --> Authenticated: Login successful (user != null)
-Authenticating --> Error: Login failed (error != null)
+待機中 --> 認証中: ユーザーがログインボタンをタップ
+認証中 --> 認証済み: ログイン成功（ユーザー情報が存在）
+認証中 --> エラー: ログイン失敗（エラーが存在）
 ```
 
 ---
 
-## Related Documents
+## 関連ドキュメント
 
-- **Parent**: [Module Navigation](../../navigation/{module_name}-module.md) - Module-level screen transitions (Level 2)
-- **Sibling**: [REQUIREMENTS.md](./REQUIREMENTS.md) - Feature specifications
-- **Reference**: [VideoIntent.kt](../../feature/video_playback/VideoIntent.kt) - Example Intent definitions
+- **親**: [モジュールナビゲーション](../../navigation/{module_name}-module.md) - モジュールレベル画面遷移（Level 2）
+- **兄弟**: [REQUIREMENTS.md](./REQUIREMENTS.md) - 機能仕様
 
 ---
 
-**Template Version**: 3.0 (Behavior-focused)
-**Last Updated**: 2025-12-30
-**Related**: [module-navigation-template.md](./module-navigation-template.md), [requirements-template.md](./requirements-template.md)
+**テンプレートバージョン**: 3.0（振る舞い重視）
+**最終更新**: 2025-12-30
+**関連**: [module-navigation-template.md](./module-navigation-template.md), [requirements-template.md](./requirements-template.md)
