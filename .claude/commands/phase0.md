@@ -1,9 +1,9 @@
 ---
 allowed-tools: Read, Write, Edit, MultiEdit, Glob, Grep, Bash(git:*), Bash(mkdir:*), Bash(gh:*), TodoWrite
-description: Epic定義 & 共通盤の切り出し - 大規模機能を複数Storyに分割
+description: Epic定義 & 共通基盤の切り出し - 大規模機能を複数Storyに分割
 ---
 
-# Phase 0: Epic定義 & 共通盤の切り出し
+# Phase 0: Epic定義 & 共通基盤の切り出し
 
 Phase 0では、大規模機能（Epic）を複数のUser Storyに分割し、並行実装時の重複を避けるための最小限の共通ドメインを定義します。
 
@@ -188,7 +188,7 @@ data class User(
 - プラットフォーム非依存
 - KDocでEpic参照、共有Story列挙
 
-#### 3.3 What NOT to Implement
+#### 3.2 What NOT to Implement
 
 **❌ Phase 0では作成しない**:
 - UseCase → Phase 1で各Storyごとに定義

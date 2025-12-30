@@ -101,7 +101,7 @@ Add your feature area to the Navigation Overview diagram with consistent color c
 
 Create the following documents in `feature/{feature_name}/`:
 - **REQUIREMENTS.md** - Feature specifications
-- **navigation.md** - Feature-level screen transitions (use [feature-navigation-template.md](./design-doc/template/feature-navigation-template.md))
+- **navigation.md** - Feature-level screen transitions (use [module-navigation-template.md](./design-doc/template/module-navigation-template.md))
 - **screen-transition.md** - Screen-internal behavior (use [screen-transition-template.md](./design-doc/template/screen-transition-template.md))
 
 ### 3. Update Feature List Table
@@ -146,7 +146,7 @@ Add a new feature section with:
 ## Related Documentation
 
 - **Templates**:
-  - [feature-navigation-template.md](./design-doc/template/feature-navigation-template.md) - Level 2: Feature-level navigation
+  - [module-navigation-template.md](./design-doc/template/module-navigation-template.md) - Level 2: Feature-level navigation
   - [screen-transition-template.md](./design-doc/template/screen-transition-template.md) - Level 3: Screen-internal behavior
 - **Architecture**: [docs/architecture/system-architecture.md](./architecture/system-architecture.md)
 - **Development Workflow**: [docs/guides/development-workflow.md](./guides/development-workflow.md)

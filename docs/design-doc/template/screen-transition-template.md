@@ -142,7 +142,7 @@ Authenticating --> Error: Login failed (error != null)
 
 ## Related Documents
 
-- **Parent**: [navigation.md](./navigation.md) - Feature-level screen transitions (Level 2)
+- **Parent**: [Module Navigation](../../navigation/{module_name}-module.md) - Module-level screen transitions (Level 2)
 - **Sibling**: [REQUIREMENTS.md](./REQUIREMENTS.md) - Feature specifications
 - **Reference**: [VideoIntent.kt](../../feature/video_playback/VideoIntent.kt) - Example Intent definitions
 
