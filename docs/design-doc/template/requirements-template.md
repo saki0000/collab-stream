@@ -1,7 +1,6 @@
 # 機能仕様: {Feature Name}
 
 > **配置場所**: `composeApp/src/commonMain/kotlin/org/example/project/feature/{feature_name}/REQUIREMENTS.md`
-> **作成フェーズ**: Phase 1（仕様・インターフェース定義）
 > **目的**: AI実装のためのSSoT（Single Source of Truth）
 
 ---
@@ -32,22 +31,19 @@
 
 ---
 
-## 3. 画面状態遷移
+## 3. 画面フローと状態遷移
 
-Mermaid図で画面の状態遷移を表現します。
+機能の詳細な振る舞いと状態遷移については、以下を参照してください。
 
-```mermaid
-stateDiagram-v2
-    [*] --> Loading
-    Loading --> Content : 取得成功
-    Loading --> Error : 取得失敗
-    Error --> Loading : リトライボタン押下
-```
+### 画面内の振る舞い（Level 3）
+画面の状態（Loading, Content, Error等）とユーザーアクション:
+- **Screen Transition**: [screen-transition.md](./screen-transition.md)
 
-### 状態の説明（必要に応じて）
-- **Loading**: データ取得中、ローディングインジケータを表示
-- **Content**: データ表示、ユーザー操作可能
-- **Error**: エラーメッセージと再試行ボタンを表示
+### アプリ全体のインデックス（Level 1）
+この機能が全体のどこに位置するか:
+- **App Navigation**: [/docs/screen-navigation.md](/docs/screen-navigation.md)
+
+**Note**: Level 2（モジュール単位の画面遷移）は `docs/navigation/{module}-module.md` で管理され、個別feature内には配置されません。
 
 ---
 

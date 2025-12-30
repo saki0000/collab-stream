@@ -98,26 +98,77 @@ composeApp/src/commonMain/kotlin/org/example/project/feature/{feature_name}/REQU
 - エラーハンドリングの詳細
 - 制約条件を明記
 
-#### 1.4 Section 3: 画面状態遷移
+#### 1.4 Diagram Files作成
 
-**Mermaid図で表現**:
+**作成するファイル**:
+```bash
+# 機能ディレクトリに移動
+cd composeApp/src/commonMain/kotlin/org/example/project/feature/{feature_name}
 
-```markdown
-## 3. 画面状態遷移
-
-\`\`\`mermaid
-stateDiagram-v2
-    [*] --> Loading
-    Loading --> Content : データ取得成功
-    Loading --> Error : データ取得失敗
-    Error --> Loading : 再試行ボタン押下
-    Content --> Loading : リフレッシュ
-\`\`\`
+# Screen Transition Diagram（Level 3）を作成
+touch screen-transition.md
 ```
 
-**よく使う状態**: Loading, Content, Error, Empty
+**テンプレートからコピー**:
+```bash
+# テンプレートをコピー
+cp docs/design-doc/template/screen-transition-template.md \
+   composeApp/src/commonMain/kotlin/org/example/project/feature/{feature_name}/screen-transition.md
+```
 
-#### 1.5 Section 4: Phase 2実装進捗（新規）
+**Note**: Level 2（モジュール単位の画面遷移図）は `docs/navigation/{module}-module.md` に配置され、個別feature内には作成されません。
+
+#### 1.5 Diagram Content作成
+
+**Screen Transition Diagram (screen-transition.md - Level 3)**:
+
+1. **基本状態の定義**:
+   - Loading → Content → Error → Empty
+   - Section 2のビジネスルールから状態を抽出
+
+2. **遷移トリガーの記述**:
+   - ユーザー操作（ボタンタップ、入力等）
+   - システムイベント（API成功/失敗等）
+
+3. **Nested Statesの追加（必要に応じて）**:
+   - Content内の表示モード切替（List/Grid）
+   - Loading内のキャッシュ処理
+
+**App Navigation (docs/screen-navigation.md)**:
+
+新機能の場合のみ更新:
+```bash
+# docs/screen-navigation.md を編集
+# 1. Mermaid図に機能ノードを追加
+# 2. Feature List Tableに行を追加
+# 3. 色分けを適用（feature areaに応じて）
+# 4. 詳細図へのリンクを追加（dotted lines）
+```
+
+#### 1.6 Section 3: 画面フローと状態遷移
+
+**別ファイルへの参照を記載**:
+
+```markdown
+## 3. 画面フローと状態遷移
+
+機能の詳細な振る舞いと状態遷移については、以下を参照してください。
+
+### 画面内の振る舞い（Level 3）
+画面の状態（Loading, Content, Error等）とユーザーアクション:
+- **Screen Transition**: [screen-transition.md](./screen-transition.md)
+
+### アプリ全体のインデックス（Level 1）
+この機能が全体のどこに位置するか:
+- **App Navigation**: [/docs/screen-navigation.md](/docs/screen-navigation.md)
+```
+
+**ポイント**:
+- Level 2（モジュール単位の画面遷移）は `docs/navigation/{module}-module.md` で管理
+- Level 3（画面内の振る舞い）は各feature内の screen-transition.md で定義
+- REQUIREMENTS.mdからは参照リンクのみ
+
+#### 1.7 Section 4: Phase 2実装進捗（新規）
 
 **REQUIREMENTS.mdに追加する新セクション**:
 
@@ -308,9 +359,13 @@ mkdir -p composeApp/src/commonTest/kotlin/org/example/project/feature/{feature_n
 **「何を作るか」の合意**:
 - [ ] REQUIREMENTS.mdが明確か（4セクション）
 - [ ] ViewModelTestで仕様が表現されているか
-- [ ] Mermaid図が状態遷移を正しく表現しているか
+- [ ] Screen Transition Diagram作成完了（screen-transition.md - Level 3）
+- [ ] App Navigation更新完了（screen-navigation.md - Level 1、新機能の場合）
+- [ ] Mermaid図が振る舞いと状態遷移を正しく表現しているか
 - [ ] Phase 2実装進捗セクションが追加されているか
 - [ ] エラーケースが含まれているか
+
+**Note**: Level 2（モジュール単位の画面遷移）は個別featureではなく `docs/navigation/{module}-module.md` で管理されます。
 
 #### 6.2 PR作成
 
