@@ -13,7 +13,6 @@ import org.example.project.domain.model.VideoServiceType
 import org.example.project.feature.home.ui.HomeContainer
 import org.example.project.feature.streamer_search.ui.StreamerSearchContainer
 import org.example.project.feature.video_playback.ui.VideoContainer
-import org.example.project.feature.video_search.ui.VideoSearchContainer
 
 /**
  * Main navigation graph for the application.
@@ -22,7 +21,6 @@ import org.example.project.feature.video_search.ui.VideoSearchContainer
  * - HomeRoute: Initial screen with group selection
  * - StreamerSearchRoute: Streamer search bottom sheet (MAIN or SUB mode)
  * - MainPlayerRoute: Main video player screen with sync functionality
- * - VideoSearchRoute: (DEPRECATED) Legacy video search
  *
  * Uses type-safe navigation with kotlinx.serialization.
  *
@@ -54,8 +52,30 @@ fun AppNavGraph(
         bottomSheet<StreamerSearchRoute> { backStackEntry ->
             val route = backStackEntry.toRoute<StreamerSearchRoute>()
 
+            // Get existing sub streams and main stream ID from previous backstack entry if in SUB mode
+            val existingSubStreamIds = if (route.searchMode == "SUB") {
+                navController.previousBackStackEntry?.savedStateHandle?.get<List<String>>(
+                    "existing_sub_stream_ids",
+                ) ?: emptyList()
+            } else {
+                emptyList()
+            }
+            val mainStreamId = if (route.searchMode == "SUB") {
+                navController.previousBackStackEntry?.savedStateHandle?.get<String>("main_stream_id")
+            } else {
+                null
+            }
+            val mainPublishedAt = if (route.searchMode == "SUB") {
+                navController.previousBackStackEntry?.savedStateHandle?.get<Long>("main_published_at")
+            } else {
+                null
+            }
+
             StreamerSearchContainer(
                 onDismiss = { navController.popBackStack() },
+                existingSubStreamIds = existingSubStreamIds,
+                mainStreamId = mainStreamId,
+                mainPublishedAt = mainPublishedAt,
                 onStreamerSelected = { searchResult, serviceType ->
                     if (route.searchMode == "MAIN") {
                         // Navigate to Main Player with selected main streamer
@@ -96,6 +116,12 @@ fun AppNavGraph(
                         // User can close it manually using the Close button in TopAppBar
                     }
                 },
+                onStreamRemoved = { videoId ->
+                    // SUB mode: Notify removal via SavedStateHandle
+                    navController.previousBackStackEntry?.savedStateHandle?.apply {
+                        set("remove_sub_stream_id", videoId)
+                    }
+                },
                 modifier = Modifier,
             )
         }
@@ -121,49 +147,17 @@ fun AppNavGraph(
             )
 
             VideoContainer(
-                onNavigateToSearch = { initialQuery ->
-                    // Legacy video search (DEPRECATED)
-                    navController.navigate(VideoSearchRoute(initialQuery = initialQuery))
-                },
-                videoSelectionResult = null, // Not used in new flow
                 modifier = Modifier,
                 onNavigateToSubSearch = {
+                    // Set main stream info for SUB search to use
+                    backStackEntry.savedStateHandle.apply {
+                        set("main_published_at", route.mainPublishedAt)
+                    }
                     // Navigate to streamer search in SUB mode
                     navController.navigate(StreamerSearchRoute(searchMode = "SUB"))
                 },
                 mainStreamInfo = mainStreamInfo,
                 savedStateHandle = backStackEntry.savedStateHandle,
-            )
-        }
-
-        // Legacy video search bottom sheet (DEPRECATED, kept for compatibility)
-        bottomSheet<VideoSearchRoute> { backStackEntry ->
-            val route = backStackEntry.toRoute<VideoSearchRoute>()
-            val isSubMode = route.initialQuery == "SUB_SEARCH_MODE" // Special flag for sub search mode
-
-            VideoSearchContainer(
-                onDismiss = { navController.popBackStack() },
-                onVideoSelected = { result ->
-                    if (isSubMode) {
-                        // SUB mode: Pass sub stream result back via SavedStateHandle
-                        navController.previousBackStackEntry?.savedStateHandle?.apply {
-                            set("sub_stream_id", result.videoId)
-                            set("sub_title", "") // TODO: Get from result if available
-                            set("sub_thumbnail_url", "")
-                            set("sub_channel_id", "")
-                            set("sub_channel_name", "")
-                            set("sub_channel_icon_url", "")
-                            set("sub_service_type", result.serviceType.name)
-                            set("sub_published_at", 0L)
-                            set("sub_is_live", false)
-                        }
-                        // Don't pop back in sub mode - allow multiple selections
-                    } else {
-                        // Legacy flow - just pop back
-                        navController.popBackStack()
-                    }
-                },
-                isSubSearchMode = isSubMode,
             )
         }
     }

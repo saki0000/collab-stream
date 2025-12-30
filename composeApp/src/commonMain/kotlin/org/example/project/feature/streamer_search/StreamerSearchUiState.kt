@@ -9,7 +9,7 @@ import kotlinx.datetime.toLocalDateTime
 import org.example.project.domain.model.ChannelInfo
 import org.example.project.domain.model.SearchResult
 import org.example.project.domain.model.VideoServiceType
-import org.example.project.feature.video_search.SearchMode
+import org.example.project.feature.streamer_search.SearchMode
 
 /**
  * UI state for streamer search screen
@@ -33,4 +33,7 @@ constructor(
     val isSearchingChannels: Boolean = false,
     val selectedChannel: ChannelInfo? = null,
     val selectedResults: List<SearchResult> = emptyList(),
+    val existingSubStreamIds: List<String> = emptyList(), // IDs of already added sub streams
+    val mainStreamId: String? = null, // Main stream ID to exclude from search results
+    val showDatePicker: Boolean = false,
 )

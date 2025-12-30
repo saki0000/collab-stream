@@ -7,6 +7,7 @@ import android.webkit.WebView
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -14,6 +15,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import org.example.project.domain.model.VideoServiceType
 import org.example.project.feature.video_playback.VideoIntent
@@ -100,7 +103,8 @@ fun VideoPlayer(
         },
         modifier = Modifier
             .fillMaxWidth()
-            .aspectRatio(16f / 9f),
+            .aspectRatio(16f / 9f)
+            .clip(RoundedCornerShape(8.dp)),
 
         // Update block is called on recomposition
         // For example, when videoId or serviceType changes, update the video

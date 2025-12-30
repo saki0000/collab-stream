@@ -463,6 +463,13 @@ class VideoViewModel(
                             val elapsedSeconds =
                                 (mainAbsoluteTime - subSyncInfo.streamStartTime).inWholeSeconds.toFloat()
 
+                            // Clamp to video duration if available
+                            val clampedSeconds = if (subSyncInfo.streamDuration != null) {
+                                elapsedSeconds.coerceIn(0f, subSyncInfo.streamDuration)
+                            } else {
+                                elapsedSeconds.coerceAtLeast(0f)
+                            }
+
                             if (elapsedSeconds < 0) {
                                 // Sub stream hasn't started yet when main is at current time
                                 subStream.copy(
@@ -471,9 +478,9 @@ class VideoViewModel(
                                     isSynced = false, // Can't sync to future
                                 )
                             } else {
-                                // Normal case: seek to calculated position
+                                // Normal case: seek to calculated position (clamped to duration)
                                 subStream.copy(
-                                    targetSeekPosition = elapsedSeconds,
+                                    targetSeekPosition = clampedSeconds,
                                     syncedAbsoluteTime = mainAbsoluteTime,
                                     isSynced = true,
                                 )

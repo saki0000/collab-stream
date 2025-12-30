@@ -47,7 +47,25 @@ class VideoSearchUseCase(
             targetServices = targetServices,
         )
 
-        return videoSearchRepository.searchVideos(searchQuery)
+        return videoSearchRepository.searchVideos(searchQuery).map { response ->
+            // Filter results by date range if specified
+            // Twitch API doesn't support date filtering, so we filter client-side
+            if (publishedAfter != null || publishedBefore != null) {
+                val filteredResults = response.results.filter { result ->
+                    val publishedAt = result.publishedAt
+                    val afterCheck = publishedAfter?.let { publishedAt >= it } ?: true
+                    val beforeCheck = publishedBefore?.let { publishedAt <= it } ?: true
+                    afterCheck && beforeCheck
+                }
+
+                response.copy(
+                    results = filteredResults,
+                    totalResults = filteredResults.size,
+                )
+            } else {
+                response
+            }
+        }
     }
 
     @OptIn(ExperimentalTime::class)

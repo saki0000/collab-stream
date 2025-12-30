@@ -52,16 +52,6 @@ data class MainPlayerRoute(
 )
 
 /**
- * Video search route - Bottom sheet for searching videos (DEPRECATED, use StreamerSearchRoute)
- *
- * @param initialQuery Optional initial search query to populate the search field
- */
-@Serializable
-data class VideoSearchRoute(
-    val initialQuery: String = "",
-)
-
-/**
  * Enum representing streamer search mode
  */
 enum class StreamerSearchMode {

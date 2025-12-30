@@ -33,4 +33,11 @@ data class VideoSyncInfo(
      * Formula: streamStartTime + playbackSeconds
      */
     val absoluteTime: Instant,
+
+    /**
+     * Duration of the stream in seconds.
+     * Used to validate sync positions don't exceed video length.
+     * Null if duration information is not available.
+     */
+    val streamDuration: Float? = null,
 )
