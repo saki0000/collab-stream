@@ -81,6 +81,9 @@ class VideoSyncUseCaseImpl(
                 IllegalStateException("Video $videoId does not have start time information for synchronization"),
             )
 
+        // Get video duration for validation
+        val streamDuration = videoDetails.getDurationInSeconds()
+
         // Calculate absolute time by adding playback seconds to stream start time
         val absoluteTime = streamStartTime.plus(currentPlaybackSeconds.toDouble().seconds)
 
@@ -89,6 +92,7 @@ class VideoSyncUseCaseImpl(
             playbackSeconds = currentPlaybackSeconds,
             streamStartTime = streamStartTime,
             absoluteTime = absoluteTime,
+            streamDuration = streamDuration,
         )
 
         return Result.success(syncInfo)

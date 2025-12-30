@@ -68,7 +68,12 @@ fun SwitchConfirmBottomSheet(
                                 val elapsedSeconds =
                                     (mainAbsoluteTime - subSyncInfo.streamStartTime).inWholeSeconds.toFloat()
 
-                                syncPosition = if (elapsedSeconds < 0) 0f else elapsedSeconds
+                                // Clamp to video duration if available
+                                syncPosition = if (subSyncInfo.streamDuration != null) {
+                                    elapsedSeconds.coerceIn(0f, subSyncInfo.streamDuration)
+                                } else {
+                                    elapsedSeconds.coerceAtLeast(0f)
+                                }
                             },
                             onFailure = {
                                 // On error, start from beginning
