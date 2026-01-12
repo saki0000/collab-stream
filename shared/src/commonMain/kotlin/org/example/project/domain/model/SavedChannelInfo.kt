@@ -39,7 +39,6 @@ data class SavedChannelInfo(
  *
  * @return 永続化用の軽量チャンネル情報
  */
-@OptIn(kotlin.time.ExperimentalTime::class)
 fun SyncChannel.toSavedChannelInfo(): SavedChannelInfo = SavedChannelInfo(
     channelId = channelId,
     channelName = channelName,

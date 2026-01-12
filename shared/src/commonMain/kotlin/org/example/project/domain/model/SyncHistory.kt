@@ -60,20 +60,18 @@ data class SyncHistory(
 )
 
 /**
- * 履歴の表示名を取得する拡張関数。
+ * 履歴の表示名を取得する拡張プロパティ。
  *
  * ユーザー設定名がある場合はそれを返し、
  * ない場合はチャンネル名を連結した自動生成名を返す。
- *
- * @return 表示用の履歴名
  */
 @OptIn(ExperimentalTime::class)
-fun SyncHistory.displayName(): String {
-    return name ?: channels.joinToString(" + ") { it.channelName }
-}
+val SyncHistory.displayName: String
+    get() = name ?: channels.joinToString(" + ") { it.channelName }
 
 /**
- * 履歴に含まれるチャンネル数を取得する拡張関数。
+ * 履歴に含まれるチャンネル数を取得する拡張プロパティ。
  */
 @OptIn(ExperimentalTime::class)
-fun SyncHistory.channelCount(): Int = channels.size
+val SyncHistory.channelCount: Int
+    get() = channels.size

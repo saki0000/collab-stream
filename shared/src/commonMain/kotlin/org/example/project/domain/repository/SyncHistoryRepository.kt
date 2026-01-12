@@ -19,8 +19,7 @@ interface SyncHistoryRepository {
      *
      * @param channels 保存するチャンネルリスト（最小2つ）
      * @param name オプションの履歴名（nullの場合は自動生成）
-     * @return 保存された履歴のResult
-     * @throws IllegalArgumentException チャンネル数が2未満の場合
+     * @return 保存された履歴のResult。チャンネル数が2未満の場合はResult.failureを返す。
      */
     suspend fun saveHistory(
         channels: List<SyncChannel>,
