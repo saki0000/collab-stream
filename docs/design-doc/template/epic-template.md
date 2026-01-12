@@ -1,3 +1,14 @@
+# ⚠️ 非推奨（DEPRECATED）
+
+> **このテンプレートは非推奨です。GitHub Issueを使用してください。**
+>
+> Epic定義は GitHub Issue [Epic] で管理します（SSOT）。
+> `/phase0` コマンドを実行すると、GitHub Issueが自動作成されます。
+>
+> 詳細: `.claude/commands/phase0.md`
+
+---
+
 # Epic: {Epic Name}
 
 > **Phase 0**: 大規模機能の分割と共通ドメイン定義
