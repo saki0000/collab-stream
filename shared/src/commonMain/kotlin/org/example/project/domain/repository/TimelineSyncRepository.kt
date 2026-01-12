@@ -7,6 +7,9 @@ import org.example.project.domain.model.VideoServiceType
 /**
  * Repository interface for Timeline Sync functionality.
  *
+ * Extends VideoSyncRepository to inherit getVideoDetails functionality,
+ * and adds channel-specific video retrieval for timeline display.
+ *
  * Handles communication with video service APIs (YouTube, Twitch) to retrieve
  * channel videos and video details necessary for timeline display and
  * synchronization calculations.
@@ -15,7 +18,7 @@ import org.example.project.domain.model.VideoServiceType
  * Shared across: US-1 (Timeline Display), US-2 (Channel Management),
  *                US-3 (Sync Calculation)
  */
-interface TimelineSyncRepository {
+interface TimelineSyncRepository : VideoSyncRepository {
     /**
      * Retrieves a list of videos from a channel within a specified date range.
      *
@@ -32,20 +35,4 @@ interface TimelineSyncRepository {
         serviceType: VideoServiceType,
         dateRange: ClosedRange<LocalDate>,
     ): Result<List<VideoDetails>>
-
-    /**
-     * Retrieves video details from the specified video service API.
-     *
-     * Fetches detailed video information including timing data needed for
-     * synchronization calculations. This method delegates to the existing
-     * VideoSyncRepository implementation.
-     *
-     * @param videoId Video ID to fetch details for
-     * @param serviceType The video service to query (YouTube or Twitch)
-     * @return Result containing VideoDetails on success, or error information on failure
-     */
-    suspend fun getVideoDetails(
-        videoId: String,
-        serviceType: VideoServiceType,
-    ): Result<VideoDetails>
 }

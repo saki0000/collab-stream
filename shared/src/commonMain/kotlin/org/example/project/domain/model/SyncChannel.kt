@@ -5,6 +5,50 @@ import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
 /**
+ * Information about a selected stream for timeline synchronization.
+ *
+ * Groups all stream-related properties into a single object for cleaner
+ * state management. When null in SyncChannel, indicates no stream is selected.
+ *
+ * Epic: Timeline Sync (EPIC-002)
+ */
+@OptIn(ExperimentalTime::class)
+data class SelectedStreamInfo(
+    /**
+     * Video ID of the selected stream.
+     */
+    val id: String,
+
+    /**
+     * Title of the selected stream.
+     */
+    val title: String,
+
+    /**
+     * Thumbnail URL of the selected stream.
+     */
+    val thumbnailUrl: String,
+
+    /**
+     * Absolute start time of the stream (when the stream began).
+     * Used for timeline positioning and sync calculations.
+     */
+    val startTime: Instant?,
+
+    /**
+     * Absolute end time of the stream (when the stream ended).
+     * Null for live streams or when duration is unknown.
+     */
+    val endTime: Instant?,
+
+    /**
+     * Duration of the stream.
+     * Can be calculated from start/end times or fetched from API.
+     */
+    val duration: Duration?,
+)
+
+/**
  * Data model for a channel in the Timeline Sync screen.
  *
  * Represents a synchronization target channel with its associated stream information
@@ -38,40 +82,11 @@ data class SyncChannel(
      */
     val serviceType: VideoServiceType,
 
-    // Selected stream information (nullable when no stream is selected)
     /**
-     * Video ID of the selected stream. Null when no stream is selected for this channel.
+     * Selected stream information for this channel.
+     * Null when no stream is selected.
      */
-    val streamId: String? = null,
-
-    /**
-     * Title of the selected stream.
-     */
-    val streamTitle: String? = null,
-
-    /**
-     * Thumbnail URL of the selected stream.
-     */
-    val streamThumbnailUrl: String? = null,
-
-    // Timeline display properties
-    /**
-     * Absolute start time of the stream (when the stream began).
-     * Used for timeline positioning and sync calculations.
-     */
-    val streamStartTime: Instant? = null,
-
-    /**
-     * Absolute end time of the stream (when the stream ended).
-     * Null for live streams or when duration is unknown.
-     */
-    val streamEndTime: Instant? = null,
-
-    /**
-     * Duration of the stream.
-     * Can be calculated from start/end times or fetched from API.
-     */
-    val streamDuration: Duration? = null,
+    val selectedStream: SelectedStreamInfo? = null,
 
     // Synchronization state
     /**
@@ -83,6 +98,7 @@ data class SyncChannel(
     /**
      * Calculated seek position in seconds for external app navigation.
      * Set when sync calculation is performed based on the global sync time.
+     * Non-null when syncStatus is READY.
      */
     val targetSeekPosition: Float? = null,
 )
@@ -91,10 +107,11 @@ data class SyncChannel(
  * Convenience function to check if this channel has a stream selected.
  */
 @OptIn(ExperimentalTime::class)
-fun SyncChannel.hasStream(): Boolean = streamId != null
+fun SyncChannel.hasStream(): Boolean = selectedStream != null
 
 /**
  * Convenience function to check if this channel is ready to open in external app.
+ * When syncStatus is READY, targetSeekPosition is guaranteed to be non-null.
  */
 @OptIn(ExperimentalTime::class)
-fun SyncChannel.isOpenable(): Boolean = syncStatus == SyncStatus.READY && targetSeekPosition != null
+fun SyncChannel.isOpenable(): Boolean = syncStatus == SyncStatus.READY
