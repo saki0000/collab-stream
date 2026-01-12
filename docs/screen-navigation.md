@@ -1,7 +1,7 @@
 # CollabStream - アプリ全体の画面ナビゲーション
 
 > **目的**: CollabStreamのすべての画面とナビゲーションフローの概要
-> **最終更新**: 2025-12-30
+> **最終更新**: 2026-01-12
 > **メンテナンス**: 新機能追加時のPhase 1で更新
 
 ---
@@ -16,6 +16,7 @@ graph LR
 
     App --> VideoPlayback[動画再生画面]
     App --> StreamerSearch[配信者検索画面]
+    App --> TimelineSync[タイムライン同期画面]
 
     %% 動画再生機能
     VideoPlayback --> VideoPlayer[動画プレイヤー]
@@ -28,10 +29,17 @@ graph LR
     SearchResults --> StreamDetail[ストリーム詳細]
     StreamDetail --> VideoPlayer
 
+    %% タイムライン同期機能
+    TimelineSync --> TimelineView[タイムライン表示]
+    TimelineSync --> ChannelAdd[チャンネル追加]
+    TimelineView --> ExternalApp[外部アプリ遷移]
+    ChannelAdd --> StreamerSearch
+
     %% 機能領域別のスタイリング
     style App fill:#e1f5ff,stroke:#0277bd,stroke-width:3px
     style VideoPlayback fill:#fff4e1,stroke:#f57c00,stroke-width:2px
     style StreamerSearch fill:#e8f5e9,stroke:#388e3c,stroke-width:2px
+    style TimelineSync fill:#e1f5ff,stroke:#0288d1,stroke-width:2px
 
     style VideoPlayer fill:#fff4e1,stroke:#f57c00
     style VideoSync fill:#fff4e1,stroke:#f57c00
@@ -41,8 +49,12 @@ graph LR
     style SearchResults fill:#e8f5e9,stroke:#388e3c
     style StreamDetail fill:#e8f5e9,stroke:#388e3c
 
+    style TimelineView fill:#e1f5ff,stroke:#0288d1
+    style ChannelAdd fill:#e1f5ff,stroke:#0288d1
+    style ExternalApp fill:#bbdefb,stroke:#1565c0,stroke-width:2px
+
     classDef modal fill:#ffe0b2,stroke:#e65100,stroke-dasharray: 5 5
-    class VideoSync,SubStreamModal,SearchModal modal
+    class VideoSync,SubStreamModal,SearchModal,ChannelAdd modal
 ```
 
 ---
@@ -89,6 +101,29 @@ graph LR
 
 ---
 
+### タイムライン同期機能（ブルー）
+
+| 画面 | タイプ | 説明 | ドキュメント |
+|--------|------|-------------|-----------------|
+| **タイムライン同期画面** | メイン | 複数チャンネルの時間軸を同期表示するメイン画面 | [REQUIREMENTS.md](../composeApp/src/commonMain/kotlin/org/example/project/feature/timeline_sync/REQUIREMENTS.md) |
+| **タイムライン表示** | コンポーネント | 横軸時間、縦軸チャンネルのタイムラインバー表示 | - |
+| **チャンネル追加** | ボトムシート | タイムラインに表示するチャンネルを追加するモーダル | - |
+| **外部アプリ遷移** | アクション | YouTube/Twitchアプリに時間指定で遷移 | - |
+
+**モジュールナビゲーション（Level 2）**: [timeline-module.md](./navigation/timeline-module.md)（Phase 1で作成予定）
+**振る舞い（Level 3）**: [screen-transition.md](../composeApp/src/commonMain/kotlin/org/example/project/feature/timeline_sync/screen-transition.md)（Phase 1で作成予定）
+
+**主要機能**:
+- 複数チャンネルのタイムライン表示
+- 日付選択（週間カレンダー）
+- 同期時刻の選択と各チャンネルの再生位置計算
+- 外部アプリ（YouTube/Twitch）へのDeepLink遷移
+- 利用規約対応（WebView埋め込み再生を使用しない）
+
+**Epic**: Timeline Sync (EPIC-002)
+
+---
+
 ## 色分けリファレンス
 
 | 機能領域 | 塗りつぶし色 | 枠線色 | 用途 |
@@ -96,6 +131,7 @@ graph LR
 | **アプリ/メイン** | ライトブルー（`#e1f5ff`） | ダークブルー（`#0277bd`） | メインアプリ画面、コアナビゲーション |
 | **動画再生** | ライトオレンジ（`#fff4e1`） | ダークオレンジ（`#f57c00`） | 動画プレイヤー、同期、サブストリーム |
 | **検索** | ライトグリーン（`#e8f5e9`） | ダークグリーン（`#388e3c`） | 配信者検索、結果、フィルター |
+| **タイムライン同期** | ライトブルー（`#e1f5ff`） | シアン（`#0288d1`） | タイムライン表示、外部アプリ連携 |
 | **モーダル** | ライトアンバー（`#ffe0b2`） | ダークアンバー（`#e65100`、破線） | モーダルオーバーレイ、ボトムシート |
 
 ### 将来の機能用色（予約済み）
