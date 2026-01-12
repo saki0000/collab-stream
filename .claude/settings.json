@@ -2,7 +2,6 @@
   "permissions": {
     "allow": [
       "Bash(./gradlew:*)",
-      "Bash(./gradlew:*)",
       "Read(~/.zshrc)",
       "Bash(mkdir:*)",
       "Bash(touch:*)",
@@ -19,7 +18,10 @@
       "Bash(else)",
       "Bash(fi)",
       "Bash(done)",
-      "Bash(for:*)"
+      "Bash(for:*)",
+      "Bash(git worktree:*)",
+      "Bash(bash:*)",
+      "Bash(chmod:*)"
     ],
     "deny": [
       "Bash(sudo:*)",
@@ -29,6 +31,19 @@
       "Read(./.env)",
       "Read(./.env.*)",
       "Read(./secrets/**)"
+    ]
+  },
+  "hooks": {
+    "SubagentStop": [
+      {
+        "matcher": "Plan",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '\\n✅ プランニング完了！\\n\\n🌳 この機能用のworktreeを作成する場合:\\n   /create-worktree <feature-name>\\n'"
+          }
+        ]
+      }
     ]
   }
 }
