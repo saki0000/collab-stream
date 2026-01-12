@@ -99,10 +99,10 @@ interface {Epic}Repository {
 
 ```mermaid
 graph TD
-    A[Story 1: {Name}] --> B[Story 2: {Name}]
-    A --> C[Story 3: {Name}]
-    B --> D[Story 4: {Name}]
-    C --> D
+    Story1["Story 1: Story名"] --> Story2["Story 2: Story名"]
+    Story1 --> Story3["Story 3: Story名"]
+    Story2 --> Story4["Story 4: Story名"]
+    Story3 --> Story4
 ```
 
 **並行開発可能**: Story 2とStory 3は並行して開発可能
