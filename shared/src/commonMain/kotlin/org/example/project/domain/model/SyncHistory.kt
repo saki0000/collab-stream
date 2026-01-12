@@ -1,8 +1,8 @@
 package org.example.project.domain.model
 
-import kotlinx.serialization.Serializable
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
+import kotlinx.serialization.Serializable
 
 /**
  * 同期セッションの履歴を表すEntity。
