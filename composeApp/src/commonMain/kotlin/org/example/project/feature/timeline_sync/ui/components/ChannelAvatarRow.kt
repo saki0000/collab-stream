@@ -92,10 +92,10 @@ private fun ChannelAvatar(
                     .clip(CircleShape)
                     .border(
                         width = 2.dp,
-                        color = MaterialTheme.colorScheme.outline,
+                        color = MaterialTheme.colorScheme.secondary,
                         shape = CircleShape,
                     ),
-                color = MaterialTheme.colorScheme.surfaceVariant,
+                color = MaterialTheme.colorScheme.primaryContainer,
             ) {
                 // Placeholder icon (in real app, load image from channelIconUrl)
                 Icon(
@@ -104,7 +104,7 @@ private fun ChannelAvatar(
                     modifier = Modifier
                         .padding(12.dp)
                         .size(32.dp),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    tint = MaterialTheme.colorScheme.secondary,
                 )
             }
 
@@ -138,10 +138,7 @@ private fun PlatformBadge(
     serviceType: VideoServiceType,
     modifier: Modifier = Modifier,
 ) {
-    val backgroundColor = when (serviceType) {
-        VideoServiceType.YOUTUBE -> Color(0xFFFF0000) // YouTube red
-        VideoServiceType.TWITCH -> Color(0xFF9146FF) // Twitch purple
-    }
+    val backgroundColor = getPlatformColor(serviceType)
 
     val text = when (serviceType) {
         VideoServiceType.YOUTUBE -> "YT"
@@ -187,7 +184,7 @@ private fun AddChannelButton(
                     color = if (enabled) {
                         MaterialTheme.colorScheme.primary
                     } else {
-                        MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
+                        MaterialTheme.colorScheme.secondary.copy(alpha = 0.5f)
                     },
                     shape = CircleShape,
                 ),

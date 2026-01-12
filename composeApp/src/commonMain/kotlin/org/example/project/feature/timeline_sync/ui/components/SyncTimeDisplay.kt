@@ -43,7 +43,7 @@ fun SyncTimeDisplay(
             .fillMaxWidth()
             .padding(horizontal = 16.dp),
         shape = RoundedCornerShape(12.dp),
-        color = MaterialTheme.colorScheme.surfaceVariant,
+        color = MaterialTheme.colorScheme.primaryContainer,
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
@@ -71,7 +71,7 @@ fun SyncTimeDisplay(
             Text(
                 text = formatSyncTime(syncTime),
                 style = MaterialTheme.typography.displaySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = MaterialTheme.colorScheme.secondary,
                 modifier = Modifier.padding(top = 8.dp),
             )
 
@@ -83,7 +83,7 @@ fun SyncTimeDisplay(
                     "同期時刻未設定"
                 },
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.7f),
                 modifier = Modifier.padding(top = 4.dp),
             )
         }

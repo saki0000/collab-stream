@@ -146,7 +146,7 @@ fun EmptyContent(
             imageVector = Icons.Default.VideoLibrary,
             contentDescription = null,
             modifier = Modifier.size(64.dp),
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            tint = MaterialTheme.colorScheme.secondary,
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -162,7 +162,7 @@ fun EmptyContent(
         Text(
             text = "チャンネルを追加して\nタイムラインを始めましょう",
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            color = MaterialTheme.colorScheme.secondary,
             textAlign = TextAlign.Center,
         )
 
@@ -220,7 +220,7 @@ fun ErrorContent(
         Text(
             text = errorMessage,
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            color = MaterialTheme.colorScheme.secondary,
             textAlign = TextAlign.Center,
         )
 

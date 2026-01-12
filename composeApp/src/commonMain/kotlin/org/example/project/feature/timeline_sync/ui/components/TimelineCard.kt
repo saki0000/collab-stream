@@ -102,7 +102,7 @@ fun TimelineCardHeader(
                 Text(
                     text = "${barInfo.displayStartTime} - ${barInfo.displayEndTime}",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = MaterialTheme.colorScheme.secondary,
                 )
             }
         }
@@ -251,7 +251,7 @@ private fun UpcomingStreamInfo(
         Text(
             text = "Starts $startTime",
             style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            color = MaterialTheme.colorScheme.secondary,
         )
         Text(
             text = "${minutesToStart}M TO START",

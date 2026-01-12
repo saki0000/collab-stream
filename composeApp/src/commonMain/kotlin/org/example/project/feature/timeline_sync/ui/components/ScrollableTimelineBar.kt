@@ -82,7 +82,7 @@ fun ScrollableTimelineBar(
                 .width(contentWidthDp)
                 .height(barHeight)
                 .clip(RoundedCornerShape(4.dp))
-                .background(MaterialTheme.colorScheme.surfaceVariant),
+                .background(MaterialTheme.colorScheme.primaryContainer),
         )
 
         // Stream duration bar

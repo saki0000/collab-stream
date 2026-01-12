@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -16,11 +17,6 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-
-/**
- * Sync line color (Blue)
- */
-private val SyncLineColor = Color(0xFF0288D1)
 
 /**
  * Sync line width
@@ -68,10 +64,12 @@ fun DraggableSyncLine(
             },
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
+        val syncLineColor = MaterialTheme.colorScheme.primary
+
         // Triangle handle at the top
         SyncLineHandle(
             size = HandleSize,
-            color = SyncLineColor,
+            color = syncLineColor,
         )
 
         // Vertical line (height will be determined by Layout)
@@ -79,7 +77,7 @@ fun DraggableSyncLine(
             modifier = Modifier
                 .width(SyncLineWidth)
                 .weight(1f)
-                .background(SyncLineColor),
+                .background(syncLineColor),
         )
     }
 }

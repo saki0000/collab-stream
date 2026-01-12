@@ -48,11 +48,6 @@ import org.example.project.feature.timeline_sync.TimelineBarInfo
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 /**
- * Sync line color (Blue)
- */
-private val SyncLineColor = Color(0xFF0288D1)
-
-/**
  * Custom Layout Composable that displays timeline cards with a fixed center sync line.
  *
  * The sync line is always fixed at the center of the screen.
@@ -168,7 +163,7 @@ fun TimelineCardsWithSyncLine(
                     .align(Alignment.TopCenter)
                     .width(2.dp)
                     .height(heightDp)
-                    .background(SyncLineColor),
+                    .background(MaterialTheme.colorScheme.primary),
             )
         }
     }
@@ -225,7 +220,7 @@ private fun TimelineCardWithScrollableBar(
                     modifier = Modifier
                         .width(contentWidthDp)
                         .height(24.dp)
-                        .background(MaterialTheme.colorScheme.surfaceVariant),
+                        .background(MaterialTheme.colorScheme.primaryContainer),
                 ) {
                     // Stream duration bar
                     val barWidthFraction = barInfo.endFraction - barInfo.startFraction
@@ -295,7 +290,7 @@ private fun UpcomingStreamInfoRow(
         androidx.compose.material3.Text(
             text = "Starts $startTime",
             style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            color = MaterialTheme.colorScheme.secondary,
         )
         Spacer(modifier = Modifier.weight(1f))
         androidx.compose.material3.Text(
