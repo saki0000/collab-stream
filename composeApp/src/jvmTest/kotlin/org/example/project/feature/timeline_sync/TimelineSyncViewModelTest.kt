@@ -1,4 +1,4 @@
-@file:OptIn(ExperimentalTime::class, ExperimentalCoroutinesApi::class)
+@file:OptIn(ExperimentalCoroutinesApi::class)
 
 package org.example.project.feature.timeline_sync
 
@@ -7,10 +7,10 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
-import kotlin.time.ExperimentalTime
-import kotlin.time.Instant
+import kotlin.time.Duration.Companion.hours
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -22,6 +22,7 @@ import kotlinx.datetime.Clock
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.plus
 import kotlinx.datetime.todayIn
 import org.example.project.domain.model.SelectedStreamInfo
@@ -203,7 +204,7 @@ class TimelineSyncViewModelTest {
     fun `should calculate timeline bar position when stream exists`() {
         val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
         val timeZone = TimeZone.currentSystemDefault()
-        val startTime = kotlinx.datetime.atStartOfDayIn(today, timeZone) + durationHours(10)
+        val startTime = today.atStartOfDayIn(timeZone) + 10.hours
 
         val channel = SyncChannel(
             channelId = "test-channel",
@@ -215,8 +216,8 @@ class TimelineSyncViewModelTest {
                 title = "Test Stream",
                 thumbnailUrl = "",
                 startTime = startTime,
-                endTime = startTime + durationHours(3),
-                duration = durationHours(3),
+                endTime = startTime + 3.hours,
+                duration = 3.hours,
             ),
         )
 
@@ -226,7 +227,7 @@ class TimelineSyncViewModelTest {
         )
 
         assertNotNull(barInfo)
-        assertTrue(barInfo.startFraction >= 0f)
+        assertTrue(barInfo!!.startFraction >= 0f)
         assertTrue(barInfo.endFraction <= 1f)
         assertTrue(barInfo.startFraction < barInfo.endFraction)
     }
@@ -258,8 +259,8 @@ class TimelineSyncViewModelTest {
         val timeZone = TimeZone.currentSystemDefault()
 
         // Stream started yesterday
-        val startTime = kotlinx.datetime.atStartOfDayIn(yesterday, timeZone) + durationHours(20)
-        val endTime = kotlinx.datetime.atStartOfDayIn(today, timeZone) + durationHours(5)
+        val startTime = yesterday.atStartOfDayIn(timeZone) + 20.hours
+        val endTime = today.atStartOfDayIn(timeZone) + 5.hours
 
         val channel = SyncChannel(
             channelId = "test-channel",
@@ -282,7 +283,7 @@ class TimelineSyncViewModelTest {
         )
 
         assertNotNull(barInfo)
-        assertEquals(0f, barInfo.startFraction)
+        assertEquals(0f, barInfo!!.startFraction)
     }
 
     // ============================================
@@ -461,20 +462,4 @@ class MockTimelineSyncRepository : TimelineSyncRepository {
             Result.success(emptyList())
         }
     }
-}
-
-// Helper function for LocalDate to Instant conversion
-private fun kotlinx.datetime.atStartOfDayIn(date: LocalDate, timeZone: TimeZone): Instant {
-    return date.atStartOfDayIn(timeZone)
-}
-
-// Helper assertion
-private fun assertNotNull(value: Any?, message: String? = null) {
-    assertTrue(value != null, message ?: "Expected non-null value")
-}
-
-// Helper function for Duration calculations (hours)
-private fun durationHours(value: Int): kotlin.time.Duration {
-    val minutes = value * 60
-    return kotlin.time.Duration.parseIsoString("PT${minutes}M")
 }

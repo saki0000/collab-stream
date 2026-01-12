@@ -61,9 +61,6 @@ fun TimelineSyncContainer(
         uiState = uiState,
         onIntent = viewModel::handleIntent,
         snackbarHostState = snackbarHostState,
-        onNavigateToHome = onNavigateToHome,
-        onNavigateToChannels = onNavigateToChannels,
-        onNavigateToSettings = onNavigateToSettings,
         modifier = modifier,
     )
 }
