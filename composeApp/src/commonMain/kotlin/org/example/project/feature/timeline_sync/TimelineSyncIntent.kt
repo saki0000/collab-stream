@@ -1,5 +1,9 @@
+@file:OptIn(ExperimentalTime::class)
+
 package org.example.project.feature.timeline_sync
 
+import kotlin.time.ExperimentalTime
+import kotlin.time.Instant
 import kotlinx.datetime.LocalDate
 
 /**
@@ -43,6 +47,28 @@ sealed interface TimelineSyncIntent {
      * Retry loading data after an error.
      */
     data object Retry : TimelineSyncIntent
+
+    // ============================================
+    // Story 3: Sync Time Selection
+    // ============================================
+
+    /**
+     * Update sync time while dragging the sync line.
+     * Updates the sync time in real-time during drag operation.
+     */
+    data class UpdateSyncTime(val syncTime: Instant) : TimelineSyncIntent
+
+    /**
+     * Start dragging the sync line.
+     * Sets isDragging flag to true.
+     */
+    data object StartDragging : TimelineSyncIntent
+
+    /**
+     * Stop dragging the sync line.
+     * Sets isDragging flag to false and finalizes the sync time.
+     */
+    data object StopDragging : TimelineSyncIntent
 }
 
 /**

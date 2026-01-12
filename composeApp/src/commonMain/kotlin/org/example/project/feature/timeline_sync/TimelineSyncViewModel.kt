@@ -54,6 +54,10 @@ class TimelineSyncViewModel(
             TimelineSyncIntent.NavigateToNextWeek -> navigateToNextWeek()
             TimelineSyncIntent.ClearError -> clearError()
             TimelineSyncIntent.Retry -> retry()
+            // Story 3: Sync Time Selection
+            is TimelineSyncIntent.UpdateSyncTime -> updateSyncTime(intent.syncTime)
+            TimelineSyncIntent.StartDragging -> startDragging()
+            TimelineSyncIntent.StopDragging -> stopDragging()
         }
     }
 
@@ -152,6 +156,34 @@ class TimelineSyncViewModel(
      */
     private fun retry() {
         loadScreen()
+    }
+
+    // ============================================
+    // Story 3: Sync Time Selection
+    // ============================================
+
+    /**
+     * Updates the sync time while dragging the sync line.
+     * Called continuously during drag operation.
+     */
+    private fun updateSyncTime(syncTime: Instant) {
+        _uiState.value = _uiState.value.copy(syncTime = syncTime)
+    }
+
+    /**
+     * Starts dragging the sync line.
+     * Sets isDragging flag to true.
+     */
+    private fun startDragging() {
+        _uiState.value = _uiState.value.copy(isDragging = true)
+    }
+
+    /**
+     * Stops dragging the sync line.
+     * Sets isDragging flag to false.
+     */
+    private fun stopDragging() {
+        _uiState.value = _uiState.value.copy(isDragging = false)
     }
 
     /**

@@ -23,6 +23,7 @@ import kotlin.time.ExperimentalTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.todayIn
+import org.example.project.core.theme.AppTheme
 import org.example.project.domain.model.SelectedStreamInfo
 import org.example.project.domain.model.SyncChannel
 import org.example.project.domain.model.SyncStatus
@@ -159,16 +160,17 @@ private fun TimelineSyncScreenPreview() {
                 endTime = null,
                 duration = null,
             ),
-            syncStatus = SyncStatus.WAITING,
+            syncStatus = SyncStatus.READY,
         ),
     )
 
-    MaterialTheme {
+    AppTheme {
         Surface {
             TimelineSyncScreen(
                 uiState = TimelineSyncUiState(
                     isLoading = false,
                     channels = mockChannels,
+                    syncTime = today.atStartOfDayIn(timeZone) + kotlin.time.Duration.parseIsoString("PT11H30M"),
                 ),
                 onIntent = {},
                 snackbarHostState = remember { SnackbarHostState() },
@@ -222,7 +224,7 @@ private fun TimelineSyncScreenEmptyPreview() {
 @Preview
 @Composable
 private fun TimelineSyncScreenErrorPreview() {
-    MaterialTheme {
+    AppTheme {
         Surface {
             TimelineSyncScreen(
                 uiState = TimelineSyncUiState(

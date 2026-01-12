@@ -4,14 +4,13 @@ package org.example.project.feature.timeline_sync.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Error
@@ -22,27 +21,31 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
+import org.example.project.domain.model.SyncChannel
+import org.example.project.feature.timeline_sync.TimelineBarInfo
 import org.example.project.feature.timeline_sync.TimelineSyncIntent
 import org.example.project.feature.timeline_sync.TimelineSyncUiState
-import org.example.project.feature.timeline_sync.TimelineSyncViewModel
 import org.example.project.feature.timeline_sync.ui.components.ChannelAvatarRow
 import org.example.project.feature.timeline_sync.ui.components.SyncTimeDisplay
-import org.example.project.feature.timeline_sync.ui.components.TimelineCard
+import org.example.project.feature.timeline_sync.ui.components.TimelineCardsWithSyncLine
 import org.example.project.feature.timeline_sync.ui.components.WeekCalendar
 
 /**
  * Main content area for Timeline Sync screen.
  *
- * Displays calendar, channel avatars, sync time, and timeline cards.
+ * Displays calendar, channel avatars, sync time, and timeline cards with draggable sync line.
  *
  * Epic: Timeline Sync (EPIC-002)
- * Story: US-1 (Timeline Display)
+ * Story: US-1 (Timeline Display), US-3 (Sync Time Selection)
  */
 @Composable
 fun TimelineContent(
@@ -51,77 +54,79 @@ fun TimelineContent(
     currentTime: Instant,
     modifier: Modifier = Modifier,
 ) {
-    LazyColumn(
-        modifier = modifier,
-        contentPadding = PaddingValues(vertical = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-    ) {
-        // Week Calendar
-        item {
-            WeekCalendar(
-                weekDays = uiState.weekDays,
-                selectedDate = uiState.selectedDate,
-                onDateSelected = { date ->
-                    onIntent(TimelineSyncIntent.SelectDate(date))
-                },
-                onNavigateToPreviousWeek = {
-                    onIntent(TimelineSyncIntent.NavigateToPreviousWeek)
-                },
-                onNavigateToNextWeek = {
-                    onIntent(TimelineSyncIntent.NavigateToNextWeek)
-                },
-                modifier = Modifier.fillMaxWidth(),
-            )
-        }
+    val scrollState = rememberScrollState()
 
-        // Channel Avatar Row
-        item {
-            ChannelAvatarRow(
-                channels = uiState.channels,
-                onAddChannel = {
-                    // Story 2: Channel add functionality
-                },
-                modifier = Modifier.fillMaxWidth(),
-            )
-        }
+    // Filter channels with selected streams
+    val channelsWithStreams = remember(uiState.channels) {
+        uiState.channels.filter { it.selectedStream != null }
+    }
 
-        // Sync Time Display
-        item {
-            SyncTimeDisplay(
-                syncTime = uiState.syncTime,
-                modifier = Modifier.fillMaxWidth(),
-            )
-        }
-
-        // Timeline Cards
-        items(
-            items = uiState.channels.filter { it.selectedStream != null },
-            key = { it.channelId },
-        ) { channel ->
-            val barInfo = TimelineSyncViewModel.calculateTimelineBarInfo(
+    // Calculate bar info for each channel based on syncTimeRange (union of all streams)
+    val barInfoMap = remember(channelsWithStreams, uiState.syncTimeRange, currentTime) {
+        val range = uiState.syncTimeRange ?: return@remember emptyMap()
+        channelsWithStreams.mapNotNull { channel ->
+            val barInfo = calculateBarInfoForRange(
                 channel = channel,
-                selectedDate = uiState.selectedDate,
+                timeRange = range,
                 currentTime = currentTime,
             )
+            barInfo?.let { channel.channelId to it }
+        }.toMap()
+    }
 
-            TimelineCard(
-                channel = channel,
-                barInfo = barInfo,
+    Column(
+        modifier = modifier.verticalScroll(scrollState),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Week Calendar
+        WeekCalendar(
+            weekDays = uiState.weekDays,
+            selectedDate = uiState.selectedDate,
+            onDateSelected = { date ->
+                onIntent(TimelineSyncIntent.SelectDate(date))
+            },
+            onNavigateToPreviousWeek = {
+                onIntent(TimelineSyncIntent.NavigateToPreviousWeek)
+            },
+            onNavigateToNextWeek = {
+                onIntent(TimelineSyncIntent.NavigateToNextWeek)
+            },
+            modifier = Modifier.fillMaxWidth(),
+        )
+
+        // Channel Avatar Row
+        ChannelAvatarRow(
+            channels = uiState.channels,
+            onAddChannel = {
+                // Story 2: Channel add functionality
+            },
+            modifier = Modifier.fillMaxWidth(),
+        )
+
+        // Sync Time Display
+        SyncTimeDisplay(
+            syncTime = uiState.syncTime,
+            modifier = Modifier.fillMaxWidth(),
+        )
+
+        // Timeline Cards with Sync Line (horizontal scrolling)
+        if (channelsWithStreams.isNotEmpty()) {
+            TimelineCardsWithSyncLine(
+                channels = channelsWithStreams,
+                barInfoMap = barInfoMap,
                 syncTime = uiState.syncTime,
-                selectedDate = uiState.selectedDate,
-                onOpenClick = {
-                    // Story 4: External app navigation
+                syncTimeRange = uiState.syncTimeRange,
+                onSyncTimeChange = { newTime ->
+                    onIntent(TimelineSyncIntent.UpdateSyncTime(newTime))
                 },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
+                modifier = Modifier.fillMaxWidth(),
             )
         }
 
         // Bottom spacer for better scrolling
-        item {
-            Spacer(modifier = Modifier.height(16.dp))
-        }
+        Spacer(modifier = Modifier.height(16.dp))
     }
 }
 
@@ -227,4 +232,59 @@ fun ErrorContent(
             Text(text = "再試行")
         }
     }
+}
+
+/**
+ * Calculates timeline bar info for a channel based on the given time range.
+ * The time range represents the union of all streams.
+ *
+ * @param channel The channel with stream information
+ * @param timeRange The total time range (union of all streams)
+ * @param currentTime Current time for live stream calculations
+ * @return TimelineBarInfo if stream exists, null otherwise
+ */
+private fun calculateBarInfoForRange(
+    channel: SyncChannel,
+    timeRange: Pair<Instant, Instant>,
+    currentTime: Instant,
+): TimelineBarInfo? {
+    val stream = channel.selectedStream ?: return null
+    val startTime = stream.startTime ?: return null
+    val streamEnd = stream.endTime ?: currentTime
+
+    val rangeStart = timeRange.first
+    val rangeEnd = timeRange.second
+    val rangeDuration = (rangeEnd - rangeStart).inWholeMinutes.toFloat()
+
+    if (rangeDuration <= 0) return null
+
+    // Calculate fractions relative to the time range
+    val startFraction = ((startTime - rangeStart).inWholeMinutes.toFloat() / rangeDuration).coerceIn(0f, 1f)
+    val endFraction = ((streamEnd - rangeStart).inWholeMinutes.toFloat() / rangeDuration).coerceIn(0f, 1f)
+
+    // Format display times
+    val timeZone = TimeZone.currentSystemDefault()
+    val startLocal = startTime.toLocalDateTime(timeZone)
+    val endLocal = streamEnd.toLocalDateTime(timeZone)
+    val displayStartTime = "${startLocal.hour.toString().padStart(2, '0')}:${startLocal.minute.toString().padStart(2, '0')}"
+    val displayEndTime = "${endLocal.hour.toString().padStart(2, '0')}:${endLocal.minute.toString().padStart(2, '0')}"
+
+    // Check if upcoming
+    val isUpcoming = startTime > currentTime
+    val minutesToStart = if (isUpcoming) {
+        (startTime - currentTime).inWholeMinutes
+    } else {
+        null
+    }
+
+    return TimelineBarInfo(
+        channelId = channel.channelId,
+        startFraction = startFraction,
+        endFraction = endFraction,
+        displayStartTime = displayStartTime,
+        displayEndTime = displayEndTime,
+        isLive = stream.endTime == null && !isUpcoming,
+        isUpcoming = isUpcoming,
+        minutesToStart = minutesToStart,
+    )
 }

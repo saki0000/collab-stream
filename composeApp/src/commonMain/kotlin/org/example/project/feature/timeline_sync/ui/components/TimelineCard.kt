@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalTime::class)
-
 package org.example.project.feature.timeline_sync.ui.components
 
 import androidx.compose.foundation.background
@@ -34,35 +32,107 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import kotlin.time.ExperimentalTime
-import kotlin.time.Instant
-import kotlinx.datetime.LocalDate
 import org.example.project.domain.model.SyncChannel
 import org.example.project.domain.model.SyncStatus
 import org.example.project.domain.model.VideoServiceType
 import org.example.project.feature.timeline_sync.TimelineBarInfo
 
 /**
+ * Returns the platform color for a given service type.
+ */
+fun getPlatformColor(serviceType: VideoServiceType): Color = when (serviceType) {
+    VideoServiceType.YOUTUBE -> Color(0xFFFF0000)
+    VideoServiceType.TWITCH -> Color(0xFF9146FF)
+}
+
+/**
+ * Timeline card header component displaying channel information.
+ *
+ * Shows platform icon, channel name, time range, and Open/Wait button.
+ * This is the fixed (non-scrolling) part of the timeline card.
+ *
+ * Epic: Timeline Sync (EPIC-002)
+ * Story: US-1 (Timeline Display), US-3 (Sync Time Selection)
+ */
+@Composable
+fun TimelineCardHeader(
+    channel: SyncChannel,
+    barInfo: TimelineBarInfo?,
+    onOpenClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val platformColor = getPlatformColor(channel.serviceType)
+
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        // Platform icon
+        Box(
+            modifier = Modifier
+                .size(32.dp)
+                .clip(CircleShape)
+                .background(platformColor),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                text = when (channel.serviceType) {
+                    VideoServiceType.YOUTUBE -> "YT"
+                    VideoServiceType.TWITCH -> "TW"
+                },
+                style = MaterialTheme.typography.labelSmall,
+                color = Color.White,
+                fontWeight = FontWeight.Bold,
+            )
+        }
+
+        Spacer(modifier = Modifier.width(12.dp))
+
+        // Channel info
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = channel.channelName,
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+
+            if (barInfo != null) {
+                Text(
+                    text = "${barInfo.displayStartTime} - ${barInfo.displayEndTime}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+
+        // Open/Wait button
+        OpenWaitButton(
+            syncStatus = channel.syncStatus,
+            isUpcoming = barInfo?.isUpcoming == true,
+            onClick = onOpenClick,
+        )
+    }
+}
+
+/**
  * Timeline card component displaying channel information and timeline bar.
  *
  * Shows channel name, time range, Open/Wait button, and visual timeline bar.
+ * Note: Sync line is now rendered as an overlay by TimelineCardsWithSyncLine.
  *
  * Epic: Timeline Sync (EPIC-002)
- * Story: US-1 (Timeline Display)
+ * Story: US-1 (Timeline Display), US-3 (Sync Time Selection)
  */
 @Composable
 fun TimelineCard(
     channel: SyncChannel,
     barInfo: TimelineBarInfo?,
-    syncTime: Instant?,
-    selectedDate: LocalDate,
     onOpenClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val platformColor = when (channel.serviceType) {
-        VideoServiceType.YOUTUBE -> Color(0xFFFF0000)
-        VideoServiceType.TWITCH -> Color(0xFF9146FF)
-    }
+    val platformColor = getPlatformColor(channel.serviceType)
 
     Card(
         modifier = modifier,
@@ -76,67 +146,19 @@ fun TimelineCard(
             modifier = Modifier.padding(16.dp),
         ) {
             // Header: Platform icon + Channel name + Time range + Button
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                // Platform icon
-                Box(
-                    modifier = Modifier
-                        .size(32.dp)
-                        .clip(CircleShape)
-                        .background(platformColor),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
-                        text = when (channel.serviceType) {
-                            VideoServiceType.YOUTUBE -> "YT"
-                            VideoServiceType.TWITCH -> "TW"
-                        },
-                        style = MaterialTheme.typography.labelSmall,
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold,
-                    )
-                }
-
-                Spacer(modifier = Modifier.width(12.dp))
-
-                // Channel info
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = channel.channelName,
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.SemiBold,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-
-                    if (barInfo != null) {
-                        Text(
-                            text = "${barInfo.displayStartTime} - ${barInfo.displayEndTime}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                }
-
-                // Open/Wait button
-                OpenWaitButton(
-                    syncStatus = channel.syncStatus,
-                    isUpcoming = barInfo?.isUpcoming == true,
-                    onClick = onOpenClick,
-                )
-            }
+            TimelineCardHeader(
+                channel = channel,
+                barInfo = barInfo,
+                onOpenClick = onOpenClick,
+            )
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Timeline bar
+            // Timeline bar (sync line is now rendered as overlay)
             if (barInfo != null) {
                 TimelineBar(
                     barInfo = barInfo,
                     platformColor = platformColor,
-                    syncTime = syncTime,
-                    selectedDate = selectedDate,
                 )
             }
 

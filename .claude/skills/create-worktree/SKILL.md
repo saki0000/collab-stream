@@ -1,6 +1,6 @@
 ---
 name: create-worktree
-description: "Git worktreeを作成し、並行開発用の独立した環境を準備します。プランニング完了後に使用してください。"
+description: "実装開始時にGit worktreeを作成し、独立した開発環境を準備します。"
 allowed-tools: Bash(git:*), Bash(mkdir:*), Bash(cp:*), Bash(chmod:*), Bash(bash:*), Bash(ls:*)
 ---
 
@@ -43,10 +43,10 @@ allowed-tools: Bash(git:*), Bash(mkdir:*), Bash(cp:*), Bash(chmod:*), Bash(bash:
 
 ## 作業完了後
 
-開発が完了したら、以下のいずれかの方法でクリーンアップしてください：
+開発が完了したら、以下の方法でクリーンアップしてください：
 
-- **推奨**: `/pr-and-cleanup`スキルを使用（PR作成とworktree削除を自動実行）
-- **手動**: `git worktree remove .worktrees/<feature-name>`
+1. `/pr`コマンドでPRを作成
+2. `/cleanup-worktree`スキルでworktreeを削除（または手動で`git worktree remove .worktrees/<feature-name>`）
 
 ## 注意事項
 
@@ -56,5 +56,6 @@ allowed-tools: Bash(git:*), Bash(mkdir:*), Bash(cp:*), Bash(chmod:*), Bash(bash:
 
 ## 関連スキル
 
-- `pr-and-cleanup`: PR作成とworktree削除
+- `cleanup-worktree`: worktree削除
 - `commit`: 変更をコミット
+- `/pr`: PRの作成

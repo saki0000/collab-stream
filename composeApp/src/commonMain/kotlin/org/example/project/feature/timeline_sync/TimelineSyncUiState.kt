@@ -56,6 +56,12 @@ data class TimelineSyncUiState(
      * Error message to display, if any.
      */
     val errorMessage: String? = null,
+
+    /**
+     * Whether the user is currently dragging the sync line.
+     * Story 3: Sync Time Selection
+     */
+    val isDragging: Boolean = false,
 ) {
     /**
      * Whether the channel list is empty (and not loading).
@@ -74,6 +80,24 @@ data class TimelineSyncUiState(
      */
     val weekDays: List<LocalDate>
         get() = (0..6).map { displayedWeekStart.plus(it, DateTimeUnit.DAY) }
+
+    /**
+     * Sync time slidable range calculated from all streams.
+     * Range is from earliest start time to latest end time.
+     * Returns null if no streams are selected.
+     * Story 3: Sync Time Selection
+     */
+    val syncTimeRange: Pair<Instant, Instant>?
+        get() {
+            val streams = channels.mapNotNull { it.selectedStream }
+            if (streams.isEmpty()) return null
+
+            val earliestStart = streams.mapNotNull { it.startTime }.minOrNull() ?: return null
+            val latestEnd = streams.mapNotNull { it.endTime }.maxOrNull()
+                ?: kotlin.time.Clock.System.now()
+
+            return earliestStart to latestEnd
+        }
 }
 
 /**
