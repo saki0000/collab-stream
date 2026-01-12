@@ -45,11 +45,10 @@
   "hooks": {
     "SubagentStop": [
       {
-        "matcher": "Plan",
         "hooks": [
           {
             "type": "command",
-            "command": "echo '\\n✅ プランニング完了！\\n\\n🌳 worktreeを作成する場合:\\n   /create-worktree <feature-name>\\n\\n🚀 実装を開始する場合:\\n   /implement-plan\\n'"
+            "command": "echo '\\n✅ サブエージェント完了！\\n\\n🌳 worktreeを作成する場合:\\n   /create-worktree <feature-name>\\n\\n🚀 実装を開始する場合:\\n   /implement-plan\\n'"
           }
         ]
       }
