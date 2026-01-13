@@ -125,26 +125,27 @@ Timeline機能モジュール内の画面遷移:
 **最終更新**: 2026-01-12
 
 ### Shared Layer
-- [ ] TimelineSyncRepository実装（既存インターフェース使用）
-- [ ] Build成功（`./gradlew :shared:build`）
+- [x] TimelineSyncRepository実装（既存インターフェース使用）
+- [x] Build成功（`./gradlew :shared:build`）
 
 ### ComposeApp Layer
-- [ ] TimelineSyncUiState実装
-- [ ] TimelineSyncIntent実装
-- [ ] TimelineSyncViewModel実装（MVI pattern）
-- [ ] UI Components実装（4層構造）
-  - [ ] TimelineSyncScreen（Screen層）
-  - [ ] TimelineSyncContainer（Container層）
-  - [ ] TimelineSyncContent（Content層）
-  - [ ] WeekCalendar（コンポーネント）
-  - [ ] ChannelAvatarRow（コンポーネント）
-  - [ ] SyncTimeDisplay（コンポーネント）
-  - [ ] TimelineCard（コンポーネント）
-  - [ ] TimelineBar（コンポーネント）
-- [ ] ViewModel Tests実装
-- [ ] DI設定（Koin）
-- [ ] Build成功（`./gradlew :composeApp:build`）
-- [ ] 全テスト成功（`./gradlew test`）
+- [x] TimelineSyncUiState実装
+- [x] TimelineSyncIntent実装
+- [x] TimelineSyncViewModel実装（MVI pattern）
+- [x] UI Components実装（4層構造）
+  - [x] TimelineSyncScreen（Screen層）
+  - [x] TimelineSyncContainer（Container層）
+  - [x] TimelineSyncContent（Content層）
+  - [x] WeekCalendar（コンポーネント）
+  - [x] ChannelAvatarRow（コンポーネント）
+  - [x] SyncTimeDisplay（コンポーネント）
+  - [x] TimelineCard（コンポーネント）
+  - [x] TimelineBar（コンポーネント）
+  - [x] TimelineSyncHeader（コンポーネント）※追加
+- [x] ViewModel Tests実装
+- [x] DI設定（Koin）
+- [x] Build成功（`./gradlew :composeApp:build`）
+- [x] 全テスト成功（`./gradlew test`）
 - [ ] Phase 3レビュー準備完了
 
 **更新タイミング**:

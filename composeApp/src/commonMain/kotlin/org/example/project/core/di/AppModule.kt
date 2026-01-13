@@ -2,6 +2,7 @@ package org.example.project.core.di
 
 import org.example.project.feature.home.HomeViewModel
 import org.example.project.feature.streamer_search.StreamerSearchViewModel
+import org.example.project.feature.timeline_sync.TimelineSyncViewModel
 import org.example.project.feature.video_playback.VideoViewModel
 import org.example.project.feature.video_playback.player.PlayerStateManager
 import org.koin.core.module.dsl.viewModel
@@ -36,6 +37,12 @@ val appModule = module {
     viewModel {
         VideoViewModel(
             videoSyncUseCase = get(),
+        )
+    }
+
+    viewModel {
+        TimelineSyncViewModel(
+            timelineSyncRepository = get(),
         )
     }
 }
