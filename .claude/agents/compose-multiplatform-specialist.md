@@ -86,3 +86,78 @@ When implementing UI features, provide:
 4. **Integration guidance**: Explain how the new UI integrates with existing navigation and state management
 
 Always prioritize maintainability, testability, and adherence to the established architectural patterns. Your implementations should serve as examples of best practices for the entire development team.
+
+## Preview必須ガイドライン
+
+すべての Screen / Content / Component には Preview を必ず作成すること。
+
+| 層 | Preview必須 | 理由 |
+|---|---|---|
+| Container | 不要 | ViewModelに依存 |
+| Screen | 必須 | 全体レイアウト確認 |
+| Content | 必須 | 機能単位UI確認 |
+| Component | 必須 | 再利用部品確認 |
+
+### 必須要件
+- `AppTheme { }` でラップ（`MaterialTheme` 直接使用は禁止）
+- `private` 修飾子を付与
+- 複数状態対応（Loading / Empty / Error / Content）
+- 命名: `private fun *Preview()` / `*LoadingPreview()` / `*ErrorPreview()` 等
+- 時刻等は固定値を使用（`Instant.parse("2024-01-01T12:00:00Z")` など）
+
+## Clock使用禁止
+
+Screen / Content / Component での `Clock.System` 使用を禁止。
+
+### 禁止理由
+- テスタビリティ低下（テスト結果が不安定）
+- Previewが毎回異なる結果になる
+- 決定論的UIを保証できない
+
+### ルール
+
+| 層 | Clock使用 | 備考 |
+|---|---|---|
+| Container | 許可 | 唯一の時刻取得ポイント |
+| Screen | 禁止 | 引数で受け取る |
+| Content | 禁止 | 引数で受け取る |
+| Component | 禁止 | 引数で受け取る |
+
+時刻が必要な場合は、Container層で取得し、引数として下位層に渡す。
+
+## アクセシビリティ
+
+- インタラクティブ要素には `contentDescription` を必須（日本語で説明）
+- 装飾目的のみのアイコン（テキスト横の補足アイコン）は `null` 許容
+- 複合コンポーネントは `Modifier.semantics(mergeDescendants = true)` を活用
+
+## パフォーマンス最適化
+
+- リスト処理: `remember(list) { list.filter { ... } }`
+- 状態派生: `derivedStateOf { ... }`
+- `LaunchedEffect` のキーは依存する値を指定（`Unit` は初回のみ実行）
+
+## カラー使用ルール
+
+`MaterialTheme.colorScheme.*` のみを使用すること。
+
+### 禁止
+- 直接 Color 値: `Color(0xFF...)`, `Color.Red`, `Color.White`
+- Color.kt の変数直接参照: `OrangePrimary`, `DarkContainer` 等
+
+### 例外
+- プラットフォーム固有カラー: `getPlatformColor()` 経由で使用
+- アルファ調整: `MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)`
+- 透明色: `Color.Transparent`
+
+## 禁止事項チェックリスト
+
+| 項目 | 理由 |
+|---|---|
+| Screen/Content/Component での `Clock.System` 使用 | 決定論性の欠如 |
+| Preview のない Screen/Content/Component | 視覚確認不可 |
+| Preview で `MaterialTheme` 直接使用 | テーマ不統一（`AppTheme` を使う） |
+| ハードコード色値 `Color(0xFF...)` | ダークモード非対応 |
+| Color.kt の変数を直接参照 | colorScheme 経由で使用 |
+| `remember` なしの高コスト計算 | パフォーマンス劣化 |
+| インタラクティブ要素の `contentDescription = null` | アクセシビリティ違反 |
