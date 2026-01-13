@@ -117,64 +117,6 @@ fun TimelineCardHeader(
 }
 
 /**
- * Timeline card component displaying channel information and timeline bar.
- *
- * Shows channel name, time range, Open/Wait button, and visual timeline bar.
- * Note: Sync line is now rendered as an overlay by TimelineCardsWithSyncLine.
- *
- * Epic: Timeline Sync (EPIC-002)
- * Story: US-1 (Timeline Display), US-3 (Sync Time Selection)
- */
-@Composable
-fun TimelineCard(
-    channel: SyncChannel,
-    barInfo: TimelineBarInfo?,
-    onOpenClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val platformColor = getPlatformColor(channel.serviceType)
-
-    Card(
-        modifier = modifier,
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface,
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-        ) {
-            // Header: Platform icon + Channel name + Time range + Button
-            TimelineCardHeader(
-                channel = channel,
-                barInfo = barInfo,
-                onOpenClick = onOpenClick,
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Timeline bar (sync line is now rendered as overlay)
-            if (barInfo != null) {
-                TimelineBar(
-                    barInfo = barInfo,
-                    platformColor = platformColor,
-                )
-            }
-
-            // Upcoming stream info
-            if (barInfo?.isUpcoming == true && barInfo.minutesToStart != null) {
-                Spacer(modifier = Modifier.height(8.dp))
-                UpcomingStreamInfo(
-                    startTime = barInfo.displayStartTime,
-                    minutesToStart = barInfo.minutesToStart,
-                )
-            }
-        }
-    }
-}
-
-/**
  * Open/Wait button based on sync status.
  */
 @Composable
@@ -232,32 +174,5 @@ private fun OpenWaitButton(
                 Text("--")
             }
         }
-    }
-}
-
-/**
- * Upcoming stream information display.
- */
-@Composable
-private fun UpcomingStreamInfo(
-    startTime: String,
-    minutesToStart: Long,
-    modifier: Modifier = Modifier,
-) {
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-    ) {
-        Text(
-            text = "Starts $startTime",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.secondary,
-        )
-        Text(
-            text = "${minutesToStart}M TO START",
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.primary,
-            fontWeight = FontWeight.Bold,
-        )
     }
 }

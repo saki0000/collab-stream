@@ -3,6 +3,7 @@ package org.example.project.feature.timeline_sync
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlin.time.Duration.Companion.days
+import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
@@ -205,8 +206,8 @@ class TimelineSyncViewModel(
         val timeZone = TimeZone.currentSystemDefault()
 
         // Mock YouTube channel with a stream
-        val youtubeStreamStart = today.atStartOfDayIn(timeZone) + hoursOf(10)
-        val youtubeStreamEnd = today.atStartOfDayIn(timeZone) + hoursOf(13)
+        val youtubeStreamStart = today.atStartOfDayIn(timeZone) + 10.hours
+        val youtubeStreamEnd = today.atStartOfDayIn(timeZone) + 13.hours
 
         val youtubeChannel = SyncChannel(
             channelId = "UC_mock_youtube_channel",
@@ -219,13 +220,13 @@ class TimelineSyncViewModel(
                 thumbnailUrl = "https://example.com/thumb1.jpg",
                 startTime = youtubeStreamStart,
                 endTime = youtubeStreamEnd,
-                duration = hoursOf(3),
+                duration = 3.hours,
             ),
             syncStatus = SyncStatus.READY,
         )
 
         // Mock Twitch channel with a live stream
-        val twitchStreamStart = today.atStartOfDayIn(timeZone) + hoursOf(14)
+        val twitchStreamStart = today.atStartOfDayIn(timeZone) + 14.hours
 
         val twitchChannel = SyncChannel(
             channelId = "twitch_mock_channel",
@@ -322,10 +323,4 @@ class TimelineSyncViewModel(
             )
         }
     }
-}
-
-// Extension for Duration calculations using minutes (60 min = 1 hour)
-private fun hoursOf(value: Int): kotlin.time.Duration {
-    val minutes = value * 60
-    return kotlin.time.Duration.parseIsoString("PT${minutes}M")
 }

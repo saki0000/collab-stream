@@ -19,6 +19,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -417,13 +418,13 @@ private fun UpcomingStreamInfoRow(
         modifier = modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        androidx.compose.material3.Text(
+        Text(
             text = "Starts $startTime",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.secondary,
         )
         Spacer(modifier = Modifier.weight(1f))
-        androidx.compose.material3.Text(
+        Text(
             text = "${minutesToStart}M TO START",
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.primary,

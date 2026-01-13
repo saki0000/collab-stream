@@ -161,6 +161,7 @@ class TimelineSyncRepositoryImpl(
             val publishedBefore = dateRange.endInclusive.atStartOfDayIn(timeZone) + 1.days
 
             // Step 1: Search for videos in the date range
+            // TODO: Implement pagination using nextPageToken for channels with >50 videos
             val searchResponse = httpClient.get(YOUTUBE_SEARCH_ENDPOINT) {
                 parameter("part", "snippet")
                 parameter("channelId", channelId)
@@ -220,6 +221,7 @@ class TimelineSyncRepositoryImpl(
                 return Result.failure(IllegalStateException("Twitch API credentials are not configured"))
             }
 
+            // TODO: Implement pagination using pagination.cursor for channels with >100 archives
             val response = httpClient.get(TWITCH_VIDEOS_ENDPOINT) {
                 parameter("user_id", channelId)
                 parameter("type", "archive")
