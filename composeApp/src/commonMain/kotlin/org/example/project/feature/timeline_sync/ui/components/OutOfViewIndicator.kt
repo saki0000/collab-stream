@@ -9,6 +9,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -21,10 +22,10 @@ import org.example.project.core.theme.AppTheme
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 /**
- * Direction indicator for when sync line is out of view.
+ * Direction indicator for when archive bar is completely out of view.
  *
- * Shows which direction the user should scroll to find the sync line,
- * along with the time distance in minutes.
+ * Shows the stream start time with a play icon and direction arrow
+ * to indicate where the archive is located.
  *
  * Epic: Timeline Sync (EPIC-002)
  * Story: US-1 (Timeline Display)
@@ -32,7 +33,7 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 @Composable
 fun OutOfViewIndicator(
     direction: OutOfViewDirection,
-    minutesAway: Long,
+    startTime: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -55,14 +56,26 @@ fun OutOfViewIndicator(
                         tint = MaterialTheme.colorScheme.onPrimaryContainer,
                     )
                     Text(
-                        text = "${minutesAway}分",
+                        text = startTime,
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onPrimaryContainer,
                     )
+                    Icon(
+                        imageVector = Icons.Default.PlayArrow,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp),
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                    )
                 }
                 OutOfViewDirection.RIGHT -> {
+                    Icon(
+                        imageVector = Icons.Default.PlayArrow,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp),
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                    )
                     Text(
-                        text = "${minutesAway}分",
+                        text = startTime,
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onPrimaryContainer,
                     )
@@ -96,7 +109,7 @@ private fun OutOfViewIndicatorLeftPreview() {
     AppTheme {
         OutOfViewIndicator(
             direction = OutOfViewDirection.LEFT,
-            minutesAway = 12,
+            startTime = "18:00",
             onClick = {},
         )
     }
@@ -108,7 +121,7 @@ private fun OutOfViewIndicatorRightPreview() {
     AppTheme {
         OutOfViewIndicator(
             direction = OutOfViewDirection.RIGHT,
-            minutesAway = 8,
+            startTime = "20:30",
             onClick = {},
         )
     }

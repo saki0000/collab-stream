@@ -225,42 +225,17 @@ private fun TimelineCardWithScrollableBar(
     val barEndPx = barInfo.endFraction * contentWidthPx
 
     // Derive visibility states based on scroll position
-    val isBarStartOutOfView by remember(contentWidthPx, viewportWidth) {
+    // Bar is completely to the left of viewport (no part visible)
+    val isBarCompletelyLeftOfView by remember(contentWidthPx, viewportWidth) {
         derivedStateOf {
-            viewportWidth > 0 && barStartPx < scrollState.value
+            viewportWidth > 0 && barEndPx < scrollState.value
         }
     }
 
-    val isBarEndOutOfView by remember(contentWidthPx, viewportWidth) {
+    // Bar is completely to the right of viewport (no part visible)
+    val isBarCompletelyRightOfView by remember(contentWidthPx, viewportWidth) {
         derivedStateOf {
-            viewportWidth > 0 && barEndPx > (scrollState.value + viewportWidth)
-        }
-    }
-
-    // Calculate minutes away for indicators (approximate based on visible window ratio)
-    val minutesToBarStart by remember(contentWidthPx, viewportWidth) {
-        derivedStateOf {
-            if (viewportWidth > 0 && contentWidthPx > 0) {
-                val distancePx = scrollState.value - barStartPx
-                val totalMinutes = 60L // Assuming ±30 min visible window = 60 min total
-                val pixelsPerMinute = viewportWidth / totalMinutes
-                (distancePx / pixelsPerMinute).toLong().coerceAtLeast(1)
-            } else {
-                0L
-            }
-        }
-    }
-
-    val minutesToBarEnd by remember(contentWidthPx, viewportWidth) {
-        derivedStateOf {
-            if (viewportWidth > 0 && contentWidthPx > 0) {
-                val distancePx = barEndPx - (scrollState.value + viewportWidth)
-                val totalMinutes = 60L
-                val pixelsPerMinute = viewportWidth / totalMinutes
-                (distancePx / pixelsPerMinute).toLong().coerceAtLeast(1)
-            } else {
-                0L
-            }
+            viewportWidth > 0 && barStartPx > (scrollState.value + viewportWidth)
         }
     }
 
@@ -376,11 +351,11 @@ private fun TimelineCardWithScrollableBar(
                     }
                 }
 
-                // Left OutOfViewIndicator (bar start is off-screen to the left)
-                if (isBarStartOutOfView && minutesToBarStart > 0) {
+                // Left OutOfViewIndicator (bar is completely off-screen to the left)
+                if (isBarCompletelyLeftOfView) {
                     OutOfViewIndicator(
                         direction = OutOfViewDirection.LEFT,
-                        minutesAway = minutesToBarStart,
+                        startTime = barInfo.displayStartTime,
                         onClick = {
                             coroutineScope.launch {
                                 // Scroll to show bar start at center
@@ -396,11 +371,11 @@ private fun TimelineCardWithScrollableBar(
                     )
                 }
 
-                // Right OutOfViewIndicator (bar end is off-screen to the right)
-                if (isBarEndOutOfView && minutesToBarEnd > 0) {
+                // Right OutOfViewIndicator (bar is completely off-screen to the right)
+                if (isBarCompletelyRightOfView) {
                     OutOfViewIndicator(
                         direction = OutOfViewDirection.RIGHT,
-                        minutesAway = minutesToBarEnd,
+                        startTime = barInfo.displayStartTime,
                         onClick = {
                             coroutineScope.launch {
                                 // Scroll to show bar end at center

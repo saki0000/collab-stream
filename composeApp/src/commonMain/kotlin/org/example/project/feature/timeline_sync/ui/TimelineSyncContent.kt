@@ -78,8 +78,6 @@ fun TimelineContent(
         modifier = modifier.verticalScroll(scrollState),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        Spacer(modifier = Modifier.height(8.dp))
-
         // Week Calendar
         WeekCalendar(
             weekDays = uiState.weekDays,
