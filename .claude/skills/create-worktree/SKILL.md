@@ -1,6 +1,6 @@
 ---
 name: create-worktree
-description: "実装開始時にGit worktreeを作成し、独立した開発環境を準備します。"
+description: "ExitPlanMode後に自動呼び出し。Git worktreeを作成して独立した開発環境を準備。使用タイミング: 計画承認後、実装開始時、「実装して」「コーディング開始」「実装を開始します」などの指示時。"
 allowed-tools: Bash(git:*), Bash(mkdir:*), Bash(cp:*), Bash(chmod:*), Bash(bash:*), Bash(ls:*)
 ---
 

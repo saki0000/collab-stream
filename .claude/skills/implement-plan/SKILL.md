@@ -1,6 +1,6 @@
 ---
 name: implement-plan
-description: "実装開始時にplanファイルを解析し、適切なエージェントを自動選択して実装を開始します。"
+description: "ExitPlanMode後に自動呼び出し。planファイルを解析し適切なエージェントを起動。使用タイミング: 計画承認後、実装開始時、「実装を開始します」の発言時。必ずcreate-worktreeの後に使用。"
 allowed-tools: Read, Glob, Task, TodoWrite, Bash(ls:*), Bash(find:*)
 ---
 
