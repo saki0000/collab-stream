@@ -9,8 +9,10 @@ import org.example.project.domain.repository.VideoSyncRepository
  *
  * 設定可能な戻り値とエラー状態を提供し、
  * ユースケーステストで使用する。
+ *
+ * サブクラスで拡張可能なopen classとして定義。
  */
-class FakeVideoSyncRepository : VideoSyncRepository {
+open class FakeVideoSyncRepository : VideoSyncRepository {
     /** エラーを返すかどうかのフラグ */
     var shouldReturnError: Boolean = false
 
@@ -47,7 +49,7 @@ class FakeVideoSyncRepository : VideoSyncRepository {
     }
 
     /** テスト間で状態をリセット */
-    fun reset() {
+    open fun reset() {
         shouldReturnError = false
         errorToReturn = RuntimeException("Fake error")
         videoDetailsToReturn = null

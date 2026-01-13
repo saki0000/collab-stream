@@ -6,6 +6,7 @@ import org.example.project.domain.repository.VideoSyncRepository
 import org.example.project.testing.repository.FakeTimelineSyncRepository
 import org.example.project.testing.repository.FakeVideoSearchRepository
 import org.example.project.testing.repository.FakeVideoSyncRepository
+import org.koin.dsl.bind
 import org.koin.dsl.module
 
 /**
@@ -40,13 +41,8 @@ import org.koin.dsl.module
  */
 val testModule =
     module {
-        // Fake Repository as singletons (same instance throughout test)
-        single<FakeVideoSyncRepository> { FakeVideoSyncRepository() }
-        single<FakeTimelineSyncRepository> { FakeTimelineSyncRepository() }
-        single<FakeVideoSearchRepository> { FakeVideoSearchRepository() }
-
-        // Bind interfaces to Fake implementations
-        single<VideoSyncRepository> { get<FakeVideoSyncRepository>() }
-        single<TimelineSyncRepository> { get<FakeTimelineSyncRepository>() }
-        single<VideoSearchRepository> { get<FakeVideoSearchRepository>() }
+        // Fake Repository as singletons and bind interfaces
+        single { FakeVideoSyncRepository() } bind VideoSyncRepository::class
+        single { FakeTimelineSyncRepository() } bind TimelineSyncRepository::class
+        single { FakeVideoSearchRepository() } bind VideoSearchRepository::class
     }

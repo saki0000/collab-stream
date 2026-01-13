@@ -8,28 +8,15 @@ import org.example.project.domain.repository.TimelineSyncRepository
 /**
  * テスト用TimelineSyncRepository Fake実装。
  *
- * VideoSyncRepositoryを継承し、チャンネル動画取得機能を追加。
+ * FakeVideoSyncRepositoryを継承し、チャンネル動画取得機能を追加。
  * ViewModelテストやインテグレーションテストで使用。
  */
-class FakeTimelineSyncRepository : TimelineSyncRepository {
-    var shouldReturnError: Boolean = false
-    var errorToReturn: Throwable = RuntimeException("Fake error")
-    var videoDetailsToReturn: VideoDetails? = null
+class FakeTimelineSyncRepository : FakeVideoSyncRepository(), TimelineSyncRepository {
     var channelVideosToReturn: List<VideoDetails> = emptyList()
 
-    private val _getVideoDetailsCalls = mutableListOf<GetVideoDetailsCall>()
     private val _getChannelVideosCalls = mutableListOf<GetChannelVideosCall>()
 
-    val getVideoDetailsCalls: List<GetVideoDetailsCall> get() = _getVideoDetailsCalls
     val getChannelVideosCalls: List<GetChannelVideosCall> get() = _getChannelVideosCalls
-
-    /**
-     * getVideoDetailsの呼び出し記録。
-     */
-    data class GetVideoDetailsCall(
-        val videoId: String,
-        val serviceType: VideoServiceType,
-    )
 
     /**
      * getChannelVideosの呼び出し記録。
@@ -39,20 +26,6 @@ class FakeTimelineSyncRepository : TimelineSyncRepository {
         val serviceType: VideoServiceType,
         val dateRange: ClosedRange<LocalDate>,
     )
-
-    override suspend fun getVideoDetails(
-        videoId: String,
-        serviceType: VideoServiceType,
-    ): Result<VideoDetails> {
-        _getVideoDetailsCalls.add(GetVideoDetailsCall(videoId, serviceType))
-
-        return if (shouldReturnError) {
-            Result.failure(errorToReturn)
-        } else {
-            videoDetailsToReturn?.let { Result.success(it) }
-                ?: Result.failure(NoSuchElementException("Video not found"))
-        }
-    }
 
     override suspend fun getChannelVideos(
         channelId: String,
@@ -69,12 +42,9 @@ class FakeTimelineSyncRepository : TimelineSyncRepository {
     }
 
     /** テスト間で状態をリセット */
-    fun reset() {
-        shouldReturnError = false
-        errorToReturn = RuntimeException("Fake error")
-        videoDetailsToReturn = null
+    override fun reset() {
+        super.reset()
         channelVideosToReturn = emptyList()
-        _getVideoDetailsCalls.clear()
         _getChannelVideosCalls.clear()
     }
 }
