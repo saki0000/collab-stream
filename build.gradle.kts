@@ -10,6 +10,7 @@ plugins {
     alias(libs.plugins.ktlint) apply false
     alias(libs.plugins.serialization) apply false
     alias(libs.plugins.kover)
+    alias(libs.plugins.roborazzi) apply false
 }
 
 dependencies {

@@ -1,3 +1,4 @@
+import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
@@ -9,6 +10,7 @@ plugins {
     alias(libs.plugins.serialization)
     alias(libs.plugins.ktlint)
     alias(libs.plugins.kover)
+    alias(libs.plugins.roborazzi)
 }
 
 kotlin {
@@ -65,6 +67,17 @@ kotlin {
         commonTest.dependencies {
             implementation(libs.kotlin.test)
         }
+
+        // iOS Screenshot Test (appleTest)
+        val appleTest by creating {
+            dependsOn(commonTest.get())
+            dependencies {
+                implementation(libs.roborazzi.compose.ios)
+            }
+        }
+        iosX64Test.get().dependsOn(appleTest)
+        iosArm64Test.get().dependsOn(appleTest)
+        iosSimulatorArm64Test.get().dependsOn(appleTest)
     }
 }
 
@@ -102,10 +115,29 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+
+    testOptions {
+        unitTests {
+            isIncludeAndroidResources = true
+            all {
+                it.systemProperty("robolectric.graphicsMode", "NATIVE")
+                it.systemProperty("robolectric.pixelCopyRenderMode", "hardware")
+            }
+        }
+    }
 }
 
 dependencies {
     debugImplementation(compose.uiTooling)
+
+    // Screenshot Testing (Android)
+    testImplementation(libs.roborazzi)
+    testImplementation(libs.roborazzi.compose)
+    testImplementation(libs.roborazzi.junit.rule)
+    testImplementation(libs.roborazzi.compose.preview.scanner.support)
+    testImplementation(libs.composable.preview.scanner.android)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.junit)
 }
 
 ktlint {
@@ -121,5 +153,22 @@ ktlint {
         exclude("**/generated/**")
         exclude("**/build/**")
         include("**/kotlin/**")
+    }
+}
+
+// Roborazzi: Auto-generate screenshot tests from @Preview annotations
+@OptIn(ExperimentalRoborazziApi::class)
+roborazzi {
+    generateComposePreviewRobolectricTests {
+        enable = true
+        // Target package for @Preview scanning
+        packages = listOf("org.example.project")
+        // Include private @Preview functions (most previews in this project are private)
+        includePrivatePreviews = true
+        // Robolectric configuration
+        robolectricConfig = mapOf(
+            "sdk" to "[34]",
+            "qualifiers" to "RobolectricDeviceQualifiers.Pixel5",
+        )
     }
 }
