@@ -108,7 +108,7 @@ fun TimelineContent(
         // Sync Time Display
         SyncTimeDisplay(
             syncTime = uiState.syncTime,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.align(Alignment.CenterHorizontally),
         )
 
         // Timeline Cards with Sync Line (horizontal scrolling)

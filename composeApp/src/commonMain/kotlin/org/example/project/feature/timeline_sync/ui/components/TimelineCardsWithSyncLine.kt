@@ -21,9 +21,11 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -31,13 +33,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 import org.example.project.core.theme.AppTheme
 import org.example.project.domain.model.SelectedStreamInfo
 import org.example.project.domain.model.SyncChannel
@@ -154,16 +159,45 @@ fun TimelineCardsWithSyncLine(
             }
         }
 
-        // Sync line overlay (fixed at center)
+        // Sync line overlay (fixed at center) with triangle indicator
         if (syncTime != null && containerHeight > 0) {
+            val primaryColor = MaterialTheme.colorScheme.primary
             val heightDp = with(density) { containerHeight.toDp() }
-            Box(
-                modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .width(2.dp)
-                    .height(heightDp)
-                    .background(MaterialTheme.colorScheme.primary),
-            )
+            val triangleSize = 16.dp
+            val lineWidth = 2.dp
+
+            Column(
+                modifier = Modifier.align(Alignment.TopCenter),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                // Triangle indicator
+                Box(
+                    modifier = Modifier
+                        .width(triangleSize)
+                        .height(triangleSize)
+                        .drawBehind {
+                            val path = Path().apply {
+                                moveTo(size.width / 2, size.height)
+                                lineTo(0f, 0f)
+                                lineTo(size.width, 0f)
+                                close()
+                            }
+                            drawPath(
+                                path = path,
+                                color = primaryColor,
+                                style = Fill,
+                            )
+                        },
+                )
+
+                // Vertical line
+                Box(
+                    modifier = Modifier
+                        .width(lineWidth)
+                        .height(heightDp - triangleSize)
+                        .background(primaryColor),
+                )
+            }
         }
     }
 }
@@ -181,6 +215,54 @@ private fun TimelineCardWithScrollableBar(
 ) {
     val density = LocalDensity.current
     val platformColor = getPlatformColor(channel.serviceType)
+    val coroutineScope = rememberCoroutineScope()
+
+    // Track viewport width for OutOfViewIndicator calculations
+    var viewportWidth by remember { mutableStateOf(0f) }
+
+    // Calculate bar positions in pixels
+    val barStartPx = barInfo.startFraction * contentWidthPx
+    val barEndPx = barInfo.endFraction * contentWidthPx
+
+    // Derive visibility states based on scroll position
+    val isBarStartOutOfView by remember(contentWidthPx, viewportWidth) {
+        derivedStateOf {
+            viewportWidth > 0 && barStartPx < scrollState.value
+        }
+    }
+
+    val isBarEndOutOfView by remember(contentWidthPx, viewportWidth) {
+        derivedStateOf {
+            viewportWidth > 0 && barEndPx > (scrollState.value + viewportWidth)
+        }
+    }
+
+    // Calculate minutes away for indicators (approximate based on visible window ratio)
+    val minutesToBarStart by remember(contentWidthPx, viewportWidth) {
+        derivedStateOf {
+            if (viewportWidth > 0 && contentWidthPx > 0) {
+                val distancePx = scrollState.value - barStartPx
+                val totalMinutes = 60L // Assuming ±30 min visible window = 60 min total
+                val pixelsPerMinute = viewportWidth / totalMinutes
+                (distancePx / pixelsPerMinute).toLong().coerceAtLeast(1)
+            } else {
+                0L
+            }
+        }
+    }
+
+    val minutesToBarEnd by remember(contentWidthPx, viewportWidth) {
+        derivedStateOf {
+            if (viewportWidth > 0 && contentWidthPx > 0) {
+                val distancePx = barEndPx - (scrollState.value + viewportWidth)
+                val totalMinutes = 60L
+                val pixelsPerMinute = viewportWidth / totalMinutes
+                (distancePx / pixelsPerMinute).toLong().coerceAtLeast(1)
+            } else {
+                0L
+            }
+        }
+    }
 
     Card(
         modifier = modifier
@@ -204,59 +286,133 @@ private fun TimelineCardWithScrollableBar(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Scrollable timeline bar area
+            // Timeline bar area with OutOfViewIndicators overlay
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(24.dp)
-                    .clip(RoundedCornerShape(4.dp))
-                    .horizontalScroll(scrollState),
+                    .onSizeChanged { size ->
+                        viewportWidth = size.width.toFloat()
+                    },
             ) {
-                // Background track (full content width)
-                val contentWidthDp = with(density) { contentWidthPx.toDp() }
-
+                // Scrollable timeline bar
                 Box(
                     modifier = Modifier
-                        .width(contentWidthDp)
+                        .fillMaxWidth()
                         .height(24.dp)
-                        .background(MaterialTheme.colorScheme.primaryContainer),
+                        .clip(RoundedCornerShape(4.dp))
+                        .horizontalScroll(scrollState),
                 ) {
-                    // Stream duration bar
-                    val barWidthFraction = barInfo.endFraction - barInfo.startFraction
-                    val barWidthDp = with(density) { (barWidthFraction * contentWidthPx).toDp() }
-                    val barOffsetDp = with(density) { (barInfo.startFraction * contentWidthPx).toDp() }
-
-                    val barColor = if (barInfo.isUpcoming) {
-                        platformColor.copy(alpha = 0.3f)
-                    } else {
-                        platformColor
-                    }
+                    // Background track (full content width)
+                    val contentWidthDp = with(density) { contentWidthPx.toDp() }
 
                     Box(
                         modifier = Modifier
-                            .padding(start = barOffsetDp)
-                            .width(barWidthDp)
+                            .width(contentWidthDp)
                             .height(24.dp)
-                            .clip(RoundedCornerShape(4.dp))
-                            .then(
-                                if (barInfo.isUpcoming) {
-                                    Modifier.drawBehind {
-                                        val pathEffect = PathEffect.dashPathEffect(
-                                            floatArrayOf(10f, 10f),
-                                            0f,
-                                        )
-                                        drawLine(
-                                            color = platformColor,
-                                            start = Offset(0f, size.height / 2),
-                                            end = Offset(size.width, size.height / 2),
-                                            strokeWidth = 4.dp.toPx(),
-                                            pathEffect = pathEffect,
-                                        )
-                                    }
-                                } else {
-                                    Modifier.background(barColor)
-                                },
-                            ),
+                            .background(MaterialTheme.colorScheme.primaryContainer),
+                    ) {
+                        // Stream duration bar
+                        val barWidthFraction = barInfo.endFraction - barInfo.startFraction
+                        val barWidthDp = with(density) { (barWidthFraction * contentWidthPx).toDp() }
+                        val barOffsetDp = with(density) { (barInfo.startFraction * contentWidthPx).toDp() }
+
+                        val barColor = if (barInfo.isUpcoming) {
+                            platformColor.copy(alpha = 0.3f)
+                        } else {
+                            platformColor
+                        }
+
+                        Box(
+                            modifier = Modifier
+                                .padding(start = barOffsetDp)
+                                .width(barWidthDp)
+                                .height(24.dp)
+                                .clip(RoundedCornerShape(4.dp))
+                                .then(
+                                    if (barInfo.isUpcoming) {
+                                        Modifier.drawBehind {
+                                            val pathEffect = PathEffect.dashPathEffect(
+                                                floatArrayOf(10f, 10f),
+                                                0f,
+                                            )
+                                            drawLine(
+                                                color = platformColor,
+                                                start = Offset(0f, size.height / 2),
+                                                end = Offset(size.width, size.height / 2),
+                                                strokeWidth = 4.dp.toPx(),
+                                                pathEffect = pathEffect,
+                                            )
+                                        }
+                                    } else {
+                                        // Solid background with diagonal stripe pattern
+                                        Modifier
+                                            .background(barColor)
+                                            .drawBehind {
+                                                val stripeSpacing = 12.dp.toPx()
+                                                val stripeWidth = 3.dp.toPx()
+                                                // Darker shade of bar color for better contrast
+                                                val stripeColor = androidx.compose.ui.graphics.Color(
+                                                    red = barColor.red * 0.7f,
+                                                    green = barColor.green * 0.7f,
+                                                    blue = barColor.blue * 0.7f,
+                                                    alpha = 1f,
+                                                )
+
+                                                // Draw 45-degree diagonal stripes
+                                                var x = -size.height
+                                                while (x < size.width + size.height) {
+                                                    drawLine(
+                                                        color = stripeColor,
+                                                        start = Offset(x, size.height),
+                                                        end = Offset(x + size.height, 0f),
+                                                        strokeWidth = stripeWidth,
+                                                    )
+                                                    x += stripeSpacing
+                                                }
+                                            }
+                                    },
+                                ),
+                        )
+                    }
+                }
+
+                // Left OutOfViewIndicator (bar start is off-screen to the left)
+                if (isBarStartOutOfView && minutesToBarStart > 0) {
+                    OutOfViewIndicator(
+                        direction = OutOfViewDirection.LEFT,
+                        minutesAway = minutesToBarStart,
+                        onClick = {
+                            coroutineScope.launch {
+                                // Scroll to show bar start at center
+                                val targetScroll = (barStartPx - viewportWidth / 2)
+                                    .toInt()
+                                    .coerceAtLeast(0)
+                                scrollState.animateScrollTo(targetScroll)
+                            }
+                        },
+                        modifier = Modifier
+                            .align(Alignment.CenterStart)
+                            .padding(start = 4.dp),
+                    )
+                }
+
+                // Right OutOfViewIndicator (bar end is off-screen to the right)
+                if (isBarEndOutOfView && minutesToBarEnd > 0) {
+                    OutOfViewIndicator(
+                        direction = OutOfViewDirection.RIGHT,
+                        minutesAway = minutesToBarEnd,
+                        onClick = {
+                            coroutineScope.launch {
+                                // Scroll to show bar end at center
+                                val targetScroll = (barEndPx - viewportWidth / 2)
+                                    .toInt()
+                                    .coerceAtLeast(0)
+                                scrollState.animateScrollTo(targetScroll)
+                            }
+                        },
+                        modifier = Modifier
+                            .align(Alignment.CenterEnd)
+                            .padding(end = 4.dp),
                     )
                 }
             }

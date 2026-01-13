@@ -1,6 +1,10 @@
 ---
 name: implement-plan
-description: "ExitPlanMode後に自動呼び出し。planファイルを解析し適切なエージェントを起動。使用タイミング: 計画承認後、実装開始時、「実装を開始します」の発言時。必ずcreate-worktreeの後に使用。"
+description: |
+  Auto-triggers on: "実装を開始", "計画が承認", "実装して", "コーディング開始", "start implementation", "実装開始"
+
+  MUST BE CALLED after create-worktree completion. planファイルを解析し適切なエージェントを起動。
+  ExitPlanMode後に自動呼び出し。使用タイミング: 計画承認後、実装開始時。必ずcreate-worktreeの後に使用。
 allowed-tools: Read, Glob, Task, TodoWrite, Bash(ls:*), Bash(find:*)
 ---
 
