@@ -4,8 +4,10 @@ import org.example.project.data.datasource.TwitchSearchDataSource
 import org.example.project.data.datasource.TwitchSearchDataSourceImpl
 import org.example.project.data.datasource.YouTubeSearchDataSource
 import org.example.project.data.datasource.YouTubeSearchDataSourceImpl
+import org.example.project.data.repository.TimelineSyncRepositoryImpl
 import org.example.project.data.repository.VideoSearchRepositoryImpl
 import org.example.project.data.repository.VideoSyncRepositoryImpl
+import org.example.project.domain.repository.TimelineSyncRepository
 import org.example.project.domain.repository.VideoSearchRepository
 import org.example.project.domain.repository.VideoSyncRepository
 import org.example.project.domain.usecase.ChannelSearchUseCase
@@ -24,6 +26,10 @@ val sharedModule = module {
     // Repository bindings
     single<VideoSyncRepository> {
         VideoSyncRepositoryImpl(get())
+    }
+
+    single<TimelineSyncRepository> {
+        TimelineSyncRepositoryImpl(get())
     }
 
     single<VideoSearchRepository> {

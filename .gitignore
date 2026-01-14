@@ -21,3 +21,4 @@ captures
 
 # Screenshot testing - component screenshots are not tracked
 screenshots/components/
+.claude/settings.local.json
