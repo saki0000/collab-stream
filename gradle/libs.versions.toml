@@ -28,6 +28,7 @@ konfig = "0.17.1"
 roborazzi = "1.56.0"
 composablePreviewScanner = "0.8.1"
 robolectric = "4.14.1"
+androidxComposeUiTest = "1.7.6"
 kotlinxCoroutines = "1.8.1"
 
 [libraries]
@@ -72,6 +73,9 @@ roborazzi-compose-ios = { module = "io.github.takahirom.roborazzi:roborazzi-comp
 composable-preview-scanner-android = { module = "io.github.sergio-sastre.ComposablePreviewScanner:android", version.ref = "composablePreviewScanner" }
 # Robolectric
 robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
+# AndroidX Compose UI Test
+androidx-compose-ui-test-junit4 = { module = "androidx.compose.ui:ui-test-junit4", version.ref = "androidxComposeUiTest" }
+androidx-compose-ui-test-manifest = { module = "androidx.compose.ui:ui-test-manifest", version.ref = "androidxComposeUiTest" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinxCoroutines" }
 
 [plugins]

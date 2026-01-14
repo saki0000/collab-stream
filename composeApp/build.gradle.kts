@@ -138,6 +138,9 @@ dependencies {
     testImplementation(libs.composable.preview.scanner.android)
     testImplementation(libs.robolectric)
     testImplementation(libs.junit)
+    // Roborazzi auto-generated tests dependencies
+    testImplementation(libs.androidx.testExt.junit)
+    testImplementation(libs.androidx.compose.ui.test.junit4)
 }
 
 ktlint {
