@@ -178,6 +178,33 @@ class ChannelAddViewModelTest {
             //
             // assertTrue(viewModel.uiState.value.isSearchingChannels)
         }
+
+        @Test
+        @DisplayName("検索結果に追加済みのチャンネルが含まれないこと")
+        fun `should exclude already added channels from search results`() = runTest {
+            // TODO: Phase 2で実装
+            // // 1. チャンネルを1つ追加する
+            // val existingChannel = ChannelInfo(id = "ch1", displayName = "Channel 1")
+            // viewModel.handleIntent(TimelineSyncIntent.AddChannel(existingChannel))
+            // advanceUntilIdle()
+            //
+            // // 2. 検索結果に同じチャンネルが含まれるようにモックを設定
+            // mockChannelSearchUseCase.resultToReturn = listOf(
+            //     existingChannel,
+            //     ChannelInfo(id = "ch2", displayName = "Channel 2")
+            // )
+            //
+            // // 3. 検索を実行
+            // viewModel.handleIntent(TimelineSyncIntent.OpenChannelAddModal)
+            // viewModel.handleIntent(TimelineSyncIntent.UpdateChannelSearchQuery("Channel"))
+            // advanceTimeBy(600)
+            // advanceUntilIdle()
+            //
+            // // 4. 検索候補に既存チャンネルが含まれていないことを確認
+            // val suggestions = viewModel.uiState.value.channelSuggestions
+            // assertEquals(1, suggestions.size)
+            // assertEquals("ch2", suggestions[0].id)
+        }
     }
 
     // ============================================
@@ -324,6 +351,59 @@ class ChannelAddViewModelTest {
             // advanceUntilIdle()
             //
             // assertTrue(viewModel.uiState.value.isEmpty)
+        }
+
+        @Test
+        @DisplayName("削除後に「元に戻す」スナックバーが表示されること")
+        fun `should show undo snackbar after deletion`() = runTest {
+            // TODO: Phase 2で実装
+            // val channel = ChannelInfo(id = "ch1", displayName = "Channel 1")
+            // viewModel.handleIntent(TimelineSyncIntent.AddChannel(channel))
+            // advanceUntilIdle()
+            //
+            // viewModel.handleIntent(TimelineSyncIntent.RemoveChannel("ch1"))
+            // advanceUntilIdle()
+            //
+            // assertNotNull(viewModel.uiState.value.recentlyDeletedChannel)
+        }
+
+        @Test
+        @DisplayName("「元に戻す」をタップすると削除が取り消されること")
+        fun `should restore channel when undo is tapped`() = runTest {
+            // TODO: Phase 2で実装
+            // val channel = ChannelInfo(id = "ch1", displayName = "Channel 1")
+            // viewModel.handleIntent(TimelineSyncIntent.AddChannel(channel))
+            // advanceUntilIdle()
+            //
+            // viewModel.handleIntent(TimelineSyncIntent.RemoveChannel("ch1"))
+            // advanceUntilIdle()
+            //
+            // // 削除を取り消す
+            // viewModel.handleIntent(TimelineSyncIntent.UndoRemoveChannel)
+            // advanceUntilIdle()
+            //
+            // assertEquals(1, viewModel.uiState.value.channels.size)
+            // assertEquals("ch1", viewModel.uiState.value.channels[0].channelId)
+            // assertNull(viewModel.uiState.value.recentlyDeletedChannel)
+        }
+
+        @Test
+        @DisplayName("3秒経過後に削除が確定すること")
+        fun `should confirm deletion after 3 seconds`() = runTest {
+            // TODO: Phase 2で実装
+            // val channel = ChannelInfo(id = "ch1", displayName = "Channel 1")
+            // viewModel.handleIntent(TimelineSyncIntent.AddChannel(channel))
+            // advanceUntilIdle()
+            //
+            // viewModel.handleIntent(TimelineSyncIntent.RemoveChannel("ch1"))
+            // advanceUntilIdle()
+            //
+            // // 3秒経過
+            // advanceTimeBy(3100)
+            // advanceUntilIdle()
+            //
+            // assertNull(viewModel.uiState.value.recentlyDeletedChannel)
+            // assertTrue(viewModel.uiState.value.channels.isEmpty())
         }
     }
 
