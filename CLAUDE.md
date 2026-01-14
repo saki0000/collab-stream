@@ -26,6 +26,28 @@
 - **共通テスト**: `./gradlew :shared:test`
 - **サーバーテスト**: `./gradlew :server:test`
 
+### スクリーンショットテスト
+- **スクリーンショット記録**: `./gradlew :composeApp:recordRoborazziDebug`
+- **スクリーンショット検証**: `./gradlew :composeApp:verifyRoborazziDebug`
+- **差分比較**: `./gradlew :composeApp:compareRoborazziDebug`
+
+### 成果物の確認
+
+UI実装の成果物を確認するには、`/capture-screenshots` skillを使用してください。
+
+```
+/capture-screenshots
+```
+
+このコマンドは以下を実行します：
+1. Roborazziで@Preview付きComposableのスクリーンショットを取得
+2. ScreenとComponentを自動分類
+3. 結果を`screenshots/`ディレクトリに保存
+
+**保存先:**
+- `screenshots/screens/` - Screen（フルスクリーンUI）のスクリーンショット（git管理対象）
+- `screenshots/components/` - Component/Content等のスクリーンショット（git管理対象外）
+
 ### ビルドタスク
 - **クリーン**: `./gradlew clean`
 - **すべてビルド**: `./gradlew build`
