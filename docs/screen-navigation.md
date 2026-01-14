@@ -151,10 +151,10 @@ graph LR
   - [screen-transition-template.md](./design-doc/template/screen-transition-template.md) - Level 3: 画面内部の振る舞い
 - **アーキテクチャ**: [docs/architecture/system-architecture.md](./architecture/system-architecture.md)
 - **開発ワークフロー**: [docs/guides/development-workflow.md](./guides/development-workflow.md)
-- **ADR**:
-  - [ADR-001: Clean Architecture](./adr/001-clean-architecture-adoption.md)
-  - [ADR-002: MVI Pattern](./adr/002-mvi-pattern-for-state-management.md)
-  - [ADR-003: 4-Layer Component](./adr/003-four-layer-component-structure.md)
+- **ADR**: `.claude/rules/architecture/` を参照
+  - [ADR-001: Clean Architecture](../.claude/rules/architecture/001-clean-architecture.md)
+  - [ADR-002: MVI Pattern](../.claude/rules/architecture/002-mvi-pattern.md)
+  - [ADR-003: 4-Layer Component](../.claude/rules/architecture/003-component-structure.md)
 
 ---
 
