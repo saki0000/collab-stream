@@ -1,10 +1,6 @@
 package org.example.project.data.local
 
 import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
-import kotlin.test.assertTrue
 
 /**
  * SyncHistoryDaoのテスト
@@ -61,6 +57,23 @@ class SyncHistoryDaoTest {
         // Arrange: SyncHistoryEntityとSavedChannelEntityリストを作成
         // Act: dao.insert(), dao.insertChannels()を呼び出し
         // Assert: getById()でchannelsが正しく関連付けられていることを確認
+    }
+
+    @Test
+    fun `insertHistoryWithChannels should save history and channels atomically`() {
+        // TODO: Phase 2で実装
+        // Arrange: 履歴とチャンネルリストを作成
+        // Act: dao.insertHistoryWithChannels(history, channels)を呼び出し
+        // Assert: 履歴とチャンネルの両方が正しく保存されていることを確認
+    }
+
+    @Test
+    fun `insertHistoryWithChannels should rollback on failure`() {
+        // TODO: Phase 2で実装（オプション）
+        // Arrange: 履歴とチャンネルを作成（チャンネルに不正データを含める）
+        // Act: dao.insertHistoryWithChannels()でエラーを発生させる
+        // Assert: トランザクションがロールバックされ、履歴も保存されていないこと
+        // Note: Room KMPでのトランザクションロールバック検証が可能な場合のみ実装
     }
 
     // ===================

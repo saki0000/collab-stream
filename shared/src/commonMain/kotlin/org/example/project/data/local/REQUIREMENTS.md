@@ -23,11 +23,19 @@
 
 ### 2.1 依存関係（gradle/libs.versions.toml）
 
+> **Note**: バージョンはPhase 2実装時に最新の安定版/互換版を確認してください。
+> 以下は参考バージョンです。
+
 ```toml
 [versions]
-room = "2.7.1"
-sqlite = "2.5.0"
-ksp = "2.2.20-1.0.32"
+# Room KMP: https://developer.android.com/jetpack/androidx/releases/room
+# Phase 2で最新KMP対応バージョンを確認（2.7.0-alpha系 or 安定版）
+room = "2.7.0-alpha03"
+# SQLite Bundled: https://developer.android.com/jetpack/androidx/releases/sqlite
+sqlite = "2.4.0"
+# KSP: Kotlinバージョンに対応（例: Kotlin 2.0.21 → ksp 2.0.21-1.0.27）
+# プロジェクトのKotlinバージョンに合わせて調整
+ksp = "2.0.21-1.0.27"
 
 [libraries]
 androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
@@ -154,7 +162,7 @@ data class SavedChannelEntity(
     val channelId: String,
     val channelName: String,
     val channelIconUrl: String,
-    val serviceType: String  // "YOUTUBE" or "TWITCH"
+    val serviceType: VideoServiceType  // TypeConverterで変換
 )
 ```
 
@@ -181,6 +189,21 @@ interface SyncHistoryDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertChannels(channels: List<SavedChannelEntity>)
+
+    /**
+     * 履歴とチャンネルをアトミックに保存する。
+     *
+     * insert()とinsertChannels()を別々に呼ぶと不整合リスクがあるため、
+     * このトランザクションメソッドを使用することを推奨。
+     */
+    @Transaction
+    suspend fun insertHistoryWithChannels(
+        history: SyncHistoryEntity,
+        channels: List<SavedChannelEntity>
+    ) {
+        insert(history)
+        insertChannels(channels)
+    }
 
     @Transaction
     @Query("SELECT * FROM sync_history ORDER BY lastUsedAt DESC")
@@ -213,12 +236,19 @@ interface SyncHistoryDao {
 
 **Converters.kt**:
 ```kotlin
+import org.example.project.domain.model.VideoServiceType
+
 class Converters {
-    // Instant <-> Long変換が必要な場合に使用
-    // SyncHistoryEntityではLong直接使用のため不要だが、
-    // 将来の拡張に備えて配置場所を確保
+    @TypeConverter
+    fun fromServiceType(value: VideoServiceType): String = value.name
+
+    @TypeConverter
+    fun toServiceType(value: String): VideoServiceType = VideoServiceType.valueOf(value)
 }
 ```
+
+> **Note**: ドメイン層のVideoServiceType Enumを直接使用することで型安全性を確保。
+> 不正な文字列がデータベースに保存されるのを防ぎます。
 
 ### 2.7 Koin DI設定
 
