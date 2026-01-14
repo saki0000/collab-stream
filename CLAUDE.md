@@ -12,12 +12,11 @@
 
 ## プロジェクト概要
 
-これはAndroid、iOS、Web（WASM）、ServerプラットフォームをターゲットとするKotlin Multiplatformプロジェクトです。UIにはCompose Multiplatformを、サーバーサイド開発にはKtorを使用しています。
+これはAndroid、iOS、ServerプラットフォームをターゲットとするKotlin Multiplatformプロジェクトです。UIにはCompose Multiplatformを、サーバーサイド開発にはKtorを使用しています。
 
 ## コマンド
 
 ### ビルドと実行
-- **Web（開発）**: `./gradlew :composeApp:wasmJsBrowserDevelopmentRun` - ブラウザでWebアプリケーションを開く
 - **Server**: `./gradlew :server:run` - ポート8080でKtorサーバーを実行
 - **Android**: `./gradlew :composeApp:assembleDebug` - Android APKをビルド
 - **iOS**: Xcodeで`iosApp/iosApp.xcodeproj`を開いてビルド・実行
@@ -115,7 +114,7 @@ class VideoSyncUseCaseTest {
 ### モジュール構造
 - **`/shared`** (`/shared/src/commonMain/kotlin`): すべてのプラットフォームで共有されるコアビジネスロジック
 - **`/composeApp`** (`/composeApp/src/commonMain/kotlin`): プラットフォーム間で共有されるCompose Multiplatform UIコード
-  - `androidMain/`、`iosMain/`、`wasmJsMain/`等にプラットフォーム固有コード
+  - `androidMain/`、`iosMain/`等にプラットフォーム固有コード
 - **`/server`** (`/server/src/main/kotlin`): Ktorサーバーアプリケーション
 - **`/iosApp`** (`/iosApp/iosApp`): iOSアプリケーションエントリーポイントとSwiftUIコード
 
@@ -175,7 +174,6 @@ shared/src/commonMain/kotlin/org/example/project/
 ### プラットフォームターゲット
 - **Android**: gradle設定ごとのmin SDKでJetpack Composeを使用
 - **iOS**: 静的ライブラリとしてビルドされ、SwiftUIアプリで利用されるフレームワーク
-- **Web**: Compose for WebでKotlin/WASMターゲット
 - **Server**: KtorとNettyを使用するJVMターゲット
 
 プロジェクトは、共有コード用の`commonMain`とプラットフォーム固有実装用のプラットフォーム固有ソースセットを持つ標準Kotlin Multiplatform規約に従っています。
