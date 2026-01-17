@@ -39,15 +39,16 @@ import org.example.project.domain.model.VideoServiceType
  * Horizontal scrolling row of channel avatars with platform badges.
  *
  * Displays channel avatars with platform-specific badges (YouTube red, Twitch purple).
- * Includes an "Add" button at the end (Story 2 functionality).
+ * Includes an "Add" button at the end.
  *
  * Epic: Timeline Sync (EPIC-002)
- * Story: US-1 (Timeline Display)
+ * Story: US-1 (Timeline Display), US-2 (Channel Add/Remove)
  */
 @Composable
 fun ChannelAvatarRow(
     channels: List<SyncChannel>,
     onAddChannel: () -> Unit,
+    canAddChannel: Boolean,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -67,7 +68,7 @@ fun ChannelAvatarRow(
         // Add button
         AddChannelButton(
             onClick = onAddChannel,
-            enabled = false, // Story 2
+            enabled = canAddChannel,
         )
     }
 }
@@ -163,7 +164,8 @@ private fun PlatformBadge(
 }
 
 /**
- * Add channel button (disabled in Story 1).
+ * Add channel button.
+ * Enabled when canAddChannel is true (less than 10 channels).
  */
 @Composable
 private fun AddChannelButton(

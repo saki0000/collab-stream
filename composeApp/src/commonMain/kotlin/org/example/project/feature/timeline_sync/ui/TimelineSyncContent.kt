@@ -100,8 +100,9 @@ fun TimelineContent(
         ChannelAvatarRow(
             channels = uiState.channels,
             onAddChannel = {
-                // Story 2: Channel add functionality
+                onIntent(TimelineSyncIntent.OpenChannelAddModal)
             },
+            canAddChannel = uiState.canAddChannel,
             modifier = Modifier.fillMaxWidth(),
         )
 
@@ -135,6 +136,7 @@ fun TimelineContent(
  */
 @Composable
 fun EmptyContent(
+    onAddChannel: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -169,9 +171,7 @@ fun EmptyContent(
         Spacer(modifier = Modifier.height(Spacing.xl))
 
         OutlinedButton(
-            onClick = {
-                // Story 2: Navigate to channel add
-            },
+            onClick = onAddChannel,
         ) {
             Icon(
                 imageVector = Icons.Default.Add,

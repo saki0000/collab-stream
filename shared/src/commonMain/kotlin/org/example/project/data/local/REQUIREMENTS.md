@@ -307,39 +307,39 @@ val iosDatabaseModule = module {
 
 **Phase 1完了時に作成し、Phase 2実装中に随時更新します。**
 
-**最終更新**: 2026-01-14
+**最終更新**: 2026-01-17
 
 ### Gradle設定
-- [ ] libs.versions.toml にRoom依存関係追加
-- [ ] shared/build.gradle.kts にKSP設定追加
-- [ ] Room Gradleプラグイン設定
+- [x] libs.versions.toml にRoom依存関係追加
+- [x] shared/build.gradle.kts にKSP設定追加
+- [x] Room Gradleプラグイン設定
 
 ### Database基盤
-- [ ] AppDatabase実装
-- [ ] AppDatabaseConstructor (expect/actual)
-- [ ] DatabaseBuilder (expect/actual)
-- [ ] Converters（TypeConverter）
+- [x] AppDatabase実装
+- [x] AppDatabaseConstructor (expect/actual)
+- [x] DatabaseBuilder (expect/actual)
+- [x] Converters（TypeConverter）
 
 ### Entity/DAO
-- [ ] SyncHistoryEntity実装
-- [ ] SavedChannelEntity実装
-- [ ] SyncHistoryWithChannels（Relation）実装
-- [ ] SyncHistoryDao実装
+- [x] SyncHistoryEntity実装
+- [x] SavedChannelEntity実装
+- [x] SyncHistoryWithChannels（Relation）実装
+- [x] SyncHistoryDao実装
 
 ### Mapper
-- [ ] SyncHistoryMapper（Entity ↔ Domain変換）
+- [x] SyncHistoryMapper（Entity ↔ Domain変換）
 
 ### Repository実装
-- [ ] SyncHistoryRepositoryImpl（SyncHistoryRepositoryインターフェース実装）
+- [x] SyncHistoryRepositoryImpl（SyncHistoryRepositoryインターフェース実装）
 
 ### DI設定
-- [ ] DatabaseModule実装
-- [ ] プラットフォーム固有モジュール（Android/iOS）
-- [ ] SharedModuleへの統合
+- [x] DatabaseModule実装
+- [x] プラットフォーム固有モジュール（Android/iOS）
+- [x] SharedModuleへの統合
 
 ### テスト
-- [ ] SyncHistoryDaoTest実装
-- [ ] 全テスト成功
+- [ ] SyncHistoryDaoTest実装（テスト骨格のみ、完全実装は別途）
+- [x] `./gradlew :composeApp:assembleDebug` 成功
 
 ---
 
