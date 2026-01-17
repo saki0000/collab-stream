@@ -32,6 +32,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import kotlin.time.ExperimentalTime
+import org.example.project.core.theme.Dimensions
+import org.example.project.core.theme.Spacing
 import org.example.project.domain.model.SyncChannel
 import org.example.project.domain.model.VideoServiceType
 
@@ -55,8 +57,8 @@ fun ChannelAvatarRow(
         modifier = modifier
             .fillMaxWidth()
             .horizontalScroll(rememberScrollState())
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+            .padding(horizontal = Spacing.lg, vertical = Spacing.sm),
+        horizontalArrangement = Arrangement.spacedBy(Spacing.md),
     ) {
         // Channel avatars
         channels.forEach { channel ->
@@ -82,17 +84,17 @@ private fun ChannelAvatar(
     modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier = modifier.width(64.dp),
+        modifier = modifier.width(Dimensions.icon4xl),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Box {
             // Avatar circle
             Surface(
                 modifier = Modifier
-                    .size(56.dp)
+                    .size(Dimensions.avatarMd)
                     .clip(CircleShape)
                     .border(
-                        width = 2.dp,
+                        width = Spacing.xxs,
                         color = MaterialTheme.colorScheme.secondary,
                         shape = CircleShape,
                     ),
@@ -103,8 +105,8 @@ private fun ChannelAvatar(
                     imageVector = Icons.Default.Person,
                     contentDescription = channel.channelName,
                     modifier = Modifier
-                        .padding(12.dp)
-                        .size(32.dp),
+                        .padding(Spacing.md)
+                        .size(Dimensions.iconXl),
                     tint = MaterialTheme.colorScheme.secondary,
                 )
             }
@@ -114,7 +116,7 @@ private fun ChannelAvatar(
                 serviceType = channel.serviceType,
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
-                    .offset(x = 4.dp, y = 4.dp),
+                    .offset(x = Spacing.xs, y = Spacing.xs),
             )
         }
 
@@ -126,7 +128,7 @@ private fun ChannelAvatar(
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             textAlign = TextAlign.Center,
-            modifier = Modifier.padding(top = 4.dp),
+            modifier = Modifier.padding(top = Spacing.xs),
         )
     }
 }
@@ -147,7 +149,7 @@ private fun PlatformBadge(
     }
 
     Surface(
-        modifier = modifier.size(20.dp),
+        modifier = modifier.size(Dimensions.iconMd),
         shape = CircleShape,
         color = backgroundColor,
     ) {
@@ -174,15 +176,15 @@ private fun AddChannelButton(
     modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier = modifier.width(64.dp),
+        modifier = modifier.width(Dimensions.icon4xl),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Surface(
             modifier = Modifier
-                .size(56.dp)
+                .size(Dimensions.avatarMd)
                 .clip(CircleShape)
                 .border(
-                    width = 2.dp,
+                    width = Spacing.xxs,
                     color = if (enabled) {
                         MaterialTheme.colorScheme.primary
                     } else {
@@ -216,7 +218,7 @@ private fun AddChannelButton(
             } else {
                 MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
             },
-            modifier = Modifier.padding(top = 4.dp),
+            modifier = Modifier.padding(top = Spacing.xs),
         )
     }
 }
