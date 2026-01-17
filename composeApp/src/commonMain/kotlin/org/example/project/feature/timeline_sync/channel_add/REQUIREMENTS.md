@@ -89,27 +89,27 @@ Timeline機能モジュール内の画面遷移:
 
 **Phase 1完了時に作成し、Phase 2実装中に随時更新します。**
 
-**最終更新**: 2026-01-14
+**最終更新**: 2026-01-17
 
 ### Shared Layer
-- [ ] ChannelSearchUseCaseの再利用確認
-- [ ] Build成功（`./gradlew :shared:build`）
+- [x] ChannelSearchUseCaseの再利用確認
+- [x] Build成功（`./gradlew :shared:build`）
 
 ### ComposeApp Layer
-- [ ] TimelineSyncUiState拡張（モーダル状態追加）
-- [ ] TimelineSyncIntent拡張（チャンネル追加・削除Intent）
-- [ ] TimelineSyncViewModel拡張（チャンネル管理ロジック）
-- [ ] UI Components実装
-  - [ ] ChannelAddBottomSheet（モーダル）
-  - [ ] ChannelSearchField（検索フィールド）
-  - [ ] ChannelSuggestionList（検索結果リスト）
-  - [ ] AddedChannelList（追加済みチャンネルリスト）
-  - [ ] AddChannelButton活性化
-- [ ] ViewModel Tests実装
-- [ ] DI設定更新（Koin）
-- [ ] Build成功（`./gradlew :composeApp:build`）
-- [ ] 全テスト成功（`./gradlew test`）
-- [ ] Phase 3レビュー準備完了
+- [x] TimelineSyncUiState拡張（モーダル状態追加）
+- [x] TimelineSyncIntent拡張（チャンネル追加・削除Intent）
+- [x] TimelineSyncViewModel拡張（チャンネル管理ロジック）
+- [x] UI Components実装
+  - [x] ChannelAddBottomSheet（モーダル）
+  - [x] ChannelSearchField（検索フィールド）
+  - [x] ChannelSuggestionList（検索結果リスト）
+  - [x] AddedChannelList（追加済みチャンネルリスト）
+  - [x] AddChannelButton活性化
+- [x] ViewModel Tests実装（22テスト成功）
+- [x] DI設定更新（Koin）
+- [x] Build成功（`./gradlew :composeApp:assembleDebug`）
+- [x] 全テスト成功（`./gradlew :shared:test :composeApp:testDebugUnitTest`）
+- [x] Phase 3レビュー準備完了
 
 **更新タイミング**:
 - Phase 2開始時: このセクションを参照

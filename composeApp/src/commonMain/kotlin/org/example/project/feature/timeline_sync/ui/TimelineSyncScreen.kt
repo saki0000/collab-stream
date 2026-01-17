@@ -28,8 +28,11 @@ import org.example.project.domain.model.SelectedStreamInfo
 import org.example.project.domain.model.SyncChannel
 import org.example.project.domain.model.SyncStatus
 import org.example.project.domain.model.VideoServiceType
+import androidx.compose.material3.ExperimentalMaterial3Api
+import org.example.project.domain.model.ChannelInfo
 import org.example.project.feature.timeline_sync.TimelineSyncIntent
 import org.example.project.feature.timeline_sync.TimelineSyncUiState
+import org.example.project.feature.timeline_sync.channel_add.ChannelAddBottomSheet
 import org.example.project.feature.timeline_sync.ui.components.TimelineSyncHeader
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
@@ -40,8 +43,9 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
  * Receives UiState and Intent callbacks from Container, delegates to Content composables.
  *
  * Epic: Timeline Sync (EPIC-002)
- * Story: US-1 (Timeline Display)
+ * Story: US-1 (Timeline Display), US-2 (Channel Add/Remove)
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TimelineSyncScreen(
     uiState: TimelineSyncUiState,
@@ -82,6 +86,7 @@ fun TimelineSyncScreen(
 
                 uiState.isEmpty -> {
                     EmptyContent(
+                        onAddChannel = { onIntent(TimelineSyncIntent.OpenChannelAddModal) },
                         modifier = Modifier.align(Alignment.Center),
                     )
                 }
@@ -95,6 +100,28 @@ fun TimelineSyncScreen(
                     )
                 }
             }
+
+            // Story 2: Channel Add Bottom Sheet
+            ChannelAddBottomSheet(
+                isVisible = uiState.isChannelAddModalVisible,
+                searchQuery = uiState.channelSearchQuery,
+                channelSuggestions = uiState.channelSuggestions,
+                addedChannels = uiState.channels,
+                isSearching = uiState.isSearchingChannels,
+                errorMessage = uiState.channelAddError,
+                onSearchQueryChange = { query ->
+                    onIntent(TimelineSyncIntent.UpdateChannelSearchQuery(query))
+                },
+                onChannelSelect = { channel ->
+                    onIntent(TimelineSyncIntent.AddChannel(channel))
+                },
+                onChannelRemove = { channelId ->
+                    onIntent(TimelineSyncIntent.RemoveChannel(channelId))
+                },
+                onDismiss = {
+                    onIntent(TimelineSyncIntent.CloseChannelAddModal)
+                },
+            )
         }
     }
 }

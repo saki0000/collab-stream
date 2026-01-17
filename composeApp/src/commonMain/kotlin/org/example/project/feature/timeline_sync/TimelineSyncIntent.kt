@@ -5,13 +5,14 @@ package org.example.project.feature.timeline_sync
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 import kotlinx.datetime.LocalDate
+import org.example.project.domain.model.ChannelInfo
 
 /**
  * Sealed interface defining all possible user intents for Timeline Sync screen.
  * Following MVI architecture pattern for state management.
  *
  * Epic: Timeline Sync (EPIC-002)
- * Story: US-1 (Timeline Display)
+ * Story: US-1 (Timeline Display), US-2 (Channel Add/Remove)
  */
 sealed interface TimelineSyncIntent {
     /**
@@ -69,6 +70,50 @@ sealed interface TimelineSyncIntent {
      * Sets isDragging flag to false and finalizes the sync time.
      */
     data object StopDragging : TimelineSyncIntent
+
+    // ============================================
+    // Story 2: Channel Add/Remove
+    // ============================================
+
+    /**
+     * Open the channel add modal (bottom sheet).
+     */
+    data object OpenChannelAddModal : TimelineSyncIntent
+
+    /**
+     * Close the channel add modal.
+     * Resets search query and suggestions.
+     */
+    data object CloseChannelAddModal : TimelineSyncIntent
+
+    /**
+     * Update the channel search query.
+     * Triggers debounced channel search.
+     */
+    data class UpdateChannelSearchQuery(val query: String) : TimelineSyncIntent
+
+    /**
+     * Add a channel to the timeline.
+     * Converts ChannelInfo to SyncChannel.
+     */
+    data class AddChannel(val channel: ChannelInfo) : TimelineSyncIntent
+
+    /**
+     * Remove a channel from the timeline.
+     * Stores the channel for undo functionality.
+     */
+    data class RemoveChannel(val channelId: String) : TimelineSyncIntent
+
+    /**
+     * Undo the most recent channel removal.
+     * Restores the recently deleted channel.
+     */
+    data object UndoRemoveChannel : TimelineSyncIntent
+
+    /**
+     * Clear the channel add error message.
+     */
+    data object ClearChannelAddError : TimelineSyncIntent
 }
 
 /**
@@ -88,4 +133,20 @@ sealed interface TimelineSyncSideEffect {
         val channelId: String,
         val seekPosition: Float,
     ) : TimelineSyncSideEffect
+
+    // ============================================
+    // Story 2: Channel Add/Remove
+    // ============================================
+
+    /**
+     * Show undo snackbar after channel removal.
+     * The snackbar should be displayed for 3 seconds.
+     */
+    data class ShowUndoSnackbar(val channelName: String) : TimelineSyncSideEffect
+
+    /**
+     * Show channel add error message.
+     * Auto-dismisses after 2 seconds.
+     */
+    data class ShowChannelAddError(val message: String) : TimelineSyncSideEffect
 }

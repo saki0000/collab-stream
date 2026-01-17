@@ -6,6 +6,8 @@ import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -19,22 +21,25 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
+import org.example.project.domain.model.ChannelInfo
 import org.example.project.domain.model.SelectedStreamInfo
 import org.example.project.domain.model.SyncChannel
 import org.example.project.domain.model.SyncStatus
 import org.example.project.domain.model.VideoServiceType
 import org.example.project.domain.repository.TimelineSyncRepository
+import org.example.project.domain.usecase.ChannelSearchUseCase
 
 /**
  * ViewModel for Timeline Sync screen following MVI architecture pattern.
  * Manages timeline display state and handles user intents for date/week navigation.
  *
  * Epic: Timeline Sync (EPIC-002)
- * Story: US-1 (Timeline Display)
+ * Story: US-1 (Timeline Display), US-2 (Channel Add/Remove)
  */
 @OptIn(ExperimentalTime::class)
 class TimelineSyncViewModel(
     private val timelineSyncRepository: TimelineSyncRepository,
+    private val channelSearchUseCase: ChannelSearchUseCase,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(TimelineSyncUiState())
@@ -42,6 +47,9 @@ class TimelineSyncViewModel(
 
     private val _sideEffect = MutableSharedFlow<TimelineSyncSideEffect>()
     val sideEffect: SharedFlow<TimelineSyncSideEffect> = _sideEffect.asSharedFlow()
+
+    // Story 2: Channel search debounce job
+    private var channelSearchJob: Job? = null
 
     /**
      * Handles user intents and updates state accordingly.
@@ -58,6 +66,14 @@ class TimelineSyncViewModel(
             is TimelineSyncIntent.UpdateSyncTime -> updateSyncTime(intent.syncTime)
             TimelineSyncIntent.StartDragging -> startDragging()
             TimelineSyncIntent.StopDragging -> stopDragging()
+            // Story 2: Channel Add/Remove
+            TimelineSyncIntent.OpenChannelAddModal -> openChannelAddModal()
+            TimelineSyncIntent.CloseChannelAddModal -> closeChannelAddModal()
+            is TimelineSyncIntent.UpdateChannelSearchQuery -> updateChannelSearchQuery(intent.query)
+            is TimelineSyncIntent.AddChannel -> addChannel(intent.channel)
+            is TimelineSyncIntent.RemoveChannel -> removeChannel(intent.channelId)
+            TimelineSyncIntent.UndoRemoveChannel -> undoRemoveChannel()
+            TimelineSyncIntent.ClearChannelAddError -> clearChannelAddError()
         }
     }
 
@@ -186,6 +202,212 @@ class TimelineSyncViewModel(
         _uiState.value = _uiState.value.copy(isDragging = false)
     }
 
+    // ============================================
+    // Story 2: Channel Add/Remove
+    // ============================================
+
+    /**
+     * Opens the channel add modal (bottom sheet).
+     */
+    private fun openChannelAddModal() {
+        _uiState.value = _uiState.value.copy(
+            isChannelAddModalVisible = true,
+        )
+    }
+
+    /**
+     * Closes the channel add modal.
+     * Resets search query and suggestions.
+     */
+    private fun closeChannelAddModal() {
+        channelSearchJob?.cancel()
+        _uiState.value = _uiState.value.copy(
+            isChannelAddModalVisible = false,
+            channelSearchQuery = "",
+            channelSuggestions = emptyList(),
+            isSearchingChannels = false,
+            channelAddError = null,
+        )
+    }
+
+    /**
+     * Updates the channel search query with 500ms debounce.
+     */
+    private fun updateChannelSearchQuery(query: String) {
+        _uiState.value = _uiState.value.copy(channelSearchQuery = query)
+
+        // Cancel previous search job
+        channelSearchJob?.cancel()
+
+        // Clear suggestions if query is empty
+        if (query.isBlank()) {
+            _uiState.value = _uiState.value.copy(
+                channelSuggestions = emptyList(),
+                isSearchingChannels = false,
+            )
+            return
+        }
+
+        // Launch debounced search
+        channelSearchJob = viewModelScope.launch {
+            delay(SEARCH_DEBOUNCE_MS)
+            searchChannels(query)
+        }
+    }
+
+    /**
+     * Executes channel search.
+     */
+    private suspend fun searchChannels(query: String) {
+        _uiState.value = _uiState.value.copy(isSearchingChannels = true)
+
+        try {
+            val result = channelSearchUseCase.searchTwitchChannels(
+                query = query,
+                maxResults = 5,
+            )
+
+            result.fold(
+                onSuccess = { channels ->
+                    // Filter out already added channels
+                    val existingChannelIds = _uiState.value.channels.map { it.channelId }.toSet()
+                    val filteredChannels = channels.filterNot { it.id in existingChannelIds }
+
+                    _uiState.value = _uiState.value.copy(
+                        channelSuggestions = filteredChannels,
+                        isSearchingChannels = false,
+                    )
+                },
+                onFailure = { error ->
+                    _uiState.value = _uiState.value.copy(
+                        channelSuggestions = emptyList(),
+                        isSearchingChannels = false,
+                        channelAddError = "検索に失敗しました",
+                    )
+
+                    _sideEffect.emit(
+                        TimelineSyncSideEffect.ShowChannelAddError("検索に失敗しました"),
+                    )
+                },
+            )
+        } catch (e: Exception) {
+            _uiState.value = _uiState.value.copy(
+                channelSuggestions = emptyList(),
+                isSearchingChannels = false,
+                channelAddError = "検索に失敗しました",
+            )
+        }
+    }
+
+    /**
+     * Adds a channel to the timeline.
+     */
+    private fun addChannel(channelInfo: ChannelInfo) {
+        val currentChannels = _uiState.value.channels
+
+        // Check for duplicate
+        if (currentChannels.any { it.channelId == channelInfo.id }) {
+            _uiState.value = _uiState.value.copy(
+                channelAddError = "既に追加済みです",
+            )
+            viewModelScope.launch {
+                _sideEffect.emit(TimelineSyncSideEffect.ShowChannelAddError("既に追加済みです"))
+                delay(ERROR_AUTO_DISMISS_MS)
+                _uiState.value = _uiState.value.copy(channelAddError = null)
+            }
+            return
+        }
+
+        // Check max limit
+        if (!_uiState.value.canAddChannel) {
+            _uiState.value = _uiState.value.copy(
+                channelAddError = "最大${TimelineSyncUiState.MAX_CHANNELS}チャンネルまで追加可能です",
+            )
+            viewModelScope.launch {
+                _sideEffect.emit(
+                    TimelineSyncSideEffect.ShowChannelAddError(
+                        "最大${TimelineSyncUiState.MAX_CHANNELS}チャンネルまで追加可能です",
+                    ),
+                )
+                delay(ERROR_AUTO_DISMISS_MS)
+                _uiState.value = _uiState.value.copy(channelAddError = null)
+            }
+            return
+        }
+
+        // Convert ChannelInfo to SyncChannel
+        val newChannel = channelInfo.toSyncChannel()
+
+        // Remove from suggestions and add to channels
+        val updatedSuggestions = _uiState.value.channelSuggestions
+            .filterNot { it.id == channelInfo.id }
+
+        _uiState.value = _uiState.value.copy(
+            channels = currentChannels + newChannel,
+            channelSuggestions = updatedSuggestions,
+            channelAddError = null,
+        )
+    }
+
+    /**
+     * Removes a channel from the timeline.
+     */
+    private fun removeChannel(channelId: String) {
+        val currentChannels = _uiState.value.channels
+        val channelToRemove = currentChannels.find { it.channelId == channelId } ?: return
+
+        val updatedChannels = currentChannels.filterNot { it.channelId == channelId }
+
+        _uiState.value = _uiState.value.copy(
+            channels = updatedChannels,
+            recentlyDeletedChannel = channelToRemove,
+        )
+
+        viewModelScope.launch {
+            _sideEffect.emit(
+                TimelineSyncSideEffect.ShowUndoSnackbar(channelToRemove.channelName),
+            )
+
+            // Auto-clear recently deleted after undo timeout
+            delay(UNDO_TIMEOUT_MS)
+            // Only clear if it's still the same channel
+            if (_uiState.value.recentlyDeletedChannel?.channelId == channelId) {
+                _uiState.value = _uiState.value.copy(recentlyDeletedChannel = null)
+            }
+        }
+    }
+
+    /**
+     * Undoes the most recent channel removal.
+     */
+    private fun undoRemoveChannel() {
+        val channelToRestore = _uiState.value.recentlyDeletedChannel ?: return
+
+        _uiState.value = _uiState.value.copy(
+            channels = _uiState.value.channels + channelToRestore,
+            recentlyDeletedChannel = null,
+        )
+    }
+
+    /**
+     * Clears the channel add error message.
+     */
+    private fun clearChannelAddError() {
+        _uiState.value = _uiState.value.copy(channelAddError = null)
+    }
+
+    /**
+     * Extension function to convert ChannelInfo to SyncChannel.
+     */
+    private fun ChannelInfo.toSyncChannel(): SyncChannel = SyncChannel(
+        channelId = id,
+        channelName = displayName,
+        channelIconUrl = thumbnailUrl ?: "",
+        serviceType = VideoServiceType.TWITCH,
+        selectedStream = null,
+        syncStatus = SyncStatus.NOT_SYNCED,
+    )
+
     /**
      * Recalculates timeline bar positions for the selected date.
      */
@@ -257,6 +479,11 @@ class TimelineSyncViewModel(
     }
 
     companion object {
+        // Story 2: Channel Add constants
+        private const val SEARCH_DEBOUNCE_MS = 500L
+        private const val ERROR_AUTO_DISMISS_MS = 2000L
+        private const val UNDO_TIMEOUT_MS = 3000L
+
         /**
          * Calculates timeline bar info for a channel's stream on the selected date.
          * Used by UI layer for rendering timeline bars.
