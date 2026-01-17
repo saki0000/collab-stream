@@ -4,7 +4,7 @@
 
 ```markdown
 ## Summary
-<1-3 bullet points describing what this PR does>
+<このPRが何をするかを1〜3つの箇条書きで記述>
 
 ## Changes
 - [ ] 変更内容1
