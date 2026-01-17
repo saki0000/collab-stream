@@ -11,6 +11,7 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.isoDayNumber
 import kotlinx.datetime.plus
 import kotlinx.datetime.todayIn
+import org.example.project.domain.model.ChannelInfo
 import org.example.project.domain.model.SyncChannel
 
 /**
@@ -20,7 +21,7 @@ import org.example.project.domain.model.SyncChannel
  * week/date navigation.
  *
  * Epic: Timeline Sync (EPIC-002)
- * Story: US-1 (Timeline Display)
+ * Story: US-1 (Timeline Display), US-2 (Channel Add/Remove)
  */
 data class TimelineSyncUiState(
     /**
@@ -62,6 +63,42 @@ data class TimelineSyncUiState(
      * Story 3: Sync Time Selection
      */
     val isDragging: Boolean = false,
+
+    // ============================================
+    // Story 2: Channel Add/Remove
+    // ============================================
+
+    /**
+     * Whether the channel add modal (bottom sheet) is visible.
+     */
+    val isChannelAddModalVisible: Boolean = false,
+
+    /**
+     * Current search query in the channel add modal.
+     */
+    val channelSearchQuery: String = "",
+
+    /**
+     * List of channel suggestions from search results.
+     */
+    val channelSuggestions: List<ChannelInfo> = emptyList(),
+
+    /**
+     * Whether channel search is in progress.
+     */
+    val isSearchingChannels: Boolean = false,
+
+    /**
+     * Error message for channel add operations.
+     * Displayed as snackbar in the modal.
+     */
+    val channelAddError: String? = null,
+
+    /**
+     * Recently deleted channel for undo functionality.
+     * Null when no channel was recently deleted.
+     */
+    val recentlyDeletedChannel: SyncChannel? = null,
 ) {
     /**
      * Whether the channel list is empty (and not loading).
@@ -98,6 +135,21 @@ data class TimelineSyncUiState(
 
             return earliestStart to latestEnd
         }
+
+    /**
+     * Whether a new channel can be added.
+     * Limited to maximum 10 channels.
+     * Story 2: Channel Add
+     */
+    val canAddChannel: Boolean
+        get() = channels.size < MAX_CHANNELS
+
+    companion object {
+        /**
+         * Maximum number of channels allowed in timeline.
+         */
+        const val MAX_CHANNELS = 10
+    }
 }
 
 /**

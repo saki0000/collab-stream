@@ -20,7 +20,7 @@ import org.koin.compose.viewmodel.koinViewModel
  * Container -> Screen -> Content -> Component
  *
  * Epic: Timeline Sync (EPIC-002)
- * Story: US-1 (Timeline Display)
+ * Story: US-1 (Timeline Display), US-2 (Channel Add/Remove)
  */
 @Composable
 fun TimelineSyncContainer(
@@ -52,6 +52,25 @@ fun TimelineSyncContainer(
 
                 is TimelineSyncSideEffect.NavigateToExternalApp -> {
                     // Story 4 implementation - placeholder for now
+                }
+
+                // Story 2: Channel Add/Remove
+                is TimelineSyncSideEffect.ShowUndoSnackbar -> {
+                    val result = snackbarHostState.showSnackbar(
+                        message = "${sideEffect.channelName}を削除しました",
+                        actionLabel = "元に戻す",
+                        duration = SnackbarDuration.Short,
+                    )
+                    if (result == androidx.compose.material3.SnackbarResult.ActionPerformed) {
+                        viewModel.handleIntent(TimelineSyncIntent.UndoRemoveChannel)
+                    }
+                }
+
+                is TimelineSyncSideEffect.ShowChannelAddError -> {
+                    snackbarHostState.showSnackbar(
+                        message = sideEffect.message,
+                        duration = SnackbarDuration.Short,
+                    )
                 }
             }
         }
