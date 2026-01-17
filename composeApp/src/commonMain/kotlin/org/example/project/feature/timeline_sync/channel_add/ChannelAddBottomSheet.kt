@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -105,81 +104,93 @@ private fun ChannelAddContent(
     onChannelRemove: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(
+    LazyColumn(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
             .padding(bottom = 32.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         // Title
-        Text(
-            text = "チャンネルを追加",
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(bottom = 16.dp),
-        )
+        item {
+            Text(
+                text = "チャンネルを追加",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(bottom = 8.dp),
+            )
+        }
 
         // Search field
-        ChannelSearchField(
-            query = searchQuery,
-            onQueryChange = onSearchQueryChange,
-            isSearching = isSearching,
-            modifier = Modifier.fillMaxWidth(),
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
+        item {
+            ChannelSearchField(
+                query = searchQuery,
+                onQueryChange = onSearchQueryChange,
+                isSearching = isSearching,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
 
         // Error message
         if (errorMessage != null) {
-            Text(
-                text = errorMessage,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.error,
-                modifier = Modifier.padding(bottom = 8.dp),
-            )
+            item {
+                Text(
+                    text = errorMessage,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error,
+                )
+            }
         }
 
         // Search suggestions
         if (channelSuggestions.isNotEmpty()) {
-            Text(
-                text = "検索結果",
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(bottom = 8.dp),
-            )
-            ChannelSuggestionList(
-                suggestions = channelSuggestions,
-                onChannelSelect = onChannelSelect,
-                modifier = Modifier.weight(1f, fill = false),
-            )
-            Spacer(modifier = Modifier.height(16.dp))
+            item {
+                Text(
+                    text = "検索結果",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 8.dp),
+                )
+            }
+            items(channelSuggestions, key = { it.id }) { channel ->
+                ChannelSuggestionItem(
+                    channel = channel,
+                    onClick = { onChannelSelect(channel) },
+                )
+            }
         } else if (searchQuery.isNotBlank() && !isSearching) {
-            Text(
-                text = "検索結果が見つかりませんでした",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(vertical = 16.dp),
-            )
+            item {
+                Text(
+                    text = "検索結果が見つかりませんでした",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(vertical = 8.dp),
+                )
+            }
         }
 
         // Divider
         if (addedChannels.isNotEmpty()) {
-            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            item {
+                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            }
         }
 
         // Added channels
         if (addedChannels.isNotEmpty()) {
-            Text(
-                text = "追加済みチャンネル (${addedChannels.size})",
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(bottom = 8.dp),
-            )
-            AddedChannelList(
-                channels = addedChannels,
-                onChannelRemove = onChannelRemove,
-                modifier = Modifier.weight(1f, fill = false),
-            )
+            item {
+                Text(
+                    text = "追加済みチャンネル (${addedChannels.size})",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            items(addedChannels, key = { it.channelId }) { channel ->
+                AddedChannelItem(
+                    channel = channel,
+                    onRemove = { onChannelRemove(channel.channelId) },
+                )
+            }
         }
     }
 }
@@ -225,28 +236,6 @@ private fun ChannelSearchField(
         keyboardActions = KeyboardActions.Default,
         shape = RoundedCornerShape(12.dp),
     )
-}
-
-/**
- * List of channel suggestions from search results.
- */
-@Composable
-private fun ChannelSuggestionList(
-    suggestions: List<ChannelInfo>,
-    onChannelSelect: (ChannelInfo) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    LazyColumn(
-        modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        items(suggestions, key = { it.id }) { channel ->
-            ChannelSuggestionItem(
-                channel = channel,
-                onClick = { onChannelSelect(channel) },
-            )
-        }
-    }
 }
 
 /**
@@ -313,28 +302,6 @@ private fun ChannelSuggestionItem(
                 contentDescription = "追加",
                 tint = MaterialTheme.colorScheme.onPrimaryContainer,
                 modifier = Modifier.size(20.dp),
-            )
-        }
-    }
-}
-
-/**
- * List of added channels.
- */
-@Composable
-private fun AddedChannelList(
-    channels: List<SyncChannel>,
-    onChannelRemove: (String) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    LazyColumn(
-        modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        items(channels, key = { it.channelId }) { channel ->
-            AddedChannelItem(
-                channel = channel,
-                onRemove = { onChannelRemove(channel.channelId) },
             )
         }
     }

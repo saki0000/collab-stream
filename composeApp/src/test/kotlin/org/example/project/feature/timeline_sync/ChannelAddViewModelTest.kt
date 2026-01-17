@@ -299,19 +299,21 @@ class ChannelAddViewModelTest {
     }
 
     @Test
-    fun `should reject channel when at max capacity`() = runTest {
+    fun `should reject 11th channel and show error`() = runTest {
         // Fill up to 10 channels
-        repeat(10) { i ->
+        repeat(10) {
             viewModel.handleIntent(
                 TimelineSyncIntent.AddChannel(
                     ChannelInfo(
-                        id = "fillch$i",
-                        displayName = "Fill Channel $i",
+                        id = "ch$it",
+                        displayName = "Channel $it",
                     ),
                 ),
             )
         }
         advanceUntilIdle()
+        assertEquals(10, viewModel.uiState.value.channels.size)
+        assertFalse(viewModel.uiState.value.canAddChannel)
 
         // Try to add 11th channel
         viewModel.handleIntent(
@@ -322,16 +324,12 @@ class ChannelAddViewModelTest {
                 ),
             ),
         )
-        advanceTimeBy(100)
+        advanceTimeBy(100) // To check state before error is auto-cleared
 
-        // When at max, the error should be set
-        if (viewModel.uiState.value.channels.size >= 10) {
-            // Either can't add (error) or already at capacity
-            assertTrue(
-                viewModel.uiState.value.channelAddError != null ||
-                    viewModel.uiState.value.channels.none { it.channelId == "ch11" },
-            )
-        }
+        // Assert that the 11th channel was not added and an error is shown
+        assertEquals(10, viewModel.uiState.value.channels.size)
+        assertNotNull(viewModel.uiState.value.channelAddError)
+        assertTrue(viewModel.uiState.value.channels.none { it.channelId == "ch11" })
     }
 
     // ============================================

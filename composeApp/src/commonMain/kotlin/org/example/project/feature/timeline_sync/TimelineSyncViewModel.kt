@@ -262,12 +262,10 @@ class TimelineSyncViewModel(
         _uiState.value = _uiState.value.copy(isSearchingChannels = true)
 
         try {
-            val result = channelSearchUseCase.searchTwitchChannels(
+            channelSearchUseCase.searchTwitchChannels(
                 query = query,
                 maxResults = 5,
-            )
-
-            result.fold(
+            ).fold(
                 onSuccess = { channels ->
                     // Filter out already added channels
                     val existingChannelIds = _uiState.value.channels.map { it.channelId }.toSet()
@@ -279,24 +277,26 @@ class TimelineSyncViewModel(
                     )
                 },
                 onFailure = { error ->
-                    _uiState.value = _uiState.value.copy(
-                        channelSuggestions = emptyList(),
-                        isSearchingChannels = false,
-                        channelAddError = "検索に失敗しました",
-                    )
-
-                    _sideEffect.emit(
-                        TimelineSyncSideEffect.ShowChannelAddError("検索に失敗しました"),
-                    )
+                    handleSearchFailure()
                 },
             )
         } catch (e: Exception) {
-            _uiState.value = _uiState.value.copy(
-                channelSuggestions = emptyList(),
-                isSearchingChannels = false,
-                channelAddError = "検索に失敗しました",
-            )
+            handleSearchFailure()
         }
+    }
+
+    /**
+     * Handles search failure by updating UI state and emitting error side effect.
+     */
+    private suspend fun handleSearchFailure() {
+        _uiState.value = _uiState.value.copy(
+            channelSuggestions = emptyList(),
+            isSearchingChannels = false,
+            channelAddError = "検索に失敗しました",
+        )
+        _sideEffect.emit(
+            TimelineSyncSideEffect.ShowChannelAddError("検索に失敗しました"),
+        )
     }
 
     /**
@@ -307,31 +307,13 @@ class TimelineSyncViewModel(
 
         // Check for duplicate
         if (currentChannels.any { it.channelId == channelInfo.id }) {
-            _uiState.value = _uiState.value.copy(
-                channelAddError = "既に追加済みです",
-            )
-            viewModelScope.launch {
-                _sideEffect.emit(TimelineSyncSideEffect.ShowChannelAddError("既に追加済みです"))
-                delay(ERROR_AUTO_DISMISS_MS)
-                _uiState.value = _uiState.value.copy(channelAddError = null)
-            }
+            showChannelAddError("既に追加済みです")
             return
         }
 
         // Check max limit
         if (!_uiState.value.canAddChannel) {
-            _uiState.value = _uiState.value.copy(
-                channelAddError = "最大${TimelineSyncUiState.MAX_CHANNELS}チャンネルまで追加可能です",
-            )
-            viewModelScope.launch {
-                _sideEffect.emit(
-                    TimelineSyncSideEffect.ShowChannelAddError(
-                        "最大${TimelineSyncUiState.MAX_CHANNELS}チャンネルまで追加可能です",
-                    ),
-                )
-                delay(ERROR_AUTO_DISMISS_MS)
-                _uiState.value = _uiState.value.copy(channelAddError = null)
-            }
+            showChannelAddError("最大${TimelineSyncUiState.MAX_CHANNELS}チャンネルまで追加可能です")
             return
         }
 
@@ -347,6 +329,20 @@ class TimelineSyncViewModel(
             channelSuggestions = updatedSuggestions,
             channelAddError = null,
         )
+    }
+
+    /**
+     * Shows channel add error and auto-dismisses after a delay.
+     */
+    private fun showChannelAddError(message: String) {
+        _uiState.value = _uiState.value.copy(channelAddError = message)
+        viewModelScope.launch {
+            _sideEffect.emit(TimelineSyncSideEffect.ShowChannelAddError(message))
+            delay(ERROR_AUTO_DISMISS_MS)
+            if (_uiState.value.channelAddError == message) {
+                _uiState.value = _uiState.value.copy(channelAddError = null)
+            }
+        }
     }
 
     /**
