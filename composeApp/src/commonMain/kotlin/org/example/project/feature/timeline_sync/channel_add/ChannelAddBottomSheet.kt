@@ -42,6 +42,9 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
+import org.example.project.core.theme.AppShapes
+import org.example.project.core.theme.Dimensions
+import org.example.project.core.theme.Spacing
 import org.example.project.domain.model.ChannelInfo
 import org.example.project.domain.model.SyncChannel
 
@@ -107,9 +110,9 @@ private fun ChannelAddContent(
     LazyColumn(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp)
-            .padding(bottom = 32.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+            .padding(horizontal = Spacing.lg)
+            .padding(bottom = Spacing.xxl),
+        verticalArrangement = Arrangement.spacedBy(Spacing.sm),
     ) {
         // Title
         item {
@@ -117,7 +120,7 @@ private fun ChannelAddContent(
                 text = "チャンネルを追加",
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(bottom = 8.dp),
+                modifier = Modifier.padding(bottom = Spacing.sm),
             )
         }
 
@@ -149,7 +152,7 @@ private fun ChannelAddContent(
                     text = "検索結果",
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(top = 8.dp),
+                    modifier = Modifier.padding(top = Spacing.sm),
                 )
             }
             items(channelSuggestions, key = { it.id }) { channel ->
@@ -164,7 +167,7 @@ private fun ChannelAddContent(
                     text = "検索結果が見つかりませんでした",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(vertical = 8.dp),
+                    modifier = Modifier.padding(vertical = Spacing.sm),
                 )
             }
         }
@@ -172,7 +175,7 @@ private fun ChannelAddContent(
         // Divider
         if (addedChannels.isNotEmpty()) {
             item {
-                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                HorizontalDivider(modifier = Modifier.padding(vertical = Spacing.sm))
             }
         }
 
@@ -219,8 +222,8 @@ private fun ChannelSearchField(
         trailingIcon = {
             if (isSearching) {
                 CircularProgressIndicator(
-                    modifier = Modifier.size(20.dp),
-                    strokeWidth = 2.dp,
+                    modifier = Modifier.size(Dimensions.iconMd),
+                    strokeWidth = Spacing.xxs,
                 )
             } else if (query.isNotBlank()) {
                 IconButton(onClick = { onQueryChange("") }) {
@@ -234,7 +237,7 @@ private fun ChannelSearchField(
         singleLine = true,
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
         keyboardActions = KeyboardActions.Default,
-        shape = RoundedCornerShape(12.dp),
+        shape = AppShapes.large,
     )
 }
 
@@ -250,9 +253,9 @@ private fun ChannelSuggestionItem(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(8.dp))
+            .clip(AppShapes.medium)
             .clickable(onClick = onClick)
-            .padding(8.dp),
+            .padding(Spacing.sm),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         // Channel avatar
@@ -260,12 +263,12 @@ private fun ChannelSuggestionItem(
             model = channel.thumbnailUrl,
             contentDescription = channel.displayName,
             modifier = Modifier
-                .size(40.dp)
+                .size(Dimensions.avatarSm)
                 .clip(CircleShape),
             contentScale = ContentScale.Crop,
         )
 
-        Spacer(modifier = Modifier.width(12.dp))
+        Spacer(modifier = Modifier.width(Spacing.md))
 
         // Channel info
         Column(modifier = Modifier.weight(1f)) {
@@ -290,7 +293,7 @@ private fun ChannelSuggestionItem(
         // Add icon
         Box(
             modifier = Modifier
-                .size(32.dp)
+                .size(Dimensions.iconXl)
                 .background(
                     color = MaterialTheme.colorScheme.primaryContainer,
                     shape = CircleShape,
@@ -301,7 +304,7 @@ private fun ChannelSuggestionItem(
                 imageVector = Icons.Default.Add,
                 contentDescription = "追加",
                 tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                modifier = Modifier.size(20.dp),
+                modifier = Modifier.size(Dimensions.iconMd),
             )
         }
     }
@@ -319,9 +322,9 @@ private fun AddedChannelItem(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(8.dp))
+            .clip(AppShapes.medium)
             .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
-            .padding(8.dp),
+            .padding(Spacing.sm),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         // Channel avatar
@@ -329,12 +332,12 @@ private fun AddedChannelItem(
             model = channel.channelIconUrl,
             contentDescription = channel.channelName,
             modifier = Modifier
-                .size(40.dp)
+                .size(Dimensions.avatarSm)
                 .clip(CircleShape),
             contentScale = ContentScale.Crop,
         )
 
-        Spacer(modifier = Modifier.width(12.dp))
+        Spacer(modifier = Modifier.width(Spacing.md))
 
         // Channel name
         Text(
@@ -349,13 +352,13 @@ private fun AddedChannelItem(
         // Remove button
         IconButton(
             onClick = onRemove,
-            modifier = Modifier.size(32.dp),
+            modifier = Modifier.size(Dimensions.iconXl),
         ) {
             Icon(
                 imageVector = Icons.Default.Close,
                 contentDescription = "削除",
                 tint = MaterialTheme.colorScheme.error,
-                modifier = Modifier.size(20.dp),
+                modifier = Modifier.size(Dimensions.iconMd),
             )
         }
     }
