@@ -1,6 +1,7 @@
 package org.example.project.core.di
 
 import androidx.compose.runtime.Composable
+import org.example.project.di.databaseModule
 import org.example.project.di.sharedModule
 import org.koin.compose.KoinApplication
 
@@ -12,9 +13,14 @@ import org.koin.compose.KoinApplication
 fun KoinInitializer(content: @Composable () -> Unit) {
     KoinApplication(application = {
         modules(
-            sharedModule,
-            appModule,
+            // Platform-specific modules first (provides DatabaseBuilder)
             platformModule(),
+            // Database module (uses DatabaseBuilder from platformModule)
+            databaseModule,
+            // Shared module
+            sharedModule,
+            // App module (ViewModels)
+            appModule,
         )
     }) {
         content()

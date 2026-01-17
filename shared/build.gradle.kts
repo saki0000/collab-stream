@@ -10,6 +10,8 @@ plugins {
     alias(libs.plugins.ktlint)
     alias(libs.plugins.kover)
     alias(libs.plugins.konfig)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.room)
     kotlin("plugin.serialization") version "2.2.20"
 }
 
@@ -38,9 +40,13 @@ kotlin {
             implementation(libs.kotlinx.serialization)
             // Dependency Injection
             implementation(libs.koin.core)
+            // Room KMP (Database)
+            implementation(libs.androidx.room.runtime)
+            implementation(libs.androidx.sqlite.bundled)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
+            implementation(libs.kotlinx.coroutines.test)
         }
         androidMain.dependencies {
             implementation(libs.ktor.client.okhttp)
@@ -49,6 +55,19 @@ kotlin {
             implementation(libs.ktor.client.darwin)
         }
     }
+}
+
+// Room schema directory for migration support
+room {
+    schemaDirectory("$projectDir/schemas")
+}
+
+// KSP configuration for Room compiler (Android and iOS targets)
+dependencies {
+    add("kspAndroid", libs.androidx.room.compiler)
+    add("kspIosSimulatorArm64", libs.androidx.room.compiler)
+    add("kspIosX64", libs.androidx.room.compiler)
+    add("kspIosArm64", libs.androidx.room.compiler)
 }
 
 android {

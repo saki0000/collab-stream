@@ -1,8 +1,12 @@
 package org.example.project.core.di
 
+import org.example.project.data.local.DatabaseBuilder
+import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
 
 actual fun platformModule() = module {
-    // iOS-specific dependencies can be added here if needed
-    // PlaybackPositionProvider is now managed by the common appModule using PlayerStateManager
+    // Database builder (Android requires Context)
+    single<DatabaseBuilder> {
+        DatabaseBuilder(androidContext())
+    }
 }
