@@ -5,6 +5,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import org.example.project.data.local.SyncHistoryDao
 import org.example.project.data.local.SyncHistoryMapper
+import org.example.project.data.local.entity.SyncHistoryWithChannels
 import org.example.project.domain.model.SyncChannel
 import org.example.project.domain.model.SyncHistory
 import org.example.project.domain.repository.HistorySortOrder
@@ -46,11 +47,9 @@ class SyncHistoryRepositoryImpl(
 
         dao.insertHistoryWithChannels(historyEntity, channelEntities)
 
-        // 保存した履歴を返す
-        val saved = dao.getById(id)
-            ?: error("保存した履歴が見つかりません: $id")
-
-        SyncHistoryMapper.toDomain(saved)
+        // 追加のDB読み取りを避け、保存したエンティティから直接ドメインオブジェクトを構築
+        val savedData = SyncHistoryWithChannels(historyEntity, channelEntities)
+        SyncHistoryMapper.toDomain(savedData)
     }
 
     override suspend fun getAllHistories(

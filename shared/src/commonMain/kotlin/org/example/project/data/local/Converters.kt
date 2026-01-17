@@ -26,8 +26,15 @@ class Converters {
      *
      * @param value 変換元の文字列
      * @return 対応するVideoServiceType
-     * @throws IllegalArgumentException 不正な文字列の場合
+     * @throws IllegalStateException データベースに不正な値が存在する場合
      */
     @TypeConverter
-    fun toServiceType(value: String): VideoServiceType = VideoServiceType.valueOf(value)
+    fun toServiceType(value: String): VideoServiceType {
+        return try {
+            VideoServiceType.valueOf(value)
+        } catch (e: IllegalArgumentException) {
+            // 不正な値がDBに存在する場合、より詳細な例外をスローして問題を検知しやすくする
+            throw IllegalStateException("データベースに不明なVideoServiceType値が存在します: '$value'", e)
+        }
+    }
 }

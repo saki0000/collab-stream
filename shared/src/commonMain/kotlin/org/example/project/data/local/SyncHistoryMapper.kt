@@ -47,13 +47,19 @@ object SyncHistoryMapper {
      *
      * @param entity 変換元のエンティティ
      * @return 変換後のドメインモデル
+     * @throws IllegalStateException エンティティに不正な値が存在する場合
      */
     private fun toDomain(entity: SavedChannelEntity): SavedChannelInfo {
+        val serviceType = runCatching {
+            VideoServiceType.valueOf(entity.serviceType)
+        }.getOrElse { e ->
+            throw IllegalStateException("エンティティに不明なVideoServiceType値が存在します: '${entity.serviceType}'", e)
+        }
         return SavedChannelInfo(
             channelId = entity.channelId,
             channelName = entity.channelName,
             channelIconUrl = entity.channelIconUrl,
-            serviceType = VideoServiceType.valueOf(entity.serviceType),
+            serviceType = serviceType,
         )
     }
 
