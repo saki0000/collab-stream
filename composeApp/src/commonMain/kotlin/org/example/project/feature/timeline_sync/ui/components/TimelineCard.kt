@@ -26,6 +26,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import org.example.project.core.theme.Dimensions
+import org.example.project.core.theme.Spacing
+import org.example.project.core.theme.TwitchPurple
+import org.example.project.core.theme.YouTubeRed
 import org.example.project.domain.model.SyncChannel
 import org.example.project.domain.model.SyncStatus
 import org.example.project.domain.model.VideoServiceType
@@ -35,8 +39,8 @@ import org.example.project.feature.timeline_sync.TimelineBarInfo
  * Returns the platform color for a given service type.
  */
 fun getPlatformColor(serviceType: VideoServiceType): Color = when (serviceType) {
-    VideoServiceType.YOUTUBE -> Color(0xFFFF0000)
-    VideoServiceType.TWITCH -> Color(0xFF9146FF)
+    VideoServiceType.YOUTUBE -> YouTubeRed
+    VideoServiceType.TWITCH -> TwitchPurple
 }
 
 /**
@@ -64,7 +68,7 @@ fun TimelineCardHeader(
         // Platform icon
         Box(
             modifier = Modifier
-                .size(32.dp)
+                .size(32.dp) // プラットフォームアイコン用の固有サイズ
                 .clip(CircleShape)
                 .background(platformColor),
             contentAlignment = Alignment.Center,
@@ -80,7 +84,7 @@ fun TimelineCardHeader(
             )
         }
 
-        Spacer(modifier = Modifier.width(12.dp))
+        Spacer(modifier = Modifier.width(Spacing.md))
 
         // Channel info
         Column(modifier = Modifier.weight(1f)) {
@@ -131,9 +135,9 @@ private fun OpenWaitButton(
                 Icon(
                     imageVector = Icons.Default.Lock,
                     contentDescription = null,
-                    modifier = Modifier.size(16.dp),
+                    modifier = Modifier.size(Dimensions.iconSmall),
                 )
-                Spacer(modifier = Modifier.width(4.dp))
+                Spacer(modifier = Modifier.width(Spacing.xs))
                 Text("Wait")
             }
         }
@@ -151,9 +155,9 @@ private fun OpenWaitButton(
                 Icon(
                     imageVector = Icons.Default.OpenInNew,
                     contentDescription = null,
-                    modifier = Modifier.size(16.dp),
+                    modifier = Modifier.size(Dimensions.iconSmall),
                 )
-                Spacer(modifier = Modifier.width(4.dp))
+                Spacer(modifier = Modifier.width(Spacing.xs))
                 Text("Open")
             }
         }

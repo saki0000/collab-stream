@@ -30,6 +30,8 @@ import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
+import org.example.project.core.theme.Dimensions
+import org.example.project.core.theme.Spacing
 import org.example.project.domain.model.SyncChannel
 import org.example.project.feature.timeline_sync.TimelineBarInfo
 import org.example.project.feature.timeline_sync.TimelineSyncIntent
@@ -76,7 +78,7 @@ fun TimelineContent(
 
     Column(
         modifier = modifier.verticalScroll(scrollState),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+        verticalArrangement = Arrangement.spacedBy(Spacing.lg),
     ) {
         // Week Calendar
         WeekCalendar(
@@ -124,7 +126,7 @@ fun TimelineContent(
         }
 
         // Bottom spacer for better scrolling
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(Spacing.lg))
     }
 }
 
@@ -136,18 +138,18 @@ fun EmptyContent(
     modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier = modifier.padding(32.dp),
+        modifier = modifier.padding(Spacing.xxl),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
         Icon(
             imageVector = Icons.Default.VideoLibrary,
             contentDescription = null,
-            modifier = Modifier.size(64.dp),
+            modifier = Modifier.size(Dimensions.iconXXLarge),
             tint = MaterialTheme.colorScheme.secondary,
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(Spacing.lg))
 
         Text(
             text = "チャンネルがありません",
@@ -155,7 +157,7 @@ fun EmptyContent(
             color = MaterialTheme.colorScheme.onSurface,
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(Spacing.sm))
 
         Text(
             text = "チャンネルを追加して\nタイムラインを始めましょう",
@@ -164,7 +166,7 @@ fun EmptyContent(
             textAlign = TextAlign.Center,
         )
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(Spacing.xl))
 
         OutlinedButton(
             onClick = {
@@ -178,7 +180,7 @@ fun EmptyContent(
             )
             Text(
                 text = "チャンネルを追加",
-                modifier = Modifier.padding(start = 8.dp),
+                modifier = Modifier.padding(start = Spacing.sm),
             )
         }
     }
@@ -194,18 +196,18 @@ fun ErrorContent(
     modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier = modifier.padding(32.dp),
+        modifier = modifier.padding(Spacing.xxl),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
         Icon(
             imageVector = Icons.Default.Error,
             contentDescription = null,
-            modifier = Modifier.size(64.dp),
+            modifier = Modifier.size(Dimensions.iconXXLarge),
             tint = MaterialTheme.colorScheme.error,
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(Spacing.lg))
 
         Text(
             text = "エラーが発生しました",
@@ -213,7 +215,7 @@ fun ErrorContent(
             color = MaterialTheme.colorScheme.onSurface,
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(Spacing.sm))
 
         Text(
             text = errorMessage,
@@ -222,7 +224,7 @@ fun ErrorContent(
             textAlign = TextAlign.Center,
         )
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(Spacing.xl))
 
         Button(
             onClick = onRetry,
