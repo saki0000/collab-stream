@@ -30,18 +30,20 @@
 
 #### 受け入れ基準
 
-##### WAITING状態（同期時刻がアーカイブ開始前）
+##### WAITING状態（同期時刻がストリームの再生可能範囲外）
 
 - 「Wait」ボタン（ロックアイコン付き、非活性）を表示
 - グレーアウトされたタイムラインバー
 - ボタンは押下不可
+- **条件**: アーカイブ開始前（`syncTime < stream.startTime`）またはアーカイブ終了後（`syncTime > stream.endTime`）
 
-##### READY状態（同期時刻がアーカイブ範囲内）
+##### READY状態（同期時刻がストリームの再生可能範囲内）
 
 - 「Open」ボタン（外部リンクアイコン付き）を表示
 - 通常色のタイムラインバー
 - targetSeekPositionが計算され、外部アプリで開く準備完了
 - ボタン押下で外部アプリを起動（Story 4で実装）
+- **条件**: アーカイブ範囲内（`stream.startTime <= syncTime <= stream.endTime`）またはライブストリーム配信中（`endTime == null && syncTime >= stream.startTime`）
 
 ##### NOT_SYNCED状態（ストリーム未選択）
 
@@ -54,8 +56,9 @@
 
 ### 2.1 対象動画
 
-- **対象**: アーカイブ動画のみ
-- **対象外**: ライブストリーム（リアルタイム配信中）
+- **対象**: アーカイブ動画とライブストリーム（配信中の動画）
+- **アーカイブ**: `endTime`が設定されている動画
+- **ライブストリーム**: `endTime == null`の配信中動画（現在時刻まで再生可能）
 
 ### 2.2 スクロール範囲
 
@@ -94,20 +97,22 @@ targetSeekPosition = (syncTime - stream.startTime).inWholeSeconds.toFloat()
 
 #### WAITING
 
-- **条件**: `syncTime < stream.startTime`（同期時刻がアーカイブ開始前）
+- **条件**: `syncTime < stream.startTime`（同期時刻がストリーム開始前）または`syncTime > stream.endTime`（アーカイブ終了後、アーカイブのみ）
 - **表示**: Waitボタン（非活性）、グレーアウトされたタイムラインバー
 - **targetSeekPosition**: null
 
 #### READY
 
-- **条件**: `stream.startTime <= syncTime <= stream.endTime`（同期時刻がアーカイブ範囲内）
+- **条件**:
+  - アーカイブ: `stream.startTime <= syncTime <= stream.endTime`（同期時刻がアーカイブ範囲内）
+  - ライブストリーム: `endTime == null && syncTime >= stream.startTime`（配信開始後）
 - **表示**: Openボタン（活性）、通常色のタイムラインバー
 - **targetSeekPosition**: 計算値（Float）
 
 #### 補足
 
-- **ストリーム終了後のケース**: syncTimeRangeで制限されるため、`syncTime > stream.endTime`は通常発生しない
 - **境界値**: `syncTime == stream.startTime`はREADY状態（targetSeekPosition = 0.0f）
+- **ライブストリーム**: `endTime == null`の場合、配信開始後は常にREADY状態
 
 ### 2.7 状態再計算タイミング
 
@@ -293,11 +298,13 @@ private fun calculateSyncStatus(
 ): SyncStatus {
     if (syncTime == null || stream == null) return SyncStatus.NOT_SYNCED
     val startTime = stream.startTime ?: return SyncStatus.NOT_SYNCED
-    val endTime = stream.endTime ?: return SyncStatus.NOT_SYNCED
+    val endTime = stream.endTime
 
     return when {
         syncTime < startTime -> SyncStatus.WAITING
-        syncTime in startTime..endTime -> SyncStatus.READY
+        // ライブストリーム（endTime == null）または アーカイブ範囲内
+        endTime == null || syncTime <= endTime -> SyncStatus.READY
+        // アーカイブ終了後
         else -> SyncStatus.WAITING
     }
 }
@@ -433,7 +440,6 @@ val barColor = when (syncStatus) {
 
 ### 7.3 対象外
 
-- **ライブストリーム**: アーカイブ動画のみ対象
 - **外部アプリ起動**: Story 4で実装
 - **サーバーサイド同期**: 不要（クライアントサイドのみ）
 - **リアルタイム通信**: 不要（手動同期方式）

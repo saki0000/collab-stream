@@ -389,13 +389,13 @@ flowchart TD
     CheckStream -->|Yes| NotSynced
     CheckStream -->|No| CheckStartTime{startTime == null?}
     CheckStartTime -->|Yes| NotSynced
-    CheckStartTime -->|No| CheckEndTime{endTime == null?}
-    CheckEndTime -->|Yes| NotSynced
-    CheckEndTime -->|No| CompareStart{syncTime < startTime?}
+    CheckStartTime -->|No| CompareStart{syncTime < startTime?}
     CompareStart -->|Yes| Waiting[WAITING]
-    CompareStart -->|No| CompareRange{syncTime in startTime..endTime?}
-    CompareRange -->|Yes| Ready[READY]
-    CompareRange -->|No| Waiting
+    CompareStart -->|No| CheckEndTime{endTime == null?}
+    CheckEndTime -->|Yes| Ready[READY<br/>ライブストリーム]
+    CheckEndTime -->|No| CompareEnd{syncTime <= endTime?}
+    CompareEnd -->|Yes| Ready
+    CompareEnd -->|No| Waiting
 
     NotSynced --> End[終了]
     Waiting --> End
@@ -411,11 +411,13 @@ flowchart TD
 fun calculateSyncStatus(syncTime: Instant?, stream: SelectedStreamInfo?): SyncStatus {
     if (syncTime == null || stream == null) return SyncStatus.NOT_SYNCED
     val startTime = stream.startTime ?: return SyncStatus.NOT_SYNCED
-    val endTime = stream.endTime ?: return SyncStatus.NOT_SYNCED
+    val endTime = stream.endTime
 
     return when {
         syncTime < startTime -> SyncStatus.WAITING
-        syncTime in startTime..endTime -> SyncStatus.READY
+        // ライブストリーム（endTime == null）または アーカイブ範囲内
+        endTime == null || syncTime <= endTime -> SyncStatus.READY
+        // アーカイブ終了後
         else -> SyncStatus.WAITING
     }
 }
