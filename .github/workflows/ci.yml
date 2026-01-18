@@ -50,14 +50,84 @@ jobs:
     - name: Generate coverage reports
       run: ./gradlew koverXmlReport koverHtmlReport
 
-    - name: Record Roborazzi screenshots
-      run: ./gradlew :composeApp:recordRoborazziDebug
+    - name: Compare Roborazzi screenshots
+      run: ./gradlew :composeApp:compareRoborazziDebug
       continue-on-error: true
 
-    - name: Upload screenshots to Artifacts
+    - name: Upload screenshot comparison (Artifacts)
       uses: actions/upload-artifact@v4
       if: always()
       with:
-        name: roborazzi-screenshots
-        path: composeApp/build/outputs/roborazzi/
+        name: roborazzi-comparison
+        path: |
+          composeApp/build/outputs/roborazzi/
+          composeApp/build/reports/roborazzi/
         retention-days: 14
+
+    - name: Find compare images
+      id: find-images
+      if: always()
+      run: |
+        mkdir -p /tmp/screenshot-diff
+        IMAGES=$(find composeApp/build/outputs/roborazzi -name "*_compare.png" 2>/dev/null || true)
+        if [ -n "$IMAGES" ]; then
+          echo "$IMAGES" | while read img; do
+            cp "$img" /tmp/screenshot-diff/
+          done
+          echo "has_changes=true" >> $GITHUB_OUTPUT
+          echo "images<<EOF" >> $GITHUB_OUTPUT
+          ls /tmp/screenshot-diff/ >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+        else
+          echo "has_changes=false" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Upload to GitHub Pages
+      if: github.event_name == 'pull_request' && steps.find-images.outputs.has_changes == 'true'
+      uses: peaceiris/actions-gh-pages@v4
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: /tmp/screenshot-diff
+        destination_dir: screenshots/pr-${{ github.event.pull_request.number }}
+        keep_files: false
+
+    - name: Comment PR with screenshots
+      if: github.event_name == 'pull_request' && steps.find-images.outputs.has_changes == 'true'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const owner = context.repo.owner;
+          const repo = context.repo.repo;
+          const prNumber = context.issue.number;
+          const baseUrl = `https://${owner}.github.io/${repo}/screenshots/pr-${prNumber}`;
+
+          let body = '## 📸 Screenshot Comparison\n\n';
+          body += 'UI変更が検出されました。以下の比較画像を確認してください。\n\n';
+
+          const images = `${{ steps.find-images.outputs.images }}`.trim().split('\n').filter(Boolean);
+          for (const img of images) {
+            const name = img.replace('_compare.png', '');
+            body += `### ${name}\n`;
+            body += `![${name}](${baseUrl}/${img})\n\n`;
+          }
+
+          body += '---\n';
+          body += '> 左: 修正前 | 中央: 修正後 | 右: 差分\n';
+
+          const { data: comments } = await github.rest.issues.listComments({
+            owner, repo, issue_number: prNumber,
+          });
+
+          const botComment = comments.find(c =>
+            c.user.type === 'Bot' && c.body.includes('Screenshot Comparison')
+          );
+
+          if (botComment) {
+            await github.rest.issues.updateComment({
+              owner, repo, comment_id: botComment.id, body
+            });
+          } else {
+            await github.rest.issues.createComment({
+              owner, repo, issue_number: prNumber, body
+            });
+          }
