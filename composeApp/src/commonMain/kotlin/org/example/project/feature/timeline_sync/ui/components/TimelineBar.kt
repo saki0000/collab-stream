@@ -19,6 +19,7 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import org.example.project.core.theme.Spacing
 import org.example.project.feature.timeline_sync.TimelineBarInfo
 
 /**
@@ -35,7 +36,7 @@ fun TimelineBar(
     barInfo: TimelineBarInfo,
     platformColor: Color,
     modifier: Modifier = Modifier,
-    barHeight: Dp = 24.dp,
+    barHeight: Dp = Spacing.xl,
 ) {
     Box(
         modifier = modifier
@@ -47,7 +48,7 @@ fun TimelineBar(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(barHeight)
-                .clip(RoundedCornerShape(4.dp))
+                .clip(RoundedCornerShape(Spacing.xs))
                 .background(MaterialTheme.colorScheme.primaryContainer),
         )
 
@@ -71,7 +72,7 @@ fun TimelineBar(
                 )
                 .padding(start = (barInfo.startFraction * 100).dp) // Simplified positioning
                 .align(Alignment.CenterStart)
-                .clip(RoundedCornerShape(4.dp))
+                .clip(RoundedCornerShape(Spacing.xs))
                 .then(
                     if (barInfo.isUpcoming) {
                         Modifier.drawBehind {
@@ -81,7 +82,7 @@ fun TimelineBar(
                                 color = platformColor,
                                 start = Offset(0f, size.height / 2),
                                 end = Offset(size.width, size.height / 2),
-                                strokeWidth = 4.dp.toPx(),
+                                strokeWidth = Spacing.xs.toPx(),
                                 pathEffect = pathEffect,
                             )
                         }

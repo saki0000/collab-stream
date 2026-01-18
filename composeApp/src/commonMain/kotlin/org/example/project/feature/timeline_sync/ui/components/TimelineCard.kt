@@ -68,7 +68,7 @@ fun TimelineCardHeader(
         // Platform icon
         Box(
             modifier = Modifier
-                .size(32.dp) // プラットフォームアイコン用の固有サイズ
+                .size(Dimensions.iconXl)
                 .clip(CircleShape)
                 .background(platformColor),
             contentAlignment = Alignment.Center,
@@ -135,7 +135,7 @@ private fun OpenWaitButton(
                 Icon(
                     imageVector = Icons.Default.Lock,
                     contentDescription = null,
-                    modifier = Modifier.size(Dimensions.iconSmall),
+                    modifier = Modifier.size(Dimensions.iconXs),
                 )
                 Spacer(modifier = Modifier.width(Spacing.xs))
                 Text("Wait")
@@ -155,7 +155,7 @@ private fun OpenWaitButton(
                 Icon(
                     imageVector = Icons.Default.OpenInNew,
                     contentDescription = null,
-                    modifier = Modifier.size(Dimensions.iconSmall),
+                    modifier = Modifier.size(Dimensions.iconXs),
                 )
                 Spacer(modifier = Modifier.width(Spacing.xs))
                 Text("Open")

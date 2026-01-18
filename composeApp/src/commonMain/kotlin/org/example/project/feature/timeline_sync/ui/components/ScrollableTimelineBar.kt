@@ -22,6 +22,7 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
+import org.example.project.core.theme.Spacing
 import org.example.project.feature.timeline_sync.TimelineBarInfo
 
 /**
@@ -53,7 +54,7 @@ fun ScrollableTimelineBar(
     timeRange: Pair<Instant, Instant>,
     contentWidthDp: Dp,
     modifier: Modifier = Modifier,
-    barHeight: Dp = 24.dp,
+    barHeight: Dp = Spacing.xl,
 ) {
     val density = LocalDensity.current
 
@@ -81,7 +82,7 @@ fun ScrollableTimelineBar(
             modifier = Modifier
                 .width(contentWidthDp)
                 .height(barHeight)
-                .clip(RoundedCornerShape(4.dp))
+                .clip(RoundedCornerShape(Spacing.xs))
                 .background(MaterialTheme.colorScheme.primaryContainer),
         )
 
@@ -97,7 +98,7 @@ fun ScrollableTimelineBar(
                 modifier = Modifier
                     .width(barWidth.dp)
                     .height(barHeight)
-                    .clip(RoundedCornerShape(4.dp))
+                    .clip(RoundedCornerShape(Spacing.xs))
                     .then(
                         if (barInfo.isUpcoming) {
                             Modifier.drawBehind {
@@ -106,7 +107,7 @@ fun ScrollableTimelineBar(
                                     color = platformColor,
                                     start = Offset(0f, size.height / 2),
                                     end = Offset(size.width, size.height / 2),
-                                    strokeWidth = 4.dp.toPx(),
+                                    strokeWidth = Spacing.xs.toPx(),
                                     pathEffect = pathEffect,
                                 )
                             }
