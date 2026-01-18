@@ -19,7 +19,7 @@ allowed-tools: Bash(git diff:*), Read, Glob, Grep, Edit
 ### Step 1: 変更されたUIファイルを検出
 
 ```bash
-git diff --name-only origin/main...HEAD | grep -E 'composeApp/src/commonMain/kotlin/.*/ui/.*\.kt$'
+git diff --name-only origin/main...HEAD | grep -E 'composeApp/src/commonMain/kotlin/.*/ui/.*\.kt$' || true
 ```
 
 ### Step 2: 各ファイルを解析
