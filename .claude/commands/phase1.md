@@ -211,7 +211,7 @@ stateDiagram-v2
         エラーメッセージが存在
         エラーメッセージとリトライボタンを表示
     end note
-\```
+```
 
 ### 関連ドキュメント
 
@@ -400,7 +400,7 @@ mkdir -p composeApp/src/commonTest/kotlin/org/example/project/feature/{feature_n
 - [ ] SPECIFICATION.mdが明確か（3セクション）
 - [ ] Section 1: ユーザーストーリーが記述されているか
 - [ ] Section 2: ビジネスルールが明確か
-- [ ] Section 3: Mermaid状態遷移図がSPECIFICATION.md内に記述されているか
+- [ ] Section 3: Mermaid状態遷移図がSPECIFICATION.md内に記述され、振る舞いを正しく表現しているか
 - [ ] ViewModelTestで仕様が表現されているか
 - [ ] App Navigation更新完了（screen-navigation.md - Level 1、新機能の場合）
 - [ ] エラーケースが含まれているか

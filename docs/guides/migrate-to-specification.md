@@ -81,7 +81,7 @@ stateDiagram-v2
     [*] --> 初期化中
     初期化中 --> 読み込み中: 画面が開かれた
     ...
-\```
+```
 
 ### 関連ドキュメント
 
@@ -160,7 +160,7 @@ stateDiagram-v2
     [*] --> 初期化中
     初期化中 --> 検索待機: 初期化完了
     ...
-\```
+```
 
 ### 関連ドキュメント
 - **App Navigation**: [/docs/screen-navigation.md](/docs/screen-navigation.md)
