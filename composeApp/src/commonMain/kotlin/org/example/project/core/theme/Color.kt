@@ -25,6 +25,10 @@ val ErrorRed = Color(0xFFBA1A1A)
 // Accent colors for special states
 val SuccessGreen = Color(0xFF4CAF50)
 
+// Platform colors
+val YouTubeRed = Color(0xFFFF0000)
+val TwitchPurple = Color(0xFF9146FF)
+
 // 2. ライトテーマ用のカラーパレットを定義
 val LightColors = lightColorScheme(
     primary = OrangePrimary,

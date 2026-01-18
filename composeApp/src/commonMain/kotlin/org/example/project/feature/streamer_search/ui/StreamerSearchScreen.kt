@@ -9,7 +9,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
+import org.example.project.core.theme.Spacing
 import org.example.project.feature.streamer_search.StreamerSearchIntent
 import org.example.project.feature.streamer_search.StreamerSearchUiState
 
@@ -70,7 +70,7 @@ fun StreamerSearchScreen(
                 onDismiss = onDismiss,
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(16.dp),
+                    .padding(Spacing.lg),
             )
         }
     }

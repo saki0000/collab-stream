@@ -16,17 +16,18 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
+import org.example.project.core.theme.Dimensions
+import org.example.project.core.theme.Spacing
 
 /**
  * Sync line width
  */
-private val SyncLineWidth = 2.dp
+private val SyncLineWidth = Spacing.xxs
 
 /**
  * Handle size (triangle)
  */
-private val HandleSize = 16.dp
+private val HandleSize = Dimensions.iconXs
 
 /**
  * Draggable sync line component with triangle handle.

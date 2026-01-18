@@ -21,7 +21,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
+import org.example.project.core.theme.Dimensions
+import org.example.project.core.theme.Spacing
 
 /**
  * Home Screen (Stateless)
@@ -44,15 +45,15 @@ fun HomeScreen(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(24.dp),
+                    .padding(Spacing.xxl),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(24.dp),
+                verticalArrangement = Arrangement.spacedBy(Spacing.xxl),
             ) {
                 // App icon/logo
                 Icon(
                     imageVector = Icons.Default.VideoLibrary,
                     contentDescription = null,
-                    modifier = Modifier.size(64.dp),
+                    modifier = Modifier.size(Dimensions.icon4xl),
                     tint = MaterialTheme.colorScheme.primary,
                 )
 
@@ -70,7 +71,7 @@ fun HomeScreen(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(Spacing.lg))
 
                 // Main CTA: Search Main Streamer
                 Button(
@@ -81,7 +82,7 @@ fun HomeScreen(
                         imageVector = Icons.Default.Search,
                         contentDescription = null,
                     )
-                    Spacer(modifier = Modifier.size(8.dp))
+                    Spacer(modifier = Modifier.size(Spacing.sm))
                     Text("Search Main Streamer")
                 }
 
