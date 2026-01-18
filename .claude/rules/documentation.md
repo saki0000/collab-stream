@@ -20,23 +20,23 @@ docs/
 |-------|------|------|
 | 1 | `docs/screen-navigation.md` | アプリ全体の画面概要 |
 | 2 | `docs/navigation/{module}-module.md` | モジュール内の画面遷移 |
-| 3 | `feature/{feature}/screen-transition.md` | 画面内部の詳細な振る舞い |
+| 3 | `feature/{feature}/SPECIFICATION.md` | 画面内部の詳細な振る舞い（統合仕様書内） |
+
+**Note**: Level 3の画面遷移図は、従来の別ファイル（screen-transition.md）ではなく、SPECIFICATION.mdのSection 3に統合されています。
 
 ## 新機能追加時の作成ドキュメント
 
 ### Phase 1（仕様定義時）
 
-1. **機能仕様**: `feature/{feature_name}/REQUIREMENTS.md`
-2. **画面遷移**: `feature/{feature_name}/screen-transition.md`
-3. **（新モジュール時）**: `docs/navigation/{module}-module.md`
-4. **アプリ概要更新**: `docs/screen-navigation.md`
+1. **機能仕様**: `feature/{feature_name}/SPECIFICATION.md`（統合仕様書）
+2. **（新モジュール時）**: `docs/navigation/{module}-module.md`
+3. **アプリ概要更新**: `docs/screen-navigation.md`
 
 ### テンプレート
 
 | 用途 | テンプレート |
 |------|-------------|
-| 機能仕様 | `docs/design-doc/template/requirements-template.md` |
-| 画面遷移 | `docs/design-doc/template/screen-transition-template.md` |
+| 機能仕様（統合） | `docs/design-doc/template/specification-template.md` |
 | モジュールナビゲーション | `docs/design-doc/template/module-navigation-template.md` |
 | Epic | `docs/design-doc/template/epic-template.md` |
 
