@@ -49,3 +49,15 @@ jobs:
 
     - name: Generate coverage reports
       run: ./gradlew koverXmlReport koverHtmlReport
+
+    - name: Record Roborazzi screenshots
+      run: ./gradlew :composeApp:recordRoborazziDebug
+      continue-on-error: true
+
+    - name: Upload screenshots to Artifacts
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: roborazzi-screenshots
+        path: composeApp/build/outputs/roborazzi/
+        retention-days: 14
