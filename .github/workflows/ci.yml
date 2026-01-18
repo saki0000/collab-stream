@@ -94,6 +94,10 @@ jobs:
         destination_dir: screenshots/pr-${{ github.event.pull_request.number }}
         keep_files: false
 
+    - name: Wait for GitHub Pages deployment
+      if: github.event_name == 'pull_request' && steps.find-images.outputs.has_changes == 'true'
+      run: sleep 30
+
     - name: Comment PR with screenshots
       if: github.event_name == 'pull_request' && steps.find-images.outputs.has_changes == 'true'
       uses: actions/github-script@v7
@@ -106,16 +110,14 @@ jobs:
 
           let body = '## 📸 Screenshot Comparison\n\n';
           body += 'UI変更が検出されました。以下の比較画像を確認してください。\n\n';
+          body += '| 画面名 | 比較画像（左: 修正前 / 中央: 修正後 / 右: 差分） |\n';
+          body += '|--------|-----------------------------------------------|\n';
 
           const images = `${{ steps.find-images.outputs.images }}`.trim().split('\n').filter(Boolean);
           for (const img of images) {
-            const name = img.replace('_compare.png', '');
-            body += `### ${name}\n`;
-            body += `![${name}](${baseUrl}/${img})\n\n`;
+            const name = img.replace('_compare.png', '').replace(/^org\.example\.project\./, '');
+            body += `| ${name} | ![${name}](${baseUrl}/${img}) |\n`;
           }
-
-          body += '---\n';
-          body += '> 左: 修正前 | 中央: 修正後 | 右: 差分\n';
 
           const { data: comments } = await github.rest.issues.listComments({
             owner, repo, issue_number: prNumber,
