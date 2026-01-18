@@ -44,7 +44,11 @@ import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import org.example.project.core.theme.AppShapes
 import org.example.project.core.theme.AppTheme
+import org.example.project.core.theme.Dimensions
+import org.example.project.core.theme.Elevation
+import org.example.project.core.theme.Spacing
 import org.example.project.domain.model.SelectedStreamInfo
 import org.example.project.domain.model.SyncChannel
 import org.example.project.domain.model.SyncStatus
@@ -164,7 +168,7 @@ fun TimelineCardsWithSyncLine(
         if (syncTime != null && containerHeight > 0) {
             val primaryColor = MaterialTheme.colorScheme.primary
             val heightDp = with(density) { containerHeight.toDp() }
-            val triangleSize = 16.dp
+            val triangleSize = Dimensions.iconXs
             val lineWidth = 2.dp
 
             Column(
@@ -243,15 +247,15 @@ private fun TimelineCardWithScrollableBar(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        shape = RoundedCornerShape(12.dp),
+            .padding(horizontal = Spacing.lg, vertical = Spacing.sm),
+        shape = AppShapes.large,
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface,
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = Elevation.low),
     ) {
         Column(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.padding(Spacing.lg),
         ) {
             // Fixed header
             TimelineCardHeader(
@@ -260,7 +264,7 @@ private fun TimelineCardWithScrollableBar(
                 onOpenClick = { /* Story 4 */ },
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(Spacing.md))
 
             // Timeline bar area with OutOfViewIndicators overlay
             Box(
@@ -274,8 +278,8 @@ private fun TimelineCardWithScrollableBar(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(24.dp)
-                        .clip(RoundedCornerShape(4.dp))
+                        .height(Dimensions.iconLg)
+                        .clip(AppShapes.small)
                         .horizontalScroll(scrollState),
                 ) {
                     // Background track (full content width)
@@ -284,7 +288,7 @@ private fun TimelineCardWithScrollableBar(
                     Box(
                         modifier = Modifier
                             .width(contentWidthDp)
-                            .height(24.dp)
+                            .height(Dimensions.iconLg)
                             .background(MaterialTheme.colorScheme.primaryContainer),
                     ) {
                         // Stream duration bar
@@ -302,8 +306,8 @@ private fun TimelineCardWithScrollableBar(
                             modifier = Modifier
                                 .padding(start = barOffsetDp)
                                 .width(barWidthDp)
-                                .height(24.dp)
-                                .clip(RoundedCornerShape(4.dp))
+                                .height(Dimensions.iconLg)
+                                .clip(AppShapes.small)
                                 .then(
                                     if (barInfo.isUpcoming) {
                                         Modifier.drawBehind {
@@ -315,7 +319,7 @@ private fun TimelineCardWithScrollableBar(
                                                 color = platformColor,
                                                 start = Offset(0f, size.height / 2),
                                                 end = Offset(size.width, size.height / 2),
-                                                strokeWidth = 4.dp.toPx(),
+                                                strokeWidth = Spacing.xs.toPx(),
                                                 pathEffect = pathEffect,
                                             )
                                         }
@@ -324,7 +328,7 @@ private fun TimelineCardWithScrollableBar(
                                         Modifier
                                             .background(barColor)
                                             .drawBehind {
-                                                val stripeSpacing = 12.dp.toPx()
+                                                val stripeSpacing = Spacing.md.toPx()
                                                 val stripeWidth = 3.dp.toPx()
                                                 // Darker shade of bar color for better contrast
                                                 val stripeColor = androidx.compose.ui.graphics.Color(
@@ -368,7 +372,7 @@ private fun TimelineCardWithScrollableBar(
                         },
                         modifier = Modifier
                             .align(Alignment.CenterStart)
-                            .padding(start = 4.dp),
+                            .padding(start = Spacing.xs),
                     )
                 }
 
@@ -388,14 +392,14 @@ private fun TimelineCardWithScrollableBar(
                         },
                         modifier = Modifier
                             .align(Alignment.CenterEnd)
-                            .padding(end = 4.dp),
+                            .padding(end = Spacing.xs),
                     )
                 }
             }
 
             // Upcoming stream info
             if (barInfo.isUpcoming && barInfo.minutesToStart != null) {
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(Spacing.sm))
                 UpcomingStreamInfoRow(
                     startTime = barInfo.displayStartTime,
                     minutesToStart = barInfo.minutesToStart,

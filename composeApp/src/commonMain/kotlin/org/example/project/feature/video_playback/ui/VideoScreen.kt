@@ -33,6 +33,8 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.dp
 import kotlin.time.ExperimentalTime
+import org.example.project.core.theme.Dimensions
+import org.example.project.core.theme.Spacing
 import org.example.project.domain.usecase.VideoSyncUseCase
 import org.example.project.feature.video_playback.VideoIntent
 import org.example.project.feature.video_playback.VideoUiState
@@ -109,10 +111,10 @@ fun VideoScreen(
             LazyColumn(
                 state = listState,
                 modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
+                verticalArrangement = Arrangement.spacedBy(Spacing.lg),
                 contentPadding = PaddingValues(
-                    start = 8.dp,
-                    end = 8.dp,
+                    start = Spacing.sm,
+                    end = Spacing.sm,
                     top = 256.dp, // Space for fixed video player
                     bottom = 96.dp, // Space for floating bar
                 ),
@@ -135,9 +137,9 @@ fun VideoScreen(
                         Icon(
                             imageVector = Icons.Default.Add,
                             contentDescription = null,
-                            modifier = Modifier.size(18.dp),
+                            modifier = Modifier.size(Dimensions.iconSm),
                         )
-                        Spacer(modifier = Modifier.width(4.dp))
+                        Spacer(modifier = Modifier.width(Spacing.xxs))
                         Text("Add Sub Stream")
                     }
                 }
@@ -171,7 +173,7 @@ fun VideoScreen(
                 },
                 modifier = Modifier
                     .align(Alignment.TopCenter)
-                    .padding(horizontal = 8.dp, vertical = 16.dp)
+                    .padding(horizontal = Spacing.sm, vertical = Spacing.lg)
                     .onSizeChanged { size ->
                         // Capture the actual video player height
                         videoPlayerHeight = size.height.toFloat()
@@ -206,7 +208,7 @@ fun VideoScreen(
                 },
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    .padding(horizontal = 16.dp, vertical = 16.dp),
+                    .padding(horizontal = Spacing.lg, vertical = Spacing.lg),
             )
         }
     }

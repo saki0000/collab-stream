@@ -6,10 +6,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
@@ -34,6 +34,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
+import org.example.project.core.theme.AppShapes
+import org.example.project.core.theme.Dimensions
+import org.example.project.core.theme.Spacing
 import org.example.project.domain.model.StreamInfo
 
 /**
@@ -56,7 +59,7 @@ fun SubStreamItem(
         modifier = modifier
             .fillMaxWidth()
             .clickable { onPlayInModal() }
-            .padding(horizontal = 8.dp, vertical = 8.dp),
+            .padding(horizontal = Spacing.sm, vertical = Spacing.sm),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         // Thumbnail
@@ -64,27 +67,28 @@ fun SubStreamItem(
             model = stream.thumbnailUrl,
             contentDescription = null,
             modifier = Modifier
-                .size(80.dp, 45.dp)
-                .clip(RoundedCornerShape(8.dp)),
+                .width(Dimensions.thumbnailSmWidth)
+                .height(Dimensions.thumbnailSmHeight)
+                .clip(AppShapes.small),
         )
 
-        Spacer(modifier = Modifier.width(12.dp))
+        Spacer(modifier = Modifier.width(Spacing.md))
 
         // Info section (2 rows)
         Column(
             modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
+            verticalArrangement = Arrangement.spacedBy(Spacing.xxs),
         ) {
             // Row 1: Sync icon + Channel name + Title
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                horizontalArrangement = Arrangement.spacedBy(Spacing.xxs),
             ) {
                 Icon(
                     imageVector = if (stream.isSynced) Icons.Default.CheckCircle else Icons.Default.Warning,
                     contentDescription = null,
                     tint = if (stream.isSynced) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.error,
-                    modifier = Modifier.size(16.dp),
+                    modifier = Modifier.size(Dimensions.iconXs),
                 )
                 Text(
                     text = "${stream.channelName} • ${stream.title}",
@@ -99,7 +103,7 @@ fun SubStreamItem(
             // Row 2: Playback Position
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                horizontalArrangement = Arrangement.spacedBy(Spacing.xxs),
             ) {
                 Icon(
                     imageVector = Icons.Default.PlayArrow,
@@ -133,7 +137,7 @@ fun SubStreamItem(
             DropdownMenuItem(
                 text = {
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Icon(
@@ -151,7 +155,7 @@ fun SubStreamItem(
             DropdownMenuItem(
                 text = {
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Icon(

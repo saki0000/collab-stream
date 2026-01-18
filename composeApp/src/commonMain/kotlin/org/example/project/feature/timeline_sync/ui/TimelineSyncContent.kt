@@ -147,7 +147,7 @@ fun EmptyContent(
         Icon(
             imageVector = Icons.Default.VideoLibrary,
             contentDescription = null,
-            modifier = Modifier.size(Dimensions.iconXXLarge),
+            modifier = Modifier.size(Dimensions.icon4xl),
             tint = MaterialTheme.colorScheme.secondary,
         )
 
@@ -176,7 +176,7 @@ fun EmptyContent(
             Icon(
                 imageVector = Icons.Default.Add,
                 contentDescription = null,
-                modifier = Modifier.size(18.dp),
+                modifier = Modifier.size(Dimensions.iconSm),
             )
             Text(
                 text = "チャンネルを追加",
@@ -203,7 +203,7 @@ fun ErrorContent(
         Icon(
             imageVector = Icons.Default.Error,
             contentDescription = null,
-            modifier = Modifier.size(Dimensions.iconXXLarge),
+            modifier = Modifier.size(Dimensions.icon4xl),
             tint = MaterialTheme.colorScheme.error,
         )
 
