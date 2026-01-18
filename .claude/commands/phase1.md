@@ -177,7 +177,7 @@ cp docs/design-doc/template/module-navigation-template.md \
 
 ### Step 1: SPECIFICATION.md作成
 
-#### 1.1 既存ファイル検索
+#### 1.1 既存ファイル検索と配置判断
 
 まず、既存の仕様ファイルを検索します:
 
@@ -187,7 +187,22 @@ find composeApp/src/commonMain/kotlin/org/example/project/feature/{feature_name}
   -name "SPECIFICATION.md" -o -name "REQUIREMENTS.md" 2>/dev/null
 ```
 
-- **既存ファイルあり** → 差分更新（Edit tool使用）
+**配置方法の判断基準**:
+
+| ケース | 配置方法 | 例 |
+|--------|----------|-----|
+| 新規画面の追加 | 新規 `feature/{feature}/SPECIFICATION.md` 作成 | 新しい機能画面 |
+| 既存画面への機能追加 | 既存 SPECIFICATION.md にStoryセクション追記 | 同じ画面に新機能追加 |
+| 別UIコンポーネント（モーダル等） | `feature/{feature}/{sub_feature}/SPECIFICATION.md` 作成 | モーダル、ボトムシート |
+
+**同じ画面への機能追加の場合**:
+- 既存SPECIFICATION.mdに「## Story N: {機能名}」セクションを追記
+- 状態遷移図は既存のものを拡張（新しい状態・遷移を追加）
+- ViewModelTestも同様に既存ファイルに追記（@Nestedクラスを追加）
+- ファイル末尾のメタデータセクションを更新（最終更新日、関連Issue追加）
+
+**実装方法**:
+- **既存ファイルあり** → Edit toolで差分更新
 - **既存ファイルなし** → 新規作成（テンプレートからコピー）
 
 #### 1.2 配置場所
