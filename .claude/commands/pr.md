@@ -14,7 +14,7 @@ description: Create a pull request using GitHub template
 ## Your task
 
 1. First, push the current branch to remote repository with tracking
-2. Check if there are UI file changes (files in `ui/` or `components/` directories)
+2. Check if there are UI file changes (files in `ui/` directory, including `ui/components/`)
 3. If UI files were changed:
    - Run `/generate-previews` to ensure all Composables have @Preview functions
    - Include UI screenshot verification in the Test section
