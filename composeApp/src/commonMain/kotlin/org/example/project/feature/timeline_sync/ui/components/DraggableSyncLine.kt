@@ -16,7 +16,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import org.example.project.core.theme.Dimensions
 import org.example.project.core.theme.Spacing
 
