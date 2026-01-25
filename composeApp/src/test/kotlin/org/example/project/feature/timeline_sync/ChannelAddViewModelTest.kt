@@ -37,9 +37,10 @@ import org.example.project.domain.usecase.ChannelSearchUseCase
  * ViewModelテスト: TimelineSyncViewModel - チャンネル追加・管理
  *
  * Story 2: チャンネル追加・管理の振る舞いを定義
+ * Story 5: マルチプラットフォームチャンネル検索
  *
- * Specification: feature/timeline_sync/channel_add/REQUIREMENTS.md
- * Story Issue: #46
+ * Specification: feature/timeline_sync/channel_add/SPECIFICATION.md
+ * Story Issue: #46, #69
  * Epic: Timeline Sync (EPIC-002)
  */
 class ChannelAddViewModelTest {
@@ -439,6 +440,66 @@ class ChannelAddViewModelTest {
         val state = TimelineSyncUiState(channels = channels)
 
         assertFalse(state.canAddChannel)
+    }
+
+    // ============================================
+    // プラットフォーム選択（US-5）
+    // ============================================
+
+    @Test
+    fun `プラットフォーム選択_初期状態はTwitchが選択されていること`() = runTest {
+        // TODO: Phase 2でAI実装
+        // viewModel.handleIntent(TimelineSyncIntent.OpenChannelAddModal)
+        // advanceUntilIdle()
+        // assertEquals(VideoServiceType.TWITCH, viewModel.uiState.value.selectedPlatform)
+    }
+
+    @Test
+    fun `プラットフォーム選択_YouTubeタブをタップするとYouTubeが選択されること`() = runTest {
+        // TODO: Phase 2でAI実装
+        // viewModel.handleIntent(TimelineSyncIntent.SelectPlatform(VideoServiceType.YOUTUBE))
+        // advanceUntilIdle()
+        // assertEquals(VideoServiceType.YOUTUBE, viewModel.uiState.value.selectedPlatform)
+    }
+
+    @Test
+    fun `プラットフォーム選択_切り替え時に検索結果がクリアされること`() = runTest {
+        // TODO: Phase 2でAI実装
+        // 1. Twitchで検索を実行して結果を取得
+        // 2. YouTubeタブに切り替え
+        // 3. 検索結果が空になることを確認
+    }
+
+    @Test
+    fun `プラットフォーム選択_切り替え時に検索クエリは保持されること`() = runTest {
+        // TODO: Phase 2でAI実装
+        // 1. 検索クエリを入力
+        // 2. プラットフォームを切り替え
+        // 3. 検索クエリが保持されていることを確認
+    }
+
+    @Test
+    fun `プラットフォーム選択_クエリありで切り替え時に自動再検索が実行されること`() = runTest {
+        // TODO: Phase 2でAI実装
+        // 1. 検索クエリを入力して検索実行
+        // 2. プラットフォームを切り替え
+        // 3. 新しいプラットフォームで自動的に検索が実行されることを確認
+    }
+
+    @Test
+    fun `プラットフォーム選択_YouTubeで検索するとYouTube APIが呼ばれること`() = runTest {
+        // TODO: Phase 2でAI実装
+        // 1. YouTubeを選択
+        // 2. 検索を実行
+        // 3. YouTube検索APIが呼ばれることを確認
+    }
+
+    @Test
+    fun `プラットフォーム選択_追加したチャンネルに正しいserviceTypeが設定されること`() = runTest {
+        // TODO: Phase 2でAI実装
+        // 1. YouTubeを選択
+        // 2. チャンネルを追加
+        // 3. 追加されたチャンネルのserviceTypeがYOUTUBEであることを確認
     }
 }
 
