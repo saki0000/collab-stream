@@ -22,3 +22,13 @@ captures
 # Screenshot testing - component screenshots are not tracked
 screenshots/components/
 .claude/settings.local.json
+
+# Roborazzi reference screenshots (tracked in Git for comparison)
+!composeApp/build
+composeApp/build/*
+!composeApp/build/outputs
+composeApp/build/outputs/*
+!composeApp/build/outputs/roborazzi
+# Exclude generated comparison and actual images
+composeApp/build/outputs/roborazzi/*_compare.png
+composeApp/build/outputs/roborazzi/*_actual.png

@@ -12,9 +12,6 @@ jobs:
   test-and-coverage:
     name: Tests and Coverage
     runs-on: ubuntu-latest
-    permissions:
-      contents: write      # gh-pagesブランチへのプッシュに必要
-      pull-requests: write # PRコメント作成に必要
 
     steps:
     - name: Checkout code
