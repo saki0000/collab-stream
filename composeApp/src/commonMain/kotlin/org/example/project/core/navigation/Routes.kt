@@ -52,6 +52,15 @@ data class MainPlayerRoute(
 )
 
 /**
+ * Timeline sync route - Main screen for timeline synchronization
+ *
+ * This is the app's start destination, displaying synchronized timelines
+ * for multiple channels.
+ */
+@Serializable
+data object TimelineSyncRoute
+
+/**
  * Enum representing streamer search mode
  */
 enum class StreamerSearchMode {
