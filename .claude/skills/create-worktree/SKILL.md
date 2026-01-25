@@ -17,6 +17,7 @@ allowed-tools: Bash(git:*), Bash(mkdir:*), Bash(cp:*), Bash(chmod:*), Bash(bash:
 1. `.worktrees/<feature-name>/`ディレクトリにworktreeを作成
 2. `feature/<feature-name>`ブランチを新規作成（mainから分岐）
 3. 環境ファイル（.env等）を自動コピー
+4. Claude Code設定ファイル（.claude/settings.local.json）を自動コピー
 
 ## 使用方法
 
@@ -37,13 +38,23 @@ allowed-tools: Bash(git:*), Bash(mkdir:*), Bash(cp:*), Bash(chmod:*), Bash(bash:
    - `server/.env` → `.worktrees/<feature-name>/server/.env`
    - `composeApp/.env` → `.worktrees/<feature-name>/composeApp/.env`
 
-## コピーされる環境ファイル
+## コピーされるファイル
+
+### 環境ファイル
 
 | 元ファイル | コピー先 |
 |-----------|---------|
 | `.env` | `.worktrees/<feature-name>/.env` |
 | `server/.env` | `.worktrees/<feature-name>/server/.env` |
 | `composeApp/.env` | `.worktrees/<feature-name>/composeApp/.env` |
+
+### Claude Code設定
+
+| 元ファイル | コピー先 |
+|-----------|---------|
+| `.claude/settings.local.json` | `.worktrees/<feature-name>/.claude/settings.local.json` |
+
+**Note**: `settings.local.json`には「accept edits on」などのユーザー固有の許可設定が含まれます。これをコピーすることで、worktreeでも同じ権限設定が適用されます。
 
 ## 作業完了後
 
