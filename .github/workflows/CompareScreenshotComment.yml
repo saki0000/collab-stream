@@ -58,22 +58,45 @@ jobs:
           git checkout --orphan companion_${{ steps.branch.outputs.name }}
           git rm -rf .
 
-      - name: Copy compare images to companion branch
+      - name: Copy images to companion branch
         run: |
-          mkdir -p screenshots
-          find screenshot-diff -name "*_compare.png" -exec cp {} screenshots/ \; 2>/dev/null || true
-          ls -la screenshots/ || echo "No compare images found"
+          mkdir -p screenshots/changed screenshots/new
+
+          # Copy compare images (changed screenshots)
+          find screenshot-diff -name "*_compare.png" -exec cp {} screenshots/changed/ \; 2>/dev/null || true
+
+          # Copy actual images that don't have a corresponding compare (new screenshots)
+          for actual in $(find screenshot-diff -name "*_actual.png" 2>/dev/null); do
+            filename=$(basename "$actual")
+            base="${filename%_actual.png}"
+            # Only copy if there's no compare image (meaning it's a new screenshot)
+            if [ ! -f "screenshot-diff/${base}_compare.png" ] && [ ! -f "screenshots/changed/${base}_compare.png" ]; then
+              cp "$actual" "screenshots/new/"
+            fi
+          done
+
+          echo "Changed screenshots:"
+          ls -la screenshots/changed/ 2>/dev/null || echo "  None"
+          echo "New screenshots:"
+          ls -la screenshots/new/ 2>/dev/null || echo "  None"
 
       - name: Commit and push companion branch
         run: |
-          if [ -n "$(ls -A screenshots 2>/dev/null)" ]; then
+          HAS_CHANGED=$(ls -A screenshots/changed 2>/dev/null)
+          HAS_NEW=$(ls -A screenshots/new 2>/dev/null)
+
+          if [ -n "$HAS_CHANGED" ] || [ -n "$HAS_NEW" ]; then
+            # Remove empty directories
+            rmdir screenshots/changed 2>/dev/null || true
+            rmdir screenshots/new 2>/dev/null || true
+
             git add screenshots/
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
-            git commit -m "Add screenshot comparison images for PR #${{ steps.pr.outputs.number }}"
+            git commit -m "Add screenshot images for PR #${{ steps.pr.outputs.number }}"
             git push origin companion_${{ steps.branch.outputs.name }} --force
           else
-            echo "No compare images to commit"
+            echo "No images to commit"
           fi
 
       - name: Generate markdown table
@@ -82,27 +105,52 @@ jobs:
           BRANCH="companion_${{ steps.branch.outputs.name }}"
           REPO="${{ github.repository }}"
 
-          if [ -n "$(ls -A screenshots 2>/dev/null)" ]; then
-            echo "## Screenshot Comparison" > comment.md
-            echo "" >> comment.md
-            echo "| Image | Comparison |" >> comment.md
-            echo "|-------|------------|" >> comment.md
+          HAS_CHANGED=$(ls -A screenshots/changed 2>/dev/null)
+          HAS_NEW=$(ls -A screenshots/new 2>/dev/null)
 
-            for file in screenshots/*_compare.png; do
+          echo "## Screenshot Review" > comment.md
+          echo "" >> comment.md
+
+          # Changed screenshots section
+          if [ -n "$HAS_CHANGED" ]; then
+            echo "### Changed Screenshots" >> comment.md
+            echo "" >> comment.md
+            echo "| Name | Comparison |" >> comment.md
+            echo "|------|------------|" >> comment.md
+
+            for file in screenshots/changed/*_compare.png; do
               if [ -f "$file" ]; then
                 filename=$(basename "$file")
-                # Extract test name from filename (remove _compare.png suffix)
                 testname="${filename%_compare.png}"
-                echo "| $testname | ![comparison](https://raw.githubusercontent.com/$REPO/$BRANCH/screenshots/$filename) |" >> comment.md
+                echo "| \`$testname\` | ![comparison](https://raw.githubusercontent.com/$REPO/$BRANCH/screenshots/changed/$filename) |" >> comment.md
               fi
             done
-          else
-            echo "## Screenshot Comparison" > comment.md
             echo "" >> comment.md
-            echo "No screenshot differences detected." >> comment.md
           fi
 
-          echo "" >> comment.md
+          # New screenshots section
+          if [ -n "$HAS_NEW" ]; then
+            echo "### New Screenshots" >> comment.md
+            echo "" >> comment.md
+            echo "| Name | Preview |" >> comment.md
+            echo "|------|---------|" >> comment.md
+
+            for file in screenshots/new/*_actual.png; do
+              if [ -f "$file" ]; then
+                filename=$(basename "$file")
+                testname="${filename%_actual.png}"
+                echo "| \`$testname\` | ![preview](https://raw.githubusercontent.com/$REPO/$BRANCH/screenshots/new/$filename) |" >> comment.md
+              fi
+            done
+            echo "" >> comment.md
+          fi
+
+          # No changes message
+          if [ -z "$HAS_CHANGED" ] && [ -z "$HAS_NEW" ]; then
+            echo "No screenshot changes or additions detected." >> comment.md
+            echo "" >> comment.md
+          fi
+
           echo "_Generated by [Roborazzi](https://github.com/takahirom/roborazzi)_" >> comment.md
 
       - name: Find existing comment
@@ -111,7 +159,7 @@ jobs:
         with:
           issue-number: ${{ steps.pr.outputs.number }}
           comment-author: 'github-actions[bot]'
-          body-includes: Screenshot Comparison
+          body-includes: Screenshot Review
 
       - name: Create or update comment
         uses: peter-evans/create-or-update-comment@v4
