@@ -40,6 +40,7 @@ import org.example.project.domain.usecase.ChannelSearchUseCase
 class TimelineSyncViewModel(
     private val timelineSyncRepository: TimelineSyncRepository,
     private val channelSearchUseCase: ChannelSearchUseCase,
+    private val clock: kotlin.time.Clock = kotlin.time.Clock.System,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(TimelineSyncUiState())
@@ -95,6 +96,7 @@ class TimelineSyncViewModel(
     /**
      * Loads channel data from repository.
      * For Story 1, we use mock data as channel management is Story 2.
+     * Story 3: Sets initial syncTime to the first channel's stream start time.
      */
     private suspend fun loadChannelsData() {
         try {
@@ -102,9 +104,18 @@ class TimelineSyncViewModel(
             // Channel management will be implemented in Story 2
             val mockChannels = getMockChannels()
 
+            // Story 3: 初期syncTime - 最初のチャンネルのストリーム開始時刻
+            val initialSyncTime = mockChannels
+                .firstOrNull { it.selectedStream?.startTime != null }
+                ?.selectedStream?.startTime
+
+            // Story 3: 初期syncTimeに基づいてチャンネルのsyncStatus/targetSeekPositionを計算
+            val channelsWithSyncInfo = calculateChannelsSyncInfo(mockChannels, initialSyncTime)
+
             _uiState.value = _uiState.value.copy(
                 isLoading = false,
-                channels = mockChannels,
+                channels = channelsWithSyncInfo,
+                syncTime = initialSyncTime,
                 errorMessage = null,
             )
         } catch (e: Exception) {
@@ -181,9 +192,75 @@ class TimelineSyncViewModel(
     /**
      * Updates the sync time while dragging the sync line.
      * Called continuously during drag operation.
+     * Recalculates all channels' syncStatus and targetSeekPosition.
      */
     private fun updateSyncTime(syncTime: Instant) {
-        _uiState.value = _uiState.value.copy(syncTime = syncTime)
+        val currentChannels = _uiState.value.channels
+        val updatedChannels = calculateChannelsSyncInfo(currentChannels, syncTime)
+
+        _uiState.value = _uiState.value.copy(
+            syncTime = syncTime,
+            channels = updatedChannels,
+        )
+    }
+
+    /**
+     * Calculates syncStatus and targetSeekPosition for all channels.
+     * Story 3: Sync Time Selection
+     *
+     * @param channels List of channels to calculate sync info for
+     * @param syncTime The global sync time to calculate positions from
+     * @return Updated list of channels with calculated sync info
+     */
+    private fun calculateChannelsSyncInfo(
+        channels: List<SyncChannel>,
+        syncTime: Instant?,
+    ): List<SyncChannel> {
+        if (syncTime == null) return channels
+
+        return channels.map { channel ->
+            calculateChannelSyncInfo(channel, syncTime)
+        }
+    }
+
+    /**
+     * Calculates syncStatus and targetSeekPosition for a single channel.
+     * Story 3: Sync Time Selection
+     *
+     * @param channel The channel to calculate sync info for
+     * @param syncTime The global sync time to calculate position from
+     * @return Updated channel with calculated sync info
+     */
+    private fun calculateChannelSyncInfo(
+        channel: SyncChannel,
+        syncTime: Instant,
+    ): SyncChannel {
+        val stream = channel.selectedStream ?: return channel.copy(
+            syncStatus = SyncStatus.NOT_SYNCED,
+            targetSeekPosition = null,
+        )
+
+        val startTime = stream.startTime ?: return channel.copy(
+            syncStatus = SyncStatus.NOT_SYNCED,
+            targetSeekPosition = null,
+        )
+
+        val endTime = stream.endTime ?: clock.now()
+
+        return when {
+            syncTime < startTime -> channel.copy(
+                syncStatus = SyncStatus.WAITING,
+                targetSeekPosition = 0f,
+            )
+            syncTime in startTime..endTime -> channel.copy(
+                syncStatus = SyncStatus.READY,
+                targetSeekPosition = (syncTime - startTime).inWholeSeconds.toFloat(),
+            )
+            else -> channel.copy(
+                syncStatus = SyncStatus.NOT_SYNCED,
+                targetSeekPosition = null,
+            )
+        }
     }
 
     /**
