@@ -17,7 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.unit.dp
+import org.example.project.core.theme.Spacing
 
 /**
  * Header component for Timeline Sync screen.
@@ -66,14 +66,14 @@ private fun ActiveChannelIndicator(
     modifier: Modifier = Modifier,
 ) {
     Row(
-        modifier = modifier.padding(end = 16.dp),
+        modifier = modifier.padding(end = Spacing.lg),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
     ) {
         // Green dot indicator
         Box(
             modifier = Modifier
-                .size(8.dp)
+                .size(Spacing.sm)
                 .clip(CircleShape)
                 .background(MaterialTheme.colorScheme.tertiary),
         )

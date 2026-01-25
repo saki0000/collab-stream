@@ -44,6 +44,8 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.minus
 import kotlinx.datetime.toLocalDateTime
+import org.example.project.core.theme.Elevation
+import org.example.project.core.theme.Spacing
 import org.example.project.domain.model.ChannelInfo
 import org.example.project.domain.model.SearchResult
 import org.example.project.domain.model.VideoServiceType
@@ -85,7 +87,7 @@ fun StreamerSearchContent(
 
     Column(
         modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+        verticalArrangement = Arrangement.spacedBy(Spacing.lg),
     ) {
         // Search Field with Dropdown
         Box {
@@ -140,8 +142,8 @@ fun StreamerSearchContent(
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(top = 4.dp),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                            .padding(top = Spacing.xxs),
+                        elevation = CardDefaults.cardElevation(defaultElevation = Elevation.low),
                     ) {
                         LazyColumn(
                             modifier = Modifier.height(200.dp),
@@ -164,7 +166,7 @@ fun StreamerSearchContent(
         // Service Selection (FilterChips)
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             FilterChip(
@@ -207,7 +209,7 @@ fun StreamerSearchContent(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(12.dp),
+                        .padding(Spacing.md),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
@@ -237,7 +239,7 @@ fun StreamerSearchContent(
                     ) {
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalArrangement = Arrangement.spacedBy(Spacing.sm),
                         ) {
                             CircularProgressIndicator()
                             Text(
@@ -276,7 +278,7 @@ fun StreamerSearchContent(
 
                 else -> {
                     LazyColumn(
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(Spacing.sm),
                     ) {
                         items(searchResults) { result ->
                             val isSelected = selectedResults.any { it.videoId == result.videoId }
@@ -293,7 +295,7 @@ fun StreamerSearchContent(
                                 Box(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(vertical = 8.dp),
+                                        .padding(vertical = Spacing.sm),
                                     contentAlignment = Alignment.Center,
                                 ) {
                                     if (isSearching) {
@@ -381,8 +383,8 @@ private fun ChannelSuggestionItem(
         modifier = modifier
             .fillMaxWidth()
             .clickable { onSelect() }
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+            .padding(horizontal = Spacing.lg, vertical = Spacing.md),
+        horizontalArrangement = Arrangement.spacedBy(Spacing.md),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(modifier = Modifier.weight(1f)) {

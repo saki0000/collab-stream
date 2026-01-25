@@ -25,6 +25,10 @@ val ErrorRed = Color(0xFFBA1A1A)
 // Accent colors for special states
 val SuccessGreen = Color(0xFF4CAF50)
 
+// Platform colors
+val YouTubeRed = Color(0xFFFF0000)
+val TwitchPurple = Color(0xFF9146FF)
+
 // 2. ライトテーマ用のカラーパレットを定義
 val LightColors = lightColorScheme(
     primary = OrangePrimary,
@@ -39,8 +43,13 @@ val LightColors = lightColorScheme(
     onBackground = Color.Black,
     surface = LightSurface,
     onSurface = Color.Black,
+    surfaceVariant = Color(0xFFF0F0F0),
+    onSurfaceVariant = Color(0xFF5C5C5C),
+    outline = Color(0xFFB0B0B0),
     error = ErrorRed,
     onError = Color.White,
+    errorContainer = Color(0xFFFFDAD6),
+    onErrorContainer = Color(0xFF410002),
 )
 
 // 3. ダークテーマ用のカラーパレットを定義
@@ -57,6 +66,11 @@ val DarkColors = darkColorScheme(
     onBackground = OnDark,
     surface = DarkSurface,
     onSurface = OnDark,
+    surfaceVariant = Color(0xFF363636),
+    onSurfaceVariant = Color(0xFFC0C0C0),
+    outline = Color(0xFF6E6E6E),
     error = Color(0xFFFFB4AB),
     onError = Color(0xFF690005),
+    errorContainer = Color(0xFF93000A),
+    onErrorContainer = Color(0xFFFFDAD6),
 )

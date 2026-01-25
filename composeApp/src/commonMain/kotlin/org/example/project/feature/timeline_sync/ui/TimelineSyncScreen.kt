@@ -18,13 +18,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.todayIn
 import org.example.project.core.theme.AppTheme
+import org.example.project.core.theme.Spacing
 import org.example.project.domain.model.SelectedStreamInfo
 import org.example.project.domain.model.SyncChannel
 import org.example.project.domain.model.SyncStatus
@@ -139,7 +139,7 @@ private fun LoadingContent(
         CircularProgressIndicator()
         Text(
             text = "読み込み中...",
-            modifier = Modifier.padding(top = 16.dp),
+            modifier = Modifier.padding(top = Spacing.lg),
         )
     }
 }

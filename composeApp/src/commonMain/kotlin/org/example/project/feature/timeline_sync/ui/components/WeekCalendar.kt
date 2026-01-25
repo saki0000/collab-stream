@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
@@ -28,6 +27,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
+import org.example.project.core.theme.AppShapes
+import org.example.project.core.theme.Dimensions
+import org.example.project.core.theme.Spacing
 
 /**
  * Week calendar component with horizontal scroll and date selection.
@@ -50,13 +52,13 @@ fun WeekCalendar(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 8.dp, vertical = 8.dp),
+            .padding(horizontal = Spacing.sm, vertical = Spacing.sm),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         // Previous week button
         IconButton(
             onClick = onNavigateToPreviousWeek,
-            modifier = Modifier.size(40.dp),
+            modifier = Modifier.size(Dimensions.iconXl),
         ) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
@@ -83,7 +85,7 @@ fun WeekCalendar(
         // Next week button
         IconButton(
             onClick = onNavigateToNextWeek,
-            modifier = Modifier.size(40.dp),
+            modifier = Modifier.size(Dimensions.iconXl),
         ) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
@@ -118,11 +120,11 @@ private fun DayItem(
     Column(
         modifier = modifier
             .width(48.dp)
-            .padding(horizontal = 4.dp)
-            .clip(RoundedCornerShape(8.dp))
+            .padding(horizontal = Spacing.xxs)
+            .clip(AppShapes.small)
             .background(backgroundColor)
             .clickable(onClick = onClick)
-            .padding(vertical = 8.dp),
+            .padding(vertical = Spacing.sm),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         // Day of week (MON, TUE, etc.)

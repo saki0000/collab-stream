@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
@@ -17,8 +16,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
+import org.example.project.core.theme.AppShapes
 import org.example.project.core.theme.AppTheme
+import org.example.project.core.theme.Dimensions
+import org.example.project.core.theme.Spacing
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 /**
@@ -39,20 +40,20 @@ fun OutOfViewIndicator(
 ) {
     Surface(
         modifier = modifier.clickable(onClick = onClick),
-        shape = RoundedCornerShape(12.dp),
+        shape = AppShapes.medium,
         color = MaterialTheme.colorScheme.primaryContainer,
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+            modifier = Modifier.padding(horizontal = Spacing.md, vertical = Spacing.xs),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            horizontalArrangement = Arrangement.spacedBy(Spacing.xxs),
         ) {
             when (direction) {
                 OutOfViewDirection.LEFT -> {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
                         contentDescription = "左にスクロール",
-                        modifier = Modifier.size(20.dp),
+                        modifier = Modifier.size(Dimensions.iconSm),
                         tint = MaterialTheme.colorScheme.onPrimaryContainer,
                     )
                     Text(
@@ -63,7 +64,7 @@ fun OutOfViewIndicator(
                     Icon(
                         imageVector = Icons.Default.PlayArrow,
                         contentDescription = null,
-                        modifier = Modifier.size(20.dp),
+                        modifier = Modifier.size(Dimensions.iconSm),
                         tint = MaterialTheme.colorScheme.onPrimaryContainer,
                     )
                 }
@@ -71,7 +72,7 @@ fun OutOfViewIndicator(
                     Icon(
                         imageVector = Icons.Default.PlayArrow,
                         contentDescription = null,
-                        modifier = Modifier.size(20.dp),
+                        modifier = Modifier.size(Dimensions.iconSm),
                         tint = MaterialTheme.colorScheme.onPrimaryContainer,
                     )
                     Text(
@@ -82,7 +83,7 @@ fun OutOfViewIndicator(
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                         contentDescription = "右にスクロール",
-                        modifier = Modifier.size(20.dp),
+                        modifier = Modifier.size(Dimensions.iconSm),
                         tint = MaterialTheme.colorScheme.onPrimaryContainer,
                     )
                 }

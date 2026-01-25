@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material3.Card
@@ -32,6 +31,10 @@ import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
+import org.example.project.core.theme.AppShapes
+import org.example.project.core.theme.Dimensions
+import org.example.project.core.theme.Elevation
+import org.example.project.core.theme.Spacing
 import org.example.project.domain.model.SearchResult
 
 /**
@@ -52,7 +55,7 @@ fun SearchResultItem(
         modifier = modifier
             .fillMaxWidth()
             .clickable { onSelect() },
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = Elevation.low),
         colors = CardDefaults.cardColors(
             containerColor = if (isSelected && isSubSearchMode) {
                 MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
@@ -64,29 +67,29 @@ fun SearchResultItem(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                .padding(Spacing.md),
+            horizontalArrangement = Arrangement.spacedBy(Spacing.md),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             // Selection checkbox (only in sub search mode)
             if (isSubSearchMode) {
                 Box(
                     contentAlignment = Alignment.Center,
-                    modifier = Modifier.size(24.dp),
+                    modifier = Modifier.size(Dimensions.iconLg),
                 ) {
                     if (isSelected) {
                         Icon(
                             imageVector = Icons.Default.CheckCircle,
                             contentDescription = "Selected",
                             tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(24.dp),
+                            modifier = Modifier.size(Dimensions.iconLg),
                         )
                     } else {
                         Box(
                             modifier = Modifier
-                                .size(24.dp)
+                                .size(Dimensions.iconLg)
                                 .border(
-                                    width = 2.dp,
+                                    width = Spacing.xxs,
                                     color = MaterialTheme.colorScheme.outline,
                                     shape = CircleShape,
                                 ),
@@ -101,15 +104,15 @@ fun SearchResultItem(
                 contentDescription = result.title,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
-                    .size(width = 120.dp, height = 68.dp)
-                    .clip(RoundedCornerShape(8.dp))
+                    .size(width = Dimensions.thumbnailMdWidth, height = Dimensions.thumbnailMdHeight)
+                    .clip(AppShapes.medium)
                     .background(MaterialTheme.colorScheme.surfaceVariant),
             )
 
             // Content
             Column(
                 modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(4.dp),
+                verticalArrangement = Arrangement.spacedBy(Spacing.xs),
             ) {
                 // Title
                 Text(
@@ -145,9 +148,9 @@ fun SearchResultItem(
                         modifier = Modifier
                             .background(
                                 MaterialTheme.colorScheme.primaryContainer,
-                                RoundedCornerShape(4.dp),
+                                AppShapes.small,
                             )
-                            .padding(horizontal = 6.dp, vertical = 2.dp),
+                            .padding(horizontal = 6.dp, vertical = Spacing.xxs),
                     )
                 }
             }
