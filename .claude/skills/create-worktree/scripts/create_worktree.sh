@@ -91,6 +91,19 @@ copy_env_file "server/.env" "${WORKTREE_PATH}/server/.env"
 # composeApp/.env
 copy_env_file "composeApp/.env" "${WORKTREE_PATH}/composeApp/.env"
 
+# Claude Code設定ファイルのコピー
+echo ""
+echo -e "${YELLOW}4. Claude Code設定をコピー中...${NC}"
+
+# .claude/settings.local.json をコピー（ユーザー固有の許可設定）
+if [ -f ".claude/settings.local.json" ]; then
+    mkdir -p "${WORKTREE_PATH}/.claude"
+    cp ".claude/settings.local.json" "${WORKTREE_PATH}/.claude/settings.local.json"
+    echo -e "   ${GREEN}コピー完了${NC}: .claude/settings.local.json"
+else
+    echo "   スキップ: .claude/settings.local.json (存在しません)"
+fi
+
 # 完了メッセージ
 echo ""
 echo -e "${GREEN}=== 完了 ===${NC}"
