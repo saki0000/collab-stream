@@ -189,20 +189,26 @@ find composeApp/src/commonMain/kotlin/org/example/project/feature/{feature_name}
 
 **配置方法の判断基準**:
 
-| ケース | 配置方法 | 例 |
-|--------|----------|-----|
-| 新規画面の追加 | 新規 `feature/{feature}/SPECIFICATION.md` 作成 | 新しい機能画面 |
-| 既存画面への機能追加 | 既存 SPECIFICATION.md にStoryセクション追記 | 同じ画面に新機能追加 |
-| 別UIコンポーネント（モーダル等） | `feature/{feature}/{sub_feature}/SPECIFICATION.md` 作成 | モーダル、ボトムシート |
+| ケース | 方法 |
+|--------|------|
+| 新規画面の追加 | 新規 SPECIFICATION.md 作成 |
+| 既存画面への機能追加 | 既存 SPECIFICATION.md の各セクションを修正 |
+| 別UIコンポーネント（モーダル等） | サブディレクトリに新規作成 |
 
-**同じ画面への機能追加の場合**:
-- 既存SPECIFICATION.mdに「## Story N: {機能名}」セクションを追記
-- 状態遷移図は既存のものを拡張（新しい状態・遷移を追加）
-- ViewModelTestも同様に既存ファイルに追記（@Nestedクラスを追加）
-- ファイル末尾のメタデータセクションを更新（最終更新日、関連Issue追加）
+**既存画面への機能追加の場合**:
+- 既存の3セクション構造は維持
+- Section 1: 新機能のユーザーストーリーを**追加**
+- Section 2: 新機能のビジネスルールを**追加**
+- Section 3: 状態図に新しい状態・遷移を**追加**（図は常に1つ）
+- **具体的なコード（疑似コード含む）は禁止** - 自然言語で説明
+
+**禁止事項**:
+- 「## Story N: {機能名}」のような独立セクションの作成
+- 複数の状態図を作成
+- 疑似コードや実装例の記載
 
 **実装方法**:
-- **既存ファイルあり** → Edit toolで差分更新
+- **既存ファイルあり** → Edit toolで各セクションに内容を追加
 - **既存ファイルなし** → 新規作成（テンプレートからコピー）
 
 #### 1.2 配置場所
@@ -323,65 +329,52 @@ composeApp/src/commonTest/kotlin/org/example/project/feature/{feature_name}/{Fea
 package org.example.project.feature.{feature_name}
 
 import kotlin.test.Test
-import kotlin.test.DisplayName
 
 /**
  * {機能名}画面の振る舞い仕様
  * Specification: feature/{feature_name}/SPECIFICATION.md
  * Story Issue: #{STORY_ISSUE_NUMBER}
  */
-@DisplayName("{機能名}画面の振る舞い仕様")
 class {Feature}ViewModelTest {
 
-    @Nested
-    @DisplayName("画面を開いた時")
-    inner class OnInitialize {
+    // ========================================
+    // 画面を開いた時
+    // ========================================
 
-        @Test
-        @DisplayName("まずはローディング状態になること")
-        fun startsWithLoading() {
-            // TODO: Phase 2でAI実装
-        }
-
-        @Nested
-        @DisplayName("データ取得に成功した場合")
-        inner class OnSuccess {
-            @Test
-            @DisplayName("コンテンツが表示されること")
-            fun showContent() {
-                // TODO: Phase 2でAI実装
-            }
-        }
-
-        @Nested
-        @DisplayName("データ取得に失敗した場合")
-        inner class OnFailure {
-            @Test
-            @DisplayName("エラー状態になること")
-            fun showsError() {
-                // TODO: Phase 2でAI実装
-            }
-        }
+    @Test
+    fun `画面を開いた時_まずはローディング状態になること`() {
+        // TODO: Phase 2でAI実装
     }
 
-    @Nested
-    @DisplayName("再試行ボタンを押した時")
-    inner class OnRetry {
-        @Test
-        @DisplayName("再度データ取得を試みること")
-        fun retriesDataFetch() {
-            // TODO: Phase 2でAI実装
-        }
+    @Test
+    fun `画面を開いた時_データ取得成功_コンテンツが表示されること`() {
+        // TODO: Phase 2でAI実装
+    }
+
+    @Test
+    fun `画面を開いた時_データ取得失敗_エラー状態になること`() {
+        // TODO: Phase 2でAI実装
+    }
+
+    // ========================================
+    // 再試行ボタンを押した時
+    // ========================================
+
+    @Test
+    fun `再試行ボタンを押した時_再度データ取得を試みること`() {
+        // TODO: Phase 2でAI実装
     }
 }
 ```
 
 **テスト構造の設計ポイント**:
-- @DisplayName: 日本語で仕様を記述
-- @Nested: 階層的に整理
+- バッククォートで日本語メソッド名: `{コンテキスト}_{期待する振る舞い}` 形式
+- コメントセクション: 論理的にグルーピング
 - TODOコメント: Phase 2でAIが実装
 - SPECIFICATION.mdの状態遷移と対応
 - **KDocにStory Issue番号を記載**
+
+**注意**: `commonTest` では `@DisplayName` や `@Nested` は使用できません（JUnit 5 固有のため）
 
 ---
 
@@ -402,17 +395,15 @@ shared/src/commonTest/kotlin/org/example/project/domain/usecase/{UseCase}Test.kt
 package org.example.project.domain.usecase
 
 import kotlin.test.Test
-import kotlin.test.DisplayName
 
 /**
+ * {機能名}のビジネスルール
  * Story Issue: #{STORY_ISSUE_NUMBER}
  */
-@DisplayName("{機能名}のビジネスルール")
 class {UseCase}Test {
 
     @Test
-    @DisplayName("{ビジネスルール説明}")
-    fun testBusinessRule() {
+    fun `{ビジネスルール説明}`() {
         // TODO: Phase 2でAI実装
     }
 }
@@ -582,7 +573,8 @@ Phase 1完了の条件：
   - [ ] Section 3: 画面内の状態遷移（Mermaid図を直接記述）
 
 - [ ] **ViewModelTest.kt作成完了**（必須）
-  - [ ] @DisplayName + @Nested 構造
+  - [ ] バッククォートで日本語メソッド名
+  - [ ] コメントセクションでグルーピング
   - [ ] 空のテストメソッド（TODOコメント付き）
   - [ ] SPECIFICATION.mdと整合性あり
   - [ ] KDocにStory Issue番号記載
