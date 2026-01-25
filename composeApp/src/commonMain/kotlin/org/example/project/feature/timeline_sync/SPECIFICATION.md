@@ -1,9 +1,10 @@
-# 機能仕様: Timeline Sync - タイムライン基本表示
+# 機能仕様: Timeline Sync
 
 > **配置場所**: `composeApp/src/commonMain/kotlin/org/example/project/feature/timeline_sync/SPECIFICATION.md`
 > **目的**: AI実装のためのSSoT（Single Source of Truth）
-> **Story**: Story 1 of EPIC-002 (Timeline Sync)
-> **バージョン**: 4.0（統合仕様書形式）
+> **Story**: Story 1, 3 of EPIC-002 (Timeline Sync)
+> **関連Issue**: #32（Story 1）, #53（Story 3）
+> **バージョン**: 5.0（統合仕様書形式 - Story 3統合）
 
 ---
 
@@ -41,9 +42,18 @@
 - 未開始のストリームは「Starts HH:MM」「{N}M TO START」と表示される
 
 ### 同期時刻インジケーター
-- タイムライン全体を貫通する縦の青い線で同期時刻を表示
-- Story 1では表示のみ（同期時刻の選択・変更はStory 3で実装）
-- 初期状態では同期時刻が設定されていない場合は非表示
+- タイムライン全体を貫通する縦の青い線で同期時刻を視覚的に表示
+- シークバーのドラッグ中は、インジケーターもリアルタイムで移動する
+- 初期表示時は、一番上に表示されているアーカイブ動画の開始時刻が設定される
+- チャンネルが登録されていない場合は非表示
+
+### 同期時刻選択
+- ユーザーがタイムライン上で同期時刻を選択できる
+- タイムライン上にドラッグ可能なシークバーが表示される
+- シークバーをドラッグすると、SYNC TIME表示がリアルタイムで更新される（HH:MM:SS形式）
+- シークバーを離すと、選択した時刻が確定される
+- 同期時刻がストリーム開始前の場合、該当チャンネルは「WAITING」状態として表示される
+- 同期時刻がストリーム範囲内の場合、該当チャンネルは「READY」状態として表示される
 
 ### 空状態
 - チャンネルが登録されていない場合、空状態UIを表示
@@ -92,8 +102,21 @@
 ### 同期時刻インジケーター
 - **表示**: 縦の青い線（#0288D1）
 - **位置**: SYNC TIMEの時刻に対応する位置
-- **初期状態**: null（インジケーター非表示）
-- **Story 1スコープ**: 表示のみ、選択・変更はStory 3で実装
+- **初期状態**: 一番上に表示されているアーカイブ動画の開始時刻
+- **ドラッグ時**: リアルタイムで移動
+
+### 同期時刻（Story 3）
+- **プロジェクト制約**: このプロジェクトは**アーカイブ動画のみ対応**（ライブ配信中の動画は扱わない）
+- **初期同期時刻**: 画面表示時の初期syncTimeは一番上に表示されているアーカイブ動画の開始時刻
+- **同期時刻範囲**: 全チャンネルの中で最も早いストリーム開始時刻〜最も遅いストリーム終了時刻
+- **同期位置計算**: 各チャンネルごとに、同期時刻における再生位置を秒単位で計算（同期時刻 - ストリーム開始時刻）
+- **SyncStatus判定**:
+  - **WAITING**: 同期時刻がストリーム開始前の場合（アーカイブ開始前）
+  - **READY**: 同期時刻がストリーム範囲内の場合（Open可能）
+- **SYNC TIME表示形式**: HH:MM:SS（24時間表記）、例: 14:30:45
+- **更新タイミング**:
+  - シークバーのドラッグ中: リアルタイム更新
+  - シークバーを離した時: 最終確定値
 
 ### エラー処理
 - **ネットワークエラー**: 「再試行」ボタン付きエラー画面を表示
@@ -141,6 +164,9 @@ stateDiagram-v2
 
         タイムライン表示 --> 週移動中: ユーザーが前週/次週にスワイプ
         週移動中 --> タイムライン表示: 週の移動完了
+
+        タイムライン表示 --> シークバードラッグ中: ユーザーがシークバーをドラッグ開始
+        シークバードラッグ中 --> タイムライン表示: ユーザーがシークバーを離す
     }
 
     note right of 初期化中
@@ -230,6 +256,18 @@ stateDiagram-v2
 **遷移条件**:
 - 週の移動完了 → タイムライン表示へ
 
+#### シークバードラッグ中（ネスト状態）
+**画面の状態**:
+- isDragging: true
+- syncTime: リアルタイム更新中
+- SYNC TIME表示: リアルタイム更新
+- 同期時刻インジケーター: リアルタイム移動
+- 各チャンネルのSyncStatus: リアルタイム再計算
+- 各チャンネルのtargetSeekPosition: リアルタイム再計算
+
+**遷移条件**:
+- シークバーを離す → タイムライン表示へ
+
 #### 空状態
 **画面の状態**:
 - チャンネルリスト: 空
@@ -284,20 +322,54 @@ stateDiagram-v2
 - バーは破線/グレーで表示
 - 「Wait」ボタン（ロックアイコン付き）を表示
 
+#### シークバードラッグ時の処理フロー
+1. ユーザーがシークバーをタッチ
+2. isDraggingがtrueになる
+3. ユーザーがシークバーを移動
+4. syncTimeがリアルタイムで更新される
+5. SYNC TIME表示が更新される
+6. 各チャンネルのtargetSeekPosition（同期時刻 - ストリーム開始時刻）が再計算される
+7. 各チャンネルのSyncStatus（WAITING/READY）が再判定される
+8. 同期時刻インジケーターが移動する
+9. ユーザーがシークバーを離す
+10. isDraggingがfalseになる
+11. 最終的なsyncTimeが確定
+
+#### 同期位置計算の詳細
+各チャンネルごとに以下のロジックで計算：
+- 同期時刻がストリーム開始前の場合:
+  - SyncStatus = WAITING
+  - targetSeekPosition = 0
+- 同期時刻がストリーム範囲内の場合:
+  - SyncStatus = READY
+  - targetSeekPosition = (同期時刻 - ストリーム開始時刻) の秒数
+
+#### チャンネル追加・削除時の振る舞い
+- **チャンネル追加時**: 同期時刻範囲を再計算、現在のsyncTimeが範囲内に収まるか確認
+- **チャンネル削除時**: 同期時刻範囲を再計算、現在のsyncTimeが範囲外になった場合は調整
+- **最後のチャンネル削除時**: syncTime = null、同期時刻インジケーター非表示
+
 ---
 
 ## 補足
 
 ### 使用するドメインモデル（Phase 0で定義済み）
-- `SyncChannel` - チャンネル + 選択ストリーム + 同期状態
+- `SyncChannel` - チャンネル + 選択ストリーム + 同期状態 + targetSeekPosition
 - `SelectedStreamInfo` - ストリーム情報（id, title, startTime, endTime, duration）
 - `SyncStatus` - 同期状態（NOT_SYNCED, WAITING, READY, OPENED）
 - `TimelineSyncRepository` - getChannelVideos()
 - `VideoServiceType` - YOUTUBE / TWITCH
 
-### Story 1スコープ外（将来のStory）
+### 既存実装の活用（Story 3）
+- `TimelineSyncIntent.UpdateSyncTime` - 既存
+- `TimelineSyncIntent.StartDragging` - 既存
+- `TimelineSyncIntent.StopDragging` - 既存
+- `TimelineSyncUiState.syncTime` - 既存
+- `TimelineSyncUiState.isDragging` - 既存
+- `TimelineSyncUiState.syncTimeRange` - 既存
+
+### スコープ外（将来のStory）
 - チャンネル追加・削除（Story 2）
-- 同期時刻の選択・変更（Story 3）
 - 外部アプリ連携（Story 4）
 
 ### UIデザイン参照
@@ -315,273 +387,9 @@ stateDiagram-v2
 
 ---
 
----
-
-# 機能仕様: Timeline Sync - 同期時刻計算と表示
-
-> **配置場所**: `composeApp/src/commonMain/kotlin/org/example/project/feature/timeline_sync/SPECIFICATION.md`
-> **目的**: AI実装のためのSSoT（Single Source of Truth）
-> **Story**: Story 3 of EPIC-002 (Timeline Sync)
-> **バージョン**: 1.0
-
----
-
-## 1. ユーザーストーリー
-
-### 同期時刻選択
-- ユーザーがタイムライン上で同期時刻を選択できる
-- タイムライン上にドラッグ可能なシークバーが表示される
-- シークバーをドラッグすると、SYNC TIME表示がリアルタイムで更新される（HH:MM:SS形式）
-- シークバーを離すと、選択した時刻が確定される
-
-### SYNC TIME表示
-- 画面中央のSYNC TIME表示が選択された同期時刻を表示する
-- 初期表示時は、一番上に表示されているアーカイブ動画の開始時刻が設定される
-- チャンネルが登録されていない場合、SYNC TIMEは表示されない
-
-### 同期位置計算
-- 各チャンネルカードに、選択された同期時刻における再生位置が計算される
-- 同期時刻がストリーム開始前の場合、「WAITING」状態として表示される
-- 同期時刻がストリーム範囲内の場合、「READY」状態として表示される
-
-### タイムラインインジケーター
-- タイムライン全体を貫通する縦の青い線で同期時刻を視覚的に表示
-- シークバーのドラッグ中は、インジケーターもリアルタイムで移動する
-
----
-
-## 2. ビジネスルール
-
-### プロジェクト制約
-- **重要**: このプロジェクトは**アーカイブ動画のみ対応**
-- ライブ配信中の動画は扱わない
-- `endTime`は常に存在する（nullのケースは考慮不要）
-
-### 同期時刻の範囲制限
-- **最小値**: 全チャンネルの中で最も早いストリーム開始時刻
-- **最大値**: 全チャンネルの中で最も遅いストリーム終了時刻
-- シークバーはこの範囲内でのみ移動可能
-
-### 初期同期時刻
-- 画面表示時の初期syncTimeは **一番上に表示されているアーカイブ動画の開始時刻**
-- チャンネルリストの最初のチャンネルの`selectedStream.startTime`を使用
-- チャンネルが空の場合は`syncTime = null`
-
-### 同期位置の計算
-- **targetSeekPosition**: `(syncTime - streamStartTime).inWholeSeconds.toFloat()`
-- 各チャンネルごとに、同期時刻における再生位置を秒単位で計算
-- 計算結果はチャンネルの`targetSeekPosition`プロパティに格納
-
-### SyncStatus判定（アーカイブのみ）
-- **WAITING**: `syncTime < streamStartTime`（アーカイブ開始前の時刻）
-- **READY**: `syncTime >= streamStartTime && syncTime <= streamEndTime`（Open可能）
-- **範囲外**: `syncTime > streamEndTime`（UIで制限するため通常発生しない）
-
-### SYNC TIME表示形式
-- **形式**: HH:MM:SS（24時間表記）
-- **例**: 14:30:45
-- **更新タイミング**:
-  - シークバーのドラッグ中: リアルタイム更新
-  - シークバーを離した時: 最終確定値
-
-### UI状態管理
-- **isDragging**: シークバーのドラッグ状態を管理
-- **StartDragging Intent**: ドラッグ開始時に発行
-- **StopDragging Intent**: ドラッグ終了時に発行
-- **UpdateSyncTime Intent**: 同期時刻の更新時に発行
-
----
-
-## 3. 画面内状態遷移
-
-### 目的
-
-この図は、Timeline Sync画面における**同期時刻選択機能の詳細な振る舞い**を可視化し、以下を示します：
-- シークバーのドラッグ状態
-- 同期時刻の更新タイミング
-- SyncStatus（WAITING/READY）の判定
-- ユーザーアクションによる状態遷移
-
-これにより、実装時に機能の振る舞い要件を正確に理解できます。
-
-### 状態図（Story 3追加分）
-
-```mermaid
-stateDiagram-v2
-    [*] --> 同期時刻未選択
-
-    同期時刻未選択 --> 同期時刻選択済み: 画面表示時（チャンネルあり）
-
-    state 同期時刻選択済み {
-        [*] --> アイドル状態
-
-        アイドル状態 --> ドラッグ中: ユーザーがシークバーをドラッグ開始
-        ドラッグ中 --> アイドル状態: ユーザーがシークバーを離す
-
-        state ドラッグ中 {
-            [*] --> 同期時刻更新中
-            同期時刻更新中 --> 同期時刻更新中: シークバー位置変更
-        }
-    }
-
-    note right of 同期時刻未選択
-        チャンネルなし
-        syncTime: null
-        SYNC TIME非表示
-    end note
-
-    note right of アイドル状態
-        isDragging: false
-        syncTime: 確定値
-        各チャンネルのSyncStatus計算済み
-    end note
-
-    note right of ドラッグ中
-        isDragging: true
-        syncTime: リアルタイム更新
-        SYNC TIME表示更新
-        インジケーター移動
-    end note
-```
-
-### 状態説明
-
-#### 同期時刻未選択
-**画面の状態**:
-- チャンネルリスト: 空
-- syncTime: null
-- SYNC TIME: 非表示
-- 同期時刻インジケーター: 非表示
-
-**遷移条件**:
-- チャンネルが追加される → 同期時刻選択済み状態へ
-- 初期syncTimeは最初のチャンネルの`selectedStream.startTime`
-
-#### 同期時刻選択済み - アイドル状態
-**画面の状態**:
-- isDragging: false
-- syncTime: 確定値
-- SYNC TIME: HH:MM:SS形式で表示
-- 各チャンネルのSyncStatus: 計算済み（WAITING/READY）
-- targetSeekPosition: 各チャンネルごとに計算済み
-
-**可能なユーザーアクション**:
-- シークバーをドラッグ開始 → ドラッグ中状態へ
-
-#### 同期時刻選択済み - ドラッグ中
-**画面の状態**:
-- isDragging: true
-- syncTime: リアルタイム更新中
-- SYNC TIME表示: リアルタイム更新
-- 同期時刻インジケーター: リアルタイム移動
-- 各チャンネルのSyncStatus: リアルタイム再計算
-- targetSeekPosition: リアルタイム再計算
-
-**可能なユーザーアクション**:
-- シークバーを移動 → 同期時刻更新中（ループ）
-- シークバーを離す → アイドル状態へ
-
-#### 同期時刻更新中（ネスト状態）
-**画面の状態**:
-- UpdateSyncTime Intentが発行される
-- syncTimeが新しい値に更新される
-- SYNC TIME表示が更新される
-- 各チャンネルのtargetSeekPositionが再計算される
-- 各チャンネルのSyncStatusが再判定される
-
-**遷移条件**:
-- シークバー位置が変更される → 同期時刻更新中（ループ）
-
-### 特殊な振る舞い
-
-#### シークバードラッグ時の処理フロー
-1. ユーザーがシークバーをタッチ
-2. StartDragging Intentが発行される
-3. isDraggingがtrueになる
-4. ユーザーがシークバーを移動
-5. UpdateSyncTime Intentが連続的に発行される
-6. syncTimeがリアルタイムで更新される
-7. SYNC TIME表示が更新される
-8. 各チャンネルのtargetSeekPosition、SyncStatusが再計算される
-9. ユーザーがシークバーを離す
-10. StopDragging Intentが発行される
-11. isDraggingがfalseになる
-12. 最終的なsyncTimeが確定
-
-#### 同期位置計算の詳細
-```kotlin
-// 疑似コード
-for (channel in channels) {
-    val streamStartTime = channel.selectedStream.startTime
-    val streamEndTime = channel.selectedStream.endTime
-
-    when {
-        syncTime < streamStartTime -> {
-            channel.syncStatus = SyncStatus.WAITING
-            channel.targetSeekPosition = 0f
-        }
-        syncTime in streamStartTime..streamEndTime -> {
-            channel.syncStatus = SyncStatus.READY
-            channel.targetSeekPosition = (syncTime - streamStartTime).inWholeSeconds.toFloat()
-        }
-        syncTime > streamEndTime -> {
-            // UI制限により通常発生しない
-        }
-    }
-}
-```
-
-#### syncTimeRange制限の適用
-- syncTimeRangeは、全チャンネルのstreamStartTime〜streamEndTimeの範囲を包含
-- シークバーの最小値 = min(channel.selectedStream.startTime)
-- シークバーの最大値 = max(channel.selectedStream.endTime)
-- アーカイブのみ対応のため、endTimeは常に確定値
-
-#### チャンネル追加・削除時の振る舞い
-- **チャンネル追加時**: syncTimeRangeを再計算、現在のsyncTimeが範囲内に収まるか確認
-- **チャンネル削除時**: syncTimeRangeを再計算、現在のsyncTimeが範囲外になった場合は調整
-- **最後のチャンネル削除時**: syncTime = null、同期時刻未選択状態へ遷移
-
----
-
-## 補足
-
-### 使用するドメインモデル（Phase 0で定義済み）
-- `SyncChannel` - チャンネル + 選択ストリーム + 同期状態
-- `SelectedStreamInfo` - ストリーム情報（id, title, startTime, endTime, duration）
-- `SyncStatus` - 同期状態（NOT_SYNCED, WAITING, READY, OPENED）
-- `SyncChannel.targetSeekPosition` - 同期位置（秒単位、Float型）
-
-### 既存実装の活用
-- `TimelineSyncIntent.UpdateSyncTime` - 既存
-- `TimelineSyncIntent.StartDragging` - 既存
-- `TimelineSyncIntent.StopDragging` - 既存
-- `TimelineSyncUiState.syncTime` - 既存
-- `TimelineSyncUiState.isDragging` - 既存
-- `TimelineSyncUiState.syncTimeRange` - 既存
-
-### Story 3スコープ外（将来のStory）
-- 外部アプリ連携（Story 4）
-- チャンネル追加・削除（Story 2）
-
-### 関連仕様
-- **Story 1仕様**: 同一ファイル上部参照
-- **Story 2仕様**: `feature/timeline_sync/channel_add/SPECIFICATION.md`
-
----
-
-**作成者**: Claude Code
-**作成日**: 2026-01-18
-**最終更新**: 2026-01-18
-**関連Issue**: #53
-**Epic**: Timeline Sync (EPIC-002)
-
----
-
-# 統合仕様書メタデータ
-
 **作成者**: Claude Code
 **作成日**: 2026-01-12
-**最終更新**: 2026-01-18（Story 3追加）
+**最終更新**: 2026-01-18（Story 3統合、統合仕様書形式への完全移行）
 **関連Issue**: #32（Story 1）, #53（Story 3）
 **Epic**: Timeline Sync (EPIC-002)
+
