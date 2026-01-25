@@ -393,9 +393,10 @@ class SyncTimeCalculationViewModelTest {
         viewModel.handleIntent(TimelineSyncIntent.LoadScreen)
         advanceUntilIdle()
 
-        val firstChannel = viewModel.uiState.value.channels.firstOrNull { it.selectedStream?.startTime != null }
-        assertNotNull(firstChannel)
-        val streamStart = firstChannel!!.selectedStream!!.startTime!!
+        val firstChannel = assertNotNull(
+            viewModel.uiState.value.channels.firstOrNull { it.selectedStream?.startTime != null },
+        )
+        val streamStart = assertNotNull(firstChannel.selectedStream?.startTime)
 
         // Act - ストリーム開始から30分後に同期
         val syncTime = streamStart + 30.minutes
@@ -403,9 +404,10 @@ class SyncTimeCalculationViewModelTest {
         advanceUntilIdle()
 
         // Assert - targetSeekPositionは1800秒（30分）
-        val updatedChannel = viewModel.uiState.value.channels.find { it.channelId == firstChannel.channelId }
-        assertNotNull(updatedChannel)
-        assertEquals(1800f, updatedChannel!!.targetSeekPosition)
+        val updatedChannel = assertNotNull(
+            viewModel.uiState.value.channels.find { it.channelId == firstChannel.channelId },
+        )
+        assertEquals(1800f, updatedChannel.targetSeekPosition)
     }
 
     @Test
@@ -414,9 +416,10 @@ class SyncTimeCalculationViewModelTest {
         viewModel.handleIntent(TimelineSyncIntent.LoadScreen)
         advanceUntilIdle()
 
-        val firstChannel = viewModel.uiState.value.channels.firstOrNull { it.selectedStream?.startTime != null }
-        assertNotNull(firstChannel)
-        val streamStart = firstChannel!!.selectedStream!!.startTime!!
+        val firstChannel = assertNotNull(
+            viewModel.uiState.value.channels.firstOrNull { it.selectedStream?.startTime != null },
+        )
+        val streamStart = assertNotNull(firstChannel.selectedStream?.startTime)
 
         // Act - ストリーム開始より前に同期
         val syncTime = streamStart - 1.hours
@@ -424,9 +427,10 @@ class SyncTimeCalculationViewModelTest {
         advanceUntilIdle()
 
         // Assert - targetSeekPositionは0
-        val updatedChannel = viewModel.uiState.value.channels.find { it.channelId == firstChannel.channelId }
-        assertNotNull(updatedChannel)
-        assertEquals(0f, updatedChannel!!.targetSeekPosition)
+        val updatedChannel = assertNotNull(
+            viewModel.uiState.value.channels.find { it.channelId == firstChannel.channelId },
+        )
+        assertEquals(0f, updatedChannel.targetSeekPosition)
     }
 
     // ========================================
@@ -439,9 +443,10 @@ class SyncTimeCalculationViewModelTest {
         viewModel.handleIntent(TimelineSyncIntent.LoadScreen)
         advanceUntilIdle()
 
-        val firstChannel = viewModel.uiState.value.channels.firstOrNull { it.selectedStream?.startTime != null }
-        assertNotNull(firstChannel)
-        val streamStart = firstChannel!!.selectedStream!!.startTime!!
+        val firstChannel = assertNotNull(
+            viewModel.uiState.value.channels.firstOrNull { it.selectedStream?.startTime != null },
+        )
+        val streamStart = assertNotNull(firstChannel.selectedStream?.startTime)
 
         // Act - ストリーム開始より前に同期
         val syncTime = streamStart - 1.hours
@@ -459,9 +464,10 @@ class SyncTimeCalculationViewModelTest {
         viewModel.handleIntent(TimelineSyncIntent.LoadScreen)
         advanceUntilIdle()
 
-        val firstChannel = viewModel.uiState.value.channels.firstOrNull { it.selectedStream?.startTime != null }
-        assertNotNull(firstChannel)
-        val streamStart = firstChannel!!.selectedStream!!.startTime!!
+        val firstChannel = assertNotNull(
+            viewModel.uiState.value.channels.firstOrNull { it.selectedStream?.startTime != null },
+        )
+        val streamStart = assertNotNull(firstChannel.selectedStream?.startTime)
 
         // Act - ストリーム範囲内に同期
         val syncTime = streamStart + 30.minutes
@@ -483,11 +489,12 @@ class SyncTimeCalculationViewModelTest {
         val channelsWithStream = viewModel.uiState.value.channels.filter { it.selectedStream != null }
         assertTrue(channelsWithStream.size >= 2)
 
-        val earliestStart = channelsWithStream.mapNotNull { it.selectedStream?.startTime }.minOrNull()
-        assertNotNull(earliestStart)
+        val earliestStart = assertNotNull(
+            channelsWithStream.mapNotNull { it.selectedStream?.startTime }.minOrNull(),
+        )
 
         // 全てのストリームが開始前の時刻
-        val earlyTime = earliestStart!! - 2.hours
+        val earlyTime = earliestStart - 2.hours
         viewModel.handleIntent(TimelineSyncIntent.UpdateSyncTime(earlyTime))
         advanceUntilIdle()
 
@@ -508,15 +515,14 @@ class SyncTimeCalculationViewModelTest {
 
         // Assert
         val state = viewModel.uiState.value
-        val range = state.syncTimeRange
-        assertNotNull(range)
+        val range = assertNotNull(state.syncTimeRange)
 
         // 全ストリームの開始・終了時刻を取得
         val streams = state.channels.mapNotNull { it.selectedStream }
         val earliestStart = streams.mapNotNull { it.startTime }.minOrNull()
         val latestEnd = streams.mapNotNull { it.endTime }.maxOrNull()
 
-        assertEquals(earliestStart, range!!.first)
+        assertEquals(earliestStart, range.first)
         // endTimeがnullのストリームがある場合は現在時刻が使われるため、厳密な比較は難しい
         // ここではlatestEndがnullでない場合のみ比較
         if (latestEnd != null) {
@@ -539,9 +545,8 @@ class SyncTimeCalculationViewModelTest {
         )
         val state = TimelineSyncUiState(channels = channels)
 
-        val range = state.syncTimeRange
-        assertNotNull(range)
-        assertEquals(stream1Start, range!!.first) // 最小開始時刻
+        val range = assertNotNull(state.syncTimeRange)
+        assertEquals(stream1Start, range.first) // 最小開始時刻
         assertEquals(stream2End, range.second) // 最大終了時刻
     }
 

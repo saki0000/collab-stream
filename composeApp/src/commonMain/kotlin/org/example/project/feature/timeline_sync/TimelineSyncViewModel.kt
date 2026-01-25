@@ -40,6 +40,7 @@ import org.example.project.domain.usecase.ChannelSearchUseCase
 class TimelineSyncViewModel(
     private val timelineSyncRepository: TimelineSyncRepository,
     private val channelSearchUseCase: ChannelSearchUseCase,
+    private val clock: kotlin.time.Clock = kotlin.time.Clock.System,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(TimelineSyncUiState())
@@ -244,7 +245,7 @@ class TimelineSyncViewModel(
             targetSeekPosition = null,
         )
 
-        val endTime = stream.endTime ?: kotlin.time.Clock.System.now()
+        val endTime = stream.endTime ?: clock.now()
 
         return when {
             syncTime < startTime -> channel.copy(

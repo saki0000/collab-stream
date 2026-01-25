@@ -1,3 +1,5 @@
+@file:OptIn(kotlin.time.ExperimentalTime::class)
+
 package org.example.project.core.di
 
 import org.example.project.feature.home.HomeViewModel
