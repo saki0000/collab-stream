@@ -12,15 +12,17 @@ import org.example.project.domain.model.StreamInfo
 import org.example.project.domain.model.VideoServiceType
 import org.example.project.feature.home.ui.HomeContainer
 import org.example.project.feature.streamer_search.ui.StreamerSearchContainer
+import org.example.project.feature.timeline_sync.ui.TimelineSyncContainer
 import org.example.project.feature.video_playback.ui.VideoContainer
 
 /**
  * Main navigation graph for the application.
  *
  * This sets up the NavHost with all app destinations:
- * - HomeRoute: Initial screen with group selection
+ * - TimelineSyncRoute: Main screen for timeline synchronization (start destination)
+ * - HomeRoute: Initial screen with group selection (hidden in release)
  * - StreamerSearchRoute: Streamer search bottom sheet (MAIN or SUB mode)
- * - MainPlayerRoute: Main video player screen with sync functionality
+ * - MainPlayerRoute: Main video player screen with sync functionality (hidden in release)
  *
  * Uses type-safe navigation with kotlinx.serialization.
  *
@@ -35,9 +37,16 @@ fun AppNavGraph(
 ) {
     NavHost(
         navController = navController,
-        startDestination = HomeRoute,
+        startDestination = TimelineSyncRoute,
         modifier = modifier,
     ) {
+        // Timeline Sync screen (main screen)
+        composable<TimelineSyncRoute> {
+            TimelineSyncContainer(
+                modifier = Modifier,
+            )
+        }
+
         // Home screen
         composable<HomeRoute> {
             HomeContainer(
