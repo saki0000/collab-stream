@@ -1,0 +1,75 @@
+name: CompareScreenshot
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions: {}
+
+jobs:
+  compare-screenshot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      actions: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v3
+        with:
+          gradle-home-cache-cleanup: true
+
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            ~/.konan
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Download base branch screenshots
+        uses: dawidd6/action-download-artifact@v6
+        continue-on-error: true
+        with:
+          name: screenshot
+          path: composeApp/build/outputs/roborazzi
+          workflow: StoreScreenshot.yml
+          branch: ${{ github.event.pull_request.base.ref || 'main' }}
+
+      - name: Compare screenshots
+        run: ./gradlew compareRoborazziDebug
+
+      - name: Upload screenshot diff
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshot-diff
+          path: composeApp/build/outputs/roborazzi
+          retention-days: 30
+
+      - name: Save PR number
+        if: github.event_name == 'pull_request'
+        run: echo ${{ github.event.number }} > pr_number.txt
+
+      - name: Upload PR number
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr
+          path: pr_number.txt
