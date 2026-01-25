@@ -308,7 +308,8 @@ class TimelineSyncViewModelTest {
     @Test
     fun `フォールバックURL生成_YouTubeの場合正しいWeb URLが生成されること`() {
         // TODO: Phase 2でAI実装
-        // 期待値: https://www.youtube.com/watch?v={VIDEO_ID}&t={SECONDS}
+        // 期待値: https://www.youtube.com/watch?v={VIDEO_ID}&t={SECONDS}s
+        // Note: YouTubeのWebサイトURLではtパラメータにs接尾辞が必要
     }
 
     @Test

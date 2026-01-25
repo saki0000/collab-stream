@@ -108,25 +108,10 @@
 - **OPENED状態**: 「Open」ボタンに「✓」マーク表示、再度タップで外部アプリを起動可能
 
 ### 外部アプリ連携（Story 4）
-- **DeepLink形式**:
-  - YouTube: `youtube://watch?v={VIDEO_ID}&t={SECONDS}`
-  - Twitch: `twitch://video/{VIDEO_ID}?t={SECONDS}s`
-- **フォールバックURL**:
-  - YouTube: `https://www.youtube.com/watch?v={VIDEO_ID}&t={SECONDS}`
-  - Twitch: `https://www.twitch.tv/videos/{VIDEO_ID}?t={SECONDS}s`
-- **再生位置**:
-  - targetSeekPositionを秒単位の整数値に変換（小数点以下切り捨て）
-  - 負の値の場合は0に丸める
-- **expect/actualパターン**:
-  - `expect fun openExternalApp(url: String, fallbackUrl: String)` をcommonMainで定義
-  - Androidでは `Intent.ACTION_VIEW` を使用
-  - iOSでは `UIApplication.shared.open` を使用
-- **SyncStatus更新**:
-  - Openボタンタップ時、外部アプリ起動成功後にOPENEDに更新
-  - OPENED状態のチャンネルもOpenボタンは引き続き有効（再度開く用途）
-- **エラーハンドリング**:
-  - 外部アプリ起動失敗時はSnackbarでエラーメッセージを表示
-  - フォールバックURL起動も失敗した場合のみエラー表示
+- **DeepLink/フォールバックURL**: 詳細は「DeepLink URL生成ロジック」セクションを参照
+- **再生位置**: targetSeekPositionを秒単位の整数値に変換（小数点以下切り捨て、負値は0）
+- **SyncStatus更新**: Openボタンタップ後、外部アプリ起動成功でOPENEDに更新
+- **エラーハンドリング**: 外部アプリ・フォールバック両方失敗時にSnackbar表示
 
 ### 同期時刻インジケーター
 - **表示**: 縦の青い線（#0288D1）
@@ -397,22 +382,32 @@ stateDiagram-v2
 - **最後のチャンネル削除時**: syncTime = null、同期時刻インジケーター非表示
 
 #### 外部アプリ起動時の処理フロー（Story 4）
+
+**MVIパターンに準拠したSideEffect経由のフロー**:
+
 1. ユーザーがREADYまたはOPENED状態のチャンネルの「Open」ボタンをタップ
-2. ViewModelがOpenChannelIntentを受信
-3. 対象チャンネルのtargetSeekPositionを取得
-4. VideoServiceTypeに基づいてDeepLink URLとフォールバックURLを生成
-5. expect/actualパターンでプラットフォーム固有の外部アプリ起動処理を実行
-6. 起動成功時:
-   - 対象チャンネルのSyncStatusをOPENEDに更新
-   - UIを更新（Openボタンに「✓」マーク表示）
-7. 起動失敗時:
-   - フォールバックURL（Webブラウザ）での起動を試行
-   - それも失敗した場合はSnackbarでエラーメッセージを表示
+2. UI層がViewModelに`OpenChannelIntent(channelId)`を送信
+3. ViewModelが対象チャンネルのtargetSeekPositionを取得
+4. ViewModelがVideoServiceTypeに基づいてDeepLink URLとフォールバックURLを生成
+5. ViewModelが`NavigateToExternalApp` SideEffectを発行（DeepLink URL、フォールバックURL、channelIdを含む）
+6. UI層（Route/Container）がSideEffectを受信し、`openExternalApp`関数を呼び出す
+7. `openExternalApp`関数（expect/actual）が以下を実行:
+   - DeepLinkでの外部アプリ起動を試行
+   - 失敗した場合、フォールバックURL（Webブラウザ）での起動を試行
+   - 両方失敗した場合は`false`を返す
+8. UI層が結果をViewModelに通知（`OpenChannelResult` Intent）
+9. 成功時: ViewModelが対象チャンネルのSyncStatusをOPENEDに更新
+10. 失敗時: ViewModelが`ShowExternalAppError` SideEffectを発行 → UI層がSnackbar表示
+
+**責務分担**:
+- **ViewModel**: URL生成、SideEffect発行、状態更新
+- **UI層（Route）**: SideEffect監視、プラットフォーム関数呼び出し、結果通知
+- **expect/actual関数**: DeepLink起動 + フォールバック起動（両方担当）
 
 #### DeepLink URL生成ロジック（Story 4）
 **YouTube**:
 - DeepLink: `youtube://watch?v={VIDEO_ID}&t={SECONDS}`
-- フォールバック: `https://www.youtube.com/watch?v={VIDEO_ID}&t={SECONDS}`
+- フォールバック: `https://www.youtube.com/watch?v={VIDEO_ID}&t={SECONDS}s`
 - VIDEO_ID: `SelectedStreamInfo.id`
 - SECONDS: `targetSeekPosition.toInt().coerceAtLeast(0)`
 
@@ -421,6 +416,8 @@ stateDiagram-v2
 - フォールバック: `https://www.twitch.tv/videos/{VIDEO_ID}?t={SECONDS}s`
 - VIDEO_ID: `SelectedStreamInfo.id`
 - SECONDS: `targetSeekPosition.toInt().coerceAtLeast(0)`
+
+**Note**: YouTubeのWebサイトURLでは、`t`パラメータに`s`（秒の接尾辞）が必要です。
 
 ---
 
@@ -442,15 +439,31 @@ stateDiagram-v2
 - `TimelineSyncUiState.syncTimeRange` - 既存
 
 ### 追加するIntent/SideEffect（Story 4）
-- `TimelineSyncIntent.OpenChannel(channelId: String)` - 新規追加
-- `TimelineSyncSideEffect.NavigateToExternalApp` - 既存（プレースホルダー、実装予定）
-- `TimelineSyncSideEffect.ShowExternalAppError` - 新規追加
+
+**Intent**:
+- `TimelineSyncIntent.OpenChannel(channelId: String)` - Openボタンタップ時にUI層が送信
+- `TimelineSyncIntent.OpenChannelResult(channelId: String, success: Boolean)` - 外部アプリ起動結果をUI層がViewModelに通知
+
+**SideEffect**:
+- `TimelineSyncSideEffect.NavigateToExternalApp(channelId: String, deepLinkUrl: String, fallbackUrl: String)` - 既存（プレースホルダー）を拡張
+- `TimelineSyncSideEffect.ShowExternalAppError(message: String)` - 新規追加
 
 ### expect/actual関数（Story 4）
-- `expect fun openExternalApp(deepLinkUrl: String, fallbackUrl: String): Boolean`
-  - Android: `Intent.ACTION_VIEW` を使用
-  - iOS: `UIApplication.shared.open` を使用
-  - 戻り値: 起動成功ならtrue、失敗ならfalse
+
+**関数シグネチャ**:
+```kotlin
+expect fun openExternalApp(deepLinkUrl: String, fallbackUrl: String): Boolean
+```
+
+**責務**: DeepLink起動 + フォールバック起動の両方を担当
+- まずDeepLinkでの外部アプリ起動を試行
+- 失敗した場合、フォールバックURL（Webブラウザ）での起動を試行
+- 両方成功した場合、または少なくとも一方が成功した場合は`true`を返す
+- 両方失敗した場合は`false`を返す
+
+**プラットフォーム実装**:
+- Android: `Intent.ACTION_VIEW` を使用（resolveActivity でアプリ存在確認）
+- iOS: `UIApplication.shared.open` を使用（canOpenURL でアプリ存在確認）
 
 ### スコープ外（将来のStory）
 - チャンネル追加・削除（Story 2）
