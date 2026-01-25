@@ -2,9 +2,9 @@
 
 > **配置場所**: `composeApp/src/commonMain/kotlin/org/example/project/feature/timeline_sync/SPECIFICATION.md`
 > **目的**: AI実装のためのSSoT（Single Source of Truth）
-> **Story**: Story 1, 3 of EPIC-002 (Timeline Sync)
-> **関連Issue**: #32（Story 1）, #53（Story 3）
-> **バージョン**: 5.0（統合仕様書形式 - Story 3統合）
+> **Story**: Story 1, 3, 4 of EPIC-002 (Timeline Sync)
+> **関連Issue**: #32（Story 1）, #53（Story 3）, #54（Story 4）
+> **バージョン**: 6.0（Story 4統合 - 外部アプリ連携）
 
 ---
 
@@ -60,6 +60,14 @@
 - 「チャンネルを追加してください」のメッセージを表示
 - チャンネル追加ボタンを表示（Story 2で動作実装）
 
+### 外部アプリ連携（Story 4）
+- ユーザーがタイムラインカードの「Open」ボタンをタップすると、該当チャンネルの外部アプリが起動する
+- 外部アプリは計算された再生位置（targetSeekPosition）から再生を開始する
+- 「Open」ボタンは同期時刻がストリーム範囲内（READY状態）の場合のみ有効
+- 「Wait」ボタン（WAITING状態）はタップできない（非活性）
+- 外部アプリが未インストールの場合、Webブラウザで該当URLを開く
+- 外部アプリを開いた後、該当チャンネルのSyncStatusがOPENEDに変わる
+
 ---
 
 ## 2. ビジネスルール
@@ -95,9 +103,15 @@
 - 緑のドットアイコンを併せて表示
 
 ### Open/Waitボタン
-- **READY状態**: 「Open」ボタン（外部リンクアイコン付き）を表示
+- **READY状態**: 「Open」ボタン（外部リンクアイコン付き）を表示、タップで外部アプリを起動
 - **WAITING状態**: 「Wait」ボタン（ロックアイコン付き、非活性）を表示
-- **Story 1スコープ**: ボタンは表示のみ、タップ動作はStory 4で実装
+- **OPENED状態**: 「Open」ボタンに「✓」マーク表示、再度タップで外部アプリを起動可能
+
+### 外部アプリ連携（Story 4）
+- **DeepLink/フォールバックURL**: 詳細は「DeepLink URL生成ロジック」セクションを参照
+- **再生位置**: targetSeekPositionを秒単位の整数値に変換（小数点以下切り捨て、負値は0）
+- **SyncStatus更新**: Openボタンタップ後、外部アプリ起動成功でOPENEDに更新
+- **エラーハンドリング**: 外部アプリ・フォールバック両方失敗時にSnackbar表示
 
 ### 同期時刻インジケーター
 - **表示**: 縦の青い線（#0288D1）
@@ -167,6 +181,10 @@ stateDiagram-v2
 
         タイムライン表示 --> タイムラインドラッグ中: ユーザーがタイムラインをドラッグ開始
         タイムラインドラッグ中 --> タイムライン表示: ユーザーがタイムラインのドラッグを離す
+
+        タイムライン表示 --> 外部アプリ起動中: ユーザーが「Open」ボタンをタップ
+        外部アプリ起動中 --> タイムライン表示: 外部アプリ起動成功（SyncStatus=OPENED）
+        外部アプリ起動中 --> タイムライン表示: 外部アプリ起動失敗（Snackbar表示）
     }
 
     note right of 初期化中
@@ -238,7 +256,8 @@ stateDiagram-v2
 - 前週/次週にスワイプ → 週移動中
 - リフレッシュ操作 → 読み込み中
 - チャンネル追加ボタンをタップ（Story 2でハンドル）
-- Open/Waitボタンをタップ（Story 4でハンドル）
+- Openボタンをタップ（READY/OPENED状態のみ）→ 外部アプリ起動中（Story 4）
+- Waitボタンはタップ不可（WAITING状態は非活性）
 
 #### 日付変更中（ネスト状態）
 **画面の状態**:
@@ -268,6 +287,16 @@ stateDiagram-v2
 
 **遷移条件**:
 - タイムラインのドラッグを離す → タイムライン表示へ
+
+#### 外部アプリ起動中（ネスト状態）（Story 4）
+**画面の状態**:
+- 対象チャンネルのOpenボタンが処理中状態
+- DeepLink URLを生成中
+- プラットフォーム固有の外部アプリ起動処理を実行中
+
+**遷移条件**:
+- 外部アプリ起動成功 → タイムライン表示へ（対象チャンネルのSyncStatus=OPENED）
+- 外部アプリ起動失敗 → タイムライン表示へ（Snackbarでエラー表示）
 
 #### 空状態
 **画面の状態**:
@@ -352,6 +381,44 @@ stateDiagram-v2
 - **チャンネル削除時**: 同期時刻範囲を再計算、現在のsyncTimeが範囲外になった場合は調整
 - **最後のチャンネル削除時**: syncTime = null、同期時刻インジケーター非表示
 
+#### 外部アプリ起動時の処理フロー（Story 4）
+
+**MVIパターンに準拠したSideEffect経由のフロー**:
+
+1. ユーザーがREADYまたはOPENED状態のチャンネルの「Open」ボタンをタップ
+2. UI層がViewModelに`OpenChannelIntent(channelId)`を送信
+3. ViewModelが対象チャンネルのtargetSeekPositionを取得
+4. ViewModelがVideoServiceTypeに基づいてDeepLink URLとフォールバックURLを生成
+5. ViewModelが`NavigateToExternalApp` SideEffectを発行（DeepLink URL、フォールバックURL、channelIdを含む）
+6. UI層（Route/Container）がSideEffectを受信し、`openExternalApp`関数を呼び出す
+7. `openExternalApp`関数（expect/actual）が以下を実行:
+   - DeepLinkでの外部アプリ起動を試行
+   - 失敗した場合、フォールバックURL（Webブラウザ）での起動を試行
+   - 両方失敗した場合は`false`を返す
+8. UI層が結果をViewModelに通知（`OpenChannelResult` Intent）
+9. 成功時: ViewModelが対象チャンネルのSyncStatusをOPENEDに更新
+10. 失敗時: ViewModelが`ShowExternalAppError` SideEffectを発行 → UI層がSnackbar表示
+
+**責務分担**:
+- **ViewModel**: URL生成、SideEffect発行、状態更新
+- **UI層（Route）**: SideEffect監視、プラットフォーム関数呼び出し、結果通知
+- **expect/actual関数**: DeepLink起動 + フォールバック起動（両方担当）
+
+#### DeepLink URL生成ロジック（Story 4）
+**YouTube**:
+- DeepLink: `youtube://watch?v={VIDEO_ID}&t={SECONDS}`
+- フォールバック: `https://www.youtube.com/watch?v={VIDEO_ID}&t={SECONDS}s`
+- VIDEO_ID: `SelectedStreamInfo.id`
+- SECONDS: `targetSeekPosition.toInt().coerceAtLeast(0)`
+
+**Twitch**:
+- DeepLink: `twitch://video/{VIDEO_ID}?t={SECONDS}s`
+- フォールバック: `https://www.twitch.tv/videos/{VIDEO_ID}?t={SECONDS}s`
+- VIDEO_ID: `SelectedStreamInfo.id`
+- SECONDS: `targetSeekPosition.toInt().coerceAtLeast(0)`
+
+**Note**: YouTubeのWebサイトURLでは、`t`パラメータに`s`（秒の接尾辞）が必要です。
+
 ---
 
 ## 補足
@@ -371,9 +438,35 @@ stateDiagram-v2
 - `TimelineSyncUiState.isDragging` - 既存
 - `TimelineSyncUiState.syncTimeRange` - 既存
 
+### 追加するIntent/SideEffect（Story 4）
+
+**Intent**:
+- `TimelineSyncIntent.OpenChannel(channelId: String)` - Openボタンタップ時にUI層が送信
+- `TimelineSyncIntent.OpenChannelResult(channelId: String, success: Boolean)` - 外部アプリ起動結果をUI層がViewModelに通知
+
+**SideEffect**:
+- `TimelineSyncSideEffect.NavigateToExternalApp(channelId: String, deepLinkUrl: String, fallbackUrl: String)` - 既存（プレースホルダー）を拡張
+- `TimelineSyncSideEffect.ShowExternalAppError(message: String)` - 新規追加
+
+### expect/actual関数（Story 4）
+
+**関数シグネチャ**:
+```kotlin
+expect fun openExternalApp(deepLinkUrl: String, fallbackUrl: String): Boolean
+```
+
+**責務**: DeepLink起動 + フォールバック起動の両方を担当
+- まずDeepLinkでの外部アプリ起動を試行
+- 失敗した場合、フォールバックURL（Webブラウザ）での起動を試行
+- 両方成功した場合、または少なくとも一方が成功した場合は`true`を返す
+- 両方失敗した場合は`false`を返す
+
+**プラットフォーム実装**:
+- Android: `Intent.ACTION_VIEW` を使用（resolveActivity でアプリ存在確認）
+- iOS: `UIApplication.shared.open` を使用（canOpenURL でアプリ存在確認）
+
 ### スコープ外（将来のStory）
 - チャンネル追加・削除（Story 2）
-- 外部アプリ連携（Story 4）
 
 ### UIデザイン参照
 - GitHub Issue #32 コメント: UIモックアップ画像
@@ -392,7 +485,7 @@ stateDiagram-v2
 
 **作成者**: Claude Code
 **作成日**: 2026-01-12
-**最終更新**: 2026-01-18（Story 3統合、統合仕様書形式への完全移行）
-**関連Issue**: #32（Story 1）, #53（Story 3）
+**最終更新**: 2026-01-25（Story 4統合 - 外部アプリ連携）
+**関連Issue**: #32（Story 1）, #53（Story 3）, #54（Story 4）
 **Epic**: Timeline Sync (EPIC-002)
 

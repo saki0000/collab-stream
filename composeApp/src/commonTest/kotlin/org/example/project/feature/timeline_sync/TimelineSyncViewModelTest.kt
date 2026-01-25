@@ -5,7 +5,7 @@ import kotlin.test.Test
 /**
  * Timeline Sync画面の振る舞い仕様
  * Specification: feature/timeline_sync/SPECIFICATION.md
- * Story Issue: #32（Story 1）, #53（Story 3）
+ * Story Issue: #32（Story 1）, #53（Story 3）, #54（Story 4）
  */
 class TimelineSyncViewModelTest {
 
@@ -234,6 +234,115 @@ class TimelineSyncViewModelTest {
 
     @Test
     fun `同期時刻インジケーター_syncTimeがnullの場合非表示になること`() {
+        // TODO: Phase 2でAI実装
+    }
+
+    // ========================================
+    // Story 4: 外部アプリ連携 - Openボタン
+    // ========================================
+
+    @Test
+    fun `Openボタン_READY状態のチャンネルで有効になること`() {
+        // TODO: Phase 2でAI実装
+    }
+
+    @Test
+    fun `Openボタン_WAITING状態のチャンネルで非活性になること`() {
+        // TODO: Phase 2でAI実装
+    }
+
+    @Test
+    fun `Openボタン_OPENED状態のチャンネルで引き続き有効になること`() {
+        // TODO: Phase 2でAI実装
+    }
+
+    // ========================================
+    // Story 4: 外部アプリ連携 - Open操作
+    // ========================================
+
+    @Test
+    fun `Open操作_READY状態のチャンネルでOpenChannelIntentを送信できること`() {
+        // TODO: Phase 2でAI実装
+    }
+
+    @Test
+    fun `Open操作_外部アプリ起動成功時にSyncStatusがOPENEDに更新されること`() {
+        // TODO: Phase 2でAI実装
+    }
+
+    @Test
+    fun `Open操作_OPENED状態のチャンネルでも再度外部アプリを起動できること`() {
+        // TODO: Phase 2でAI実装
+    }
+
+    // ========================================
+    // Story 4: DeepLink URL生成
+    // ========================================
+
+    @Test
+    fun `DeepLink生成_YouTubeの場合正しい形式のURLが生成されること`() {
+        // TODO: Phase 2でAI実装
+        // 期待値: youtube://watch?v={VIDEO_ID}&t={SECONDS}
+    }
+
+    @Test
+    fun `DeepLink生成_Twitchの場合正しい形式のURLが生成されること`() {
+        // TODO: Phase 2でAI実装
+        // 期待値: twitch://video/{VIDEO_ID}?t={SECONDS}s
+    }
+
+    @Test
+    fun `DeepLink生成_targetSeekPositionが秒単位の整数値に変換されること`() {
+        // TODO: Phase 2でAI実装
+    }
+
+    @Test
+    fun `DeepLink生成_targetSeekPositionが負の値の場合0に丸められること`() {
+        // TODO: Phase 2でAI実装
+    }
+
+    // ========================================
+    // Story 4: フォールバックURL生成
+    // ========================================
+
+    @Test
+    fun `フォールバックURL生成_YouTubeの場合正しいWeb URLが生成されること`() {
+        // TODO: Phase 2でAI実装
+        // 期待値: https://www.youtube.com/watch?v={VIDEO_ID}&t={SECONDS}s
+        // Note: YouTubeのWebサイトURLではtパラメータにs接尾辞が必要
+    }
+
+    @Test
+    fun `フォールバックURL生成_Twitchの場合正しいWeb URLが生成されること`() {
+        // TODO: Phase 2でAI実装
+        // 期待値: https://www.twitch.tv/videos/{VIDEO_ID}?t={SECONDS}s
+    }
+
+    // ========================================
+    // Story 4: 外部アプリ起動エラー
+    // ========================================
+
+    @Test
+    fun `外部アプリ起動失敗_フォールバックURLでWebブラウザを起動すること`() {
+        // TODO: Phase 2でAI実装
+    }
+
+    @Test
+    fun `外部アプリ起動失敗_フォールバックも失敗時にSnackbarでエラー表示すること`() {
+        // TODO: Phase 2でAI実装
+    }
+
+    // ========================================
+    // Story 4: SideEffect発行
+    // ========================================
+
+    @Test
+    fun `SideEffect_Open成功時にNavigateToExternalAppが発行されること`() {
+        // TODO: Phase 2でAI実装
+    }
+
+    @Test
+    fun `SideEffect_Open失敗時にShowExternalAppErrorが発行されること`() {
         // TODO: Phase 2でAI実装
     }
 }
