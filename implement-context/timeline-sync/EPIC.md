@@ -36,12 +36,12 @@ kanban
   design[Design]
   dev[Dev]
   review[Review]
-    us5[US-5: マルチプラットフォーム検索]
     us4[US-4: 外部アプリ連携]
   done[Done]
     us1[US-1: タイムライン基本表示]@{ priority: 'High' }
     us2[US-2: チャンネル追加・管理]
     us3[US-3: 同期時刻計算と表示]
+    us5[US-5: マルチプラットフォーム検索]
 ```
 
 **カラム = `/develop` ステップ対応**:
