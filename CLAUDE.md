@@ -20,6 +20,8 @@ UI は Compose Multiplatform、サーバーは Ktor を使用。
 | `./gradlew test` | 全テスト実行 |
 | `./gradlew :composeApp:recordRoborazziDebug` | スクリーンショット記録 |
 | `/capture-screenshots` | UI スクリーンショット取得 |
+| `/phase0` | Epic定義 & 共通基盤の切り出し（大規模機能） |
+| `/develop` | 仕様定義 → 実装 → PR作成（統合開発コマンド） |
 
 ## モジュール構造
 
@@ -55,5 +57,6 @@ UI は Compose Multiplatform、サーバーは Ktor を使用。
 
 ## 開発ワークフロー
 
-Phase 0〜3 の仕様駆動開発（SDD）を採用。
+`/phase0` + `/develop` の2コマンド体制による仕様駆動開発（SDD）を採用。
+タスク管理は `implement-context/` 内のmarkdownファイルで行う。
 詳細: `.claude/rules/workflow.md` / `docs/guides/development-workflow.md`
