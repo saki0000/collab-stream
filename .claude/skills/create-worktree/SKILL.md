@@ -27,6 +27,25 @@ allowed-tools: Bash(git:*), Bash(mkdir:*), Bash(cp:*), Bash(chmod:*), Bash(bash:
 
 **例**: `/create-worktree user-authentication`
 
+## 引数がない場合
+
+ARGUMENTSが空、または feature-name が指定されていない場合は、以下の手順で対応すること。
+
+### 1. コンテキストから提案候補を収集
+
+以下の情報源からブランチ名の候補を生成する:
+
+- **implement-context/**: 進行中のUS・Epicからまだworktreeがないものを確認
+- **直前の会話コンテキスト**: planモードで議論した機能名がある場合はそれを優先
+
+### 2. AskUserQuestion で質問
+
+- header: `Branch名`
+- question: 「作成するworktreeのfeature名を選択または入力してください（ケバブケース推奨）」
+- options: 収集した候補を最大3つまでオプションとして提示（labelにケバブケースのfeature名、descriptionにUS/Epic名を記載）
+- ユーザーは「その他」から自由入力も可能
+- ユーザーが入力/選択した値を `<feature-name>` として使用する
+
 ## 実行内容
 
 スクリプト: `bash .claude/skills/create-worktree/scripts/create_worktree.sh <feature-name>`
