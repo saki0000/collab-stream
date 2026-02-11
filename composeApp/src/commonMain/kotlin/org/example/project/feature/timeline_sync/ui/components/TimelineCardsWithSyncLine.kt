@@ -79,6 +79,7 @@ fun TimelineCardsWithSyncLine(
     syncTime: Instant?,
     syncTimeRange: Pair<Instant, Instant>?,
     onSyncTimeChange: (Instant) -> Unit,
+    onOpenClick: (channelId: String) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     if (syncTimeRange == null) return
@@ -158,6 +159,7 @@ fun TimelineCardsWithSyncLine(
                         barInfo = barInfo,
                         scrollState = scrollState,
                         contentWidthPx = contentWidth,
+                        onOpenClick = { onOpenClick(channel.channelId) },
                     )
                 }
             }
@@ -215,6 +217,7 @@ private fun TimelineCardWithScrollableBar(
     barInfo: TimelineBarInfo,
     scrollState: androidx.compose.foundation.ScrollState,
     contentWidthPx: Float,
+    onOpenClick: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val density = LocalDensity.current
@@ -260,7 +263,7 @@ private fun TimelineCardWithScrollableBar(
             TimelineCardHeader(
                 channel = channel,
                 barInfo = barInfo,
-                onOpenClick = { /* Story 4 */ },
+                onOpenClick = onOpenClick,
             )
 
             Spacer(modifier = Modifier.height(Spacing.md))

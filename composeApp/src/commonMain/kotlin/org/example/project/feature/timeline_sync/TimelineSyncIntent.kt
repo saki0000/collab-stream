@@ -114,6 +114,16 @@ sealed interface TimelineSyncIntent {
      * Clear the channel add error message.
      */
     data object ClearChannelAddError : TimelineSyncIntent
+
+    // ============================================
+    // Story 4: External App Navigation
+    // ============================================
+
+    /**
+     * 外部アプリでチャンネルの動画を開く。
+     * READY または OPENED 状態のチャンネルで有効。
+     */
+    data class OpenExternalApp(val channelId: String) : TimelineSyncIntent
 }
 
 /**
@@ -127,11 +137,12 @@ sealed interface TimelineSyncSideEffect {
     data class ShowError(val message: String) : TimelineSyncSideEffect
 
     /**
-     * Navigate to external app (Story 4 - placeholder).
+     * 外部アプリを起動する。
+     * DeepLink URIを先に試行し、失敗時にフォールバックURLを使用する。
      */
     data class NavigateToExternalApp(
-        val channelId: String,
-        val seekPosition: Float,
+        val deepLinkUri: String,
+        val fallbackUrl: String,
     ) : TimelineSyncSideEffect
 
     // ============================================
