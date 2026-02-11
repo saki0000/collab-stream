@@ -35,8 +35,8 @@ kanban
   spec[Spec]
   design[Design]
   dev[Dev]
-    us5[US-5: マルチプラットフォーム検索]
   review[Review]
+    us5[US-5: マルチプラットフォーム検索]
     us4[US-4: 外部アプリ連携]
   done[Done]
     us1[US-1: タイムライン基本表示]@{ priority: 'High' }
