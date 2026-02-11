@@ -33,11 +33,11 @@ config:
 kanban
   backlog[Backlog]
   spec[Spec]
-    us4[US-4: 外部アプリ連携]
     us5[US-5: マルチプラットフォーム検索]
   design[Design]
   dev[Dev]
   review[Review]
+    us4[US-4: 外部アプリ連携]
   done[Done]
     us1[US-1: タイムライン基本表示]@{ priority: 'High' }
     us2[US-2: チャンネル追加・管理]
