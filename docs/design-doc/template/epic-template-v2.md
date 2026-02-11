@@ -18,17 +18,7 @@
 
 ---
 
-## 2. 共通ドメイン
-
-### Entity
-- `{EntityName}` - `shared/src/commonMain/kotlin/org/example/project/domain/model/`
-
-### Repository Interface
-- `{RepositoryName}` - `shared/src/commonMain/kotlin/org/example/project/domain/repository/`
-
----
-
-## 3. 開発進捗
+## 2. 開発進捗
 
 ```mermaid
 ---
@@ -61,7 +51,7 @@ kanban
 
 ---
 
-## 4. 依存関係図
+## 3. 依存関係図
 
 ```mermaid
 graph TD
@@ -73,7 +63,7 @@ graph TD
 
 ---
 
-## 5. 関連ドキュメント
+## 4. 関連ドキュメント
 
 ### 参照ADR
 - ADR-{Number}: {Title}

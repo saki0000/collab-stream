@@ -20,25 +20,16 @@
 
 ## 依存
 
-- US-2: チャンネル追加・管理 ✅（完了 - チャンネル追加UI基盤）
+- US-2: チャンネル追加・管理 ✅（完了）
 
 ---
 
-## 成果物
+## スコープ
 
-### Domain層
-- `ChannelInfo` に `serviceType: VideoServiceType` フィールド追加
-- `ChannelSearchUseCase` に `searchYouTubeChannels()` メソッド追加
-
-### Data層
-- `YouTubeSearchDataSource` に `searchChannels()` メソッド追加
-- YouTube Channels API 呼び出し実装
-
-### UI層
-- `ChannelAddBottomSheet` にプラットフォーム選択UI追加（タブ）
-- `TimelineSyncUiState` に `selectedPlatform: VideoServiceType` 追加
-- `TimelineSyncIntent` にプラットフォーム選択 Intent 追加
-- `TimelineSyncViewModel` でプラットフォーム切り替えロジック実装
+- チャンネル追加モーダルにプラットフォーム選択タブ（Twitch/YouTube）を追加
+- 選択したプラットフォームでチャンネル検索を実行
+- 検索結果とチャンネルリストにプラットフォームアイコンを表示
+- 追加されたチャンネルがプラットフォーム情報を保持
 
 ---
 
@@ -47,14 +38,7 @@
 - Twitch / YouTube タブを切り替えられる
 - 選択したプラットフォームでチャンネル検索できる
 - 検索結果にプラットフォームアイコンが表示される
-- 追加したチャンネルが正しい serviceType を持つ
-
----
-
-## 現在の実装状態
-
-- SPECIFICATION.md: 作成済み（`feature/timeline_sync/channel_add/SPECIFICATION.md` 内 US-5セクション）
-- コード: 未実装（ChannelAddBottomSheetにプラットフォーム選択UIなし）
+- 追加したチャンネルが正しいプラットフォーム情報を持つ
 
 ---
 

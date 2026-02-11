@@ -26,32 +26,22 @@
 
 ---
 
-## 成果物
+## スコープ
 
-- Open/Waitボタンの実装（現在placeholder）
-- expect/actualパターンによるDeepLink実装
-- プラットフォーム固有のDeepLink処理（Android/iOS）
-- 外部アプリ未インストール時のフォールバック処理
-
----
-
-## 技術詳細
-
-- **YouTube DeepLink**: `youtube://watch?v={ID}&t={SECONDS}`
-- **YouTube フォールバック**: `https://www.youtube.com/watch?v={ID}&t={SECONDS}s`
-- **Twitch DeepLink**: `twitch://video/{ID}?t={SECONDS}s`
-- **Twitch フォールバック**: `https://www.twitch.tv/videos/{VIDEO_ID}?t={SECONDS}s`
-- expect/actualパターンでプラットフォーム固有実装を分離
-- SyncStatus.READY時のみOpenボタンを有効化
-- アプリ未インストール時はWebブラウザにフォールバック
+- タイムラインカードの「Open」ボタンタップで外部アプリ（YouTube/Twitch）を起動
+- 同期時刻から計算された再生位置で動画を開始
+- READY状態のチャンネルのみOpenボタンを有効化
+- 外部アプリ未インストール時はWebブラウザにフォールバック
 
 ---
 
-## 現在の実装状態
+## 受け入れ条件
 
-- SPECIFICATION.md: 作成済み（`feature/timeline_sync/SPECIFICATION.md` 内 Story 4セクション）
-- コード骨格: `NavigateToExternalApp` Intent・SideEffect定義済み（placeholder）
-- TimelineCard: Open/Waitボタンの枠組みあり（`/* Story 4 */` コメント）
+- READY状態のチャンネルで「Open」ボタンをタップすると外部アプリが起動する
+- 外部アプリが計算された再生位置から再生を開始する
+- WAITING状態では「Wait」ボタンが非活性で表示される
+- 外部アプリ未インストール時にWebブラウザが開く
+- 起動成功後、チャンネルのステータスがOPENEDに変わる
 
 ---
 

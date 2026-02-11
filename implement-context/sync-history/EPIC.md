@@ -22,25 +22,7 @@
 
 ---
 
-## 2. 共通ドメイン
-
-### Entity
-- `SyncHistory` - `shared/src/commonMain/kotlin/org/example/project/domain/model/SyncHistory.kt`
-
-### Repository Interface
-- `SyncHistoryRepository` - `shared/src/commonMain/kotlin/org/example/project/domain/repository/SyncHistoryRepository.kt`
-
-### 技術選定
-
-| 項目 | 選定 |
-|------|------|
-| **永続化** | Room KMP 2.7.x |
-| **対象プラットフォーム** | Android, iOS |
-| **WASMサポート** | 対象外 |
-
----
-
-## 3. 開発進捗
+## 2. 開発進捗
 
 ```mermaid
 ---
@@ -74,7 +56,7 @@ kanban
 
 ---
 
-## 4. 依存関係図
+## 3. 依存関係図
 
 ```mermaid
 graph TD
@@ -96,7 +78,7 @@ graph TD
 
 ---
 
-## 5. 関連ドキュメント
+## 4. 関連ドキュメント
 
 ### 参照ADR
 - ADR-001: Android Architecture採用

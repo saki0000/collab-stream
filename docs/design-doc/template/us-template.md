@@ -23,9 +23,17 @@
 
 ---
 
-## 成果物
+## スコープ
 
-- `composeApp/src/commonMain/kotlin/org/example/project/feature/{feature_name}/SPECIFICATION.md`
+- {ユーザーに提供する機能・振る舞いの概要}
+- {画面やインタラクションの概要}
+
+---
+
+## 受け入れ条件
+
+- {条件1: ユーザー視点で検証可能な振る舞い}
+- {条件2}
 
 ---
 

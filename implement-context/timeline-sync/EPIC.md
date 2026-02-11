@@ -13,7 +13,7 @@
 ### 背景・課題
 1. **利用規約対応**: WebView埋め込み再生は各プラットフォームの利用規約に抵触するリスクがある
 2. **リリース版の要件**: 公開アプリでは正規の視聴方法（公式アプリ）を利用する必要がある
-3. **既存機能の発展**: 現在の`video_playback`機能で培ったSync計算ロジックを再利用
+3. **既存機能の発展**: 現在のvideo_playback機能で培ったSync計算ロジックを再利用
 
 ### ユーザー価値
 - 複数チャンネルの配信を同じ絶対時刻で開始できる
@@ -22,23 +22,7 @@
 
 ---
 
-## 2. 共通ドメイン
-
-### Entity
-- `SyncChannel` - `shared/src/commonMain/kotlin/org/example/project/domain/model/SyncChannel.kt`
-- `SyncStatus` - `shared/src/commonMain/kotlin/org/example/project/domain/model/SyncStatus.kt`
-
-### Repository Interface
-- `TimelineSyncRepository` - `shared/src/commonMain/kotlin/org/example/project/domain/repository/TimelineSyncRepository.kt`
-
-### 既存モデルの再利用
-- `VideoSyncUseCase` - 同期計算ロジック
-- `VideoDetails` - 動画詳細情報
-- `ChannelInfo` - チャンネル検索
-
----
-
-## 3. 開発進捗
+## 2. 開発進捗
 
 ```mermaid
 ---
@@ -73,7 +57,7 @@ kanban
 
 ---
 
-## 4. 依存関係図
+## 3. 依存関係図
 
 ```mermaid
 graph TD
@@ -95,11 +79,7 @@ graph TD
 
 ---
 
-## 5. 関連ドキュメント
-
-### SPECIFICATION.md
-- `composeApp/.../feature/timeline_sync/SPECIFICATION.md`（US-1, 3, 4）
-- `composeApp/.../feature/timeline_sync/channel_add/SPECIFICATION.md`（US-2, 5）
+## 4. 関連ドキュメント
 
 ### 参照ADR
 - ADR-002: MVI パターン採用
