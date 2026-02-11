@@ -132,7 +132,7 @@ implement-context/
 ### 4.2 フロー
 
 ```
-US選択（or 新規作成）
+US選択（or 新規作成）+ Worktree作成
     ↓
 SPECIFICATION.md 確認・作成
     ↓
@@ -140,13 +140,9 @@ DESIGN.md 作成（コードベース分析 → 実装方針）
     ↓
 PROGRESS.md 作成（タスク分割）
     ↓
-/create-worktree 実行
+実装（Task エージェントに委譲）
     ↓
-実装（Shared → ComposeApp → Integration）
-    ↓
-テスト・ビルド確認
-    ↓
-PROGRESS.md 更新
+エージェント完了後の検証
     ↓
 PR作成
 ```
@@ -157,9 +153,16 @@ PR作成
 /develop
 ```
 
-### 4.4 実装順序
+### 4.4 実装（エージェント委譲）
 
-**推奨順序**: Shared → ComposeApp → Integration
+Step 4 では Task ツールを使用して実装をエージェントに委譲します。
+DESIGN.md の変更対象レイヤーに応じて適切な subagent_type を自動選択します。
+
+**エージェントに渡すコンテキスト**:
+- SPECIFICATION.md（仕様）、DESIGN.md（設計）、PROGRESS.md（タスク一覧）
+- プロジェクト規約の要約（ADR、テスト規約、DI、日時処理等）
+
+**エージェントの実装順序**: Shared → ComposeApp → Integration
 
 1. **Shared Layer** (Domain/Data)
    - Domain Models, Repository Interface, UseCase, Repository Implementation
@@ -175,6 +178,8 @@ PR作成
    - DI 設定（Koin）
    - Navigation 設定
    - 全テスト実行
+
+エージェント完了後、PROGRESS.md の全タスク完了を検証し、不足があれば追加 Task を発行します。
 
 ### 4.5 仕様のSSOT
 
