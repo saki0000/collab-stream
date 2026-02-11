@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.OpenInNew
 import androidx.compose.material3.Button
@@ -49,7 +50,7 @@ fun getPlatformColor(serviceType: VideoServiceType): Color = when (serviceType) 
  * This is the fixed (non-scrolling) part of the timeline card.
  *
  * Epic: Timeline Sync (EPIC-002)
- * Story: US-1 (Timeline Display), US-3 (Sync Time Selection)
+ * Story: US-1 (Timeline Display), US-3 (Sync Time Selection), US-4 (External App Navigation)
  */
 @Composable
 fun TimelineCardHeader(
@@ -115,6 +116,7 @@ fun TimelineCardHeader(
 
 /**
  * Open/Wait button based on sync status.
+ * Story 4: READY/OPENEDで有効化、タップで外部アプリ起動。
  */
 @Composable
 private fun OpenWaitButton(
@@ -123,11 +125,10 @@ private fun OpenWaitButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    // Story 1: Display only, button is non-functional
     when {
         isUpcoming || syncStatus == SyncStatus.WAITING -> {
             OutlinedButton(
-                onClick = { /* Story 4 */ },
+                onClick = {},
                 modifier = modifier,
                 enabled = false,
             ) {
@@ -143,17 +144,27 @@ private fun OpenWaitButton(
 
         syncStatus == SyncStatus.READY -> {
             Button(
-                onClick = { /* Story 4 */ },
+                onClick = onClick,
                 modifier = modifier,
-                enabled = false, // Story 1: Display only
-                colors = ButtonDefaults.buttonColors(
-                    disabledContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
-                    disabledContentColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.5f),
-                ),
             ) {
                 Icon(
                     imageVector = Icons.Default.OpenInNew,
-                    contentDescription = null,
+                    contentDescription = "外部アプリで開く",
+                    modifier = Modifier.size(Dimensions.iconXs),
+                )
+                Spacer(modifier = Modifier.width(Spacing.xs))
+                Text("Open")
+            }
+        }
+
+        syncStatus == SyncStatus.OPENED -> {
+            Button(
+                onClick = onClick,
+                modifier = modifier,
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Check,
+                    contentDescription = "外部アプリで再度開く",
                     modifier = Modifier.size(Dimensions.iconXs),
                 )
                 Spacer(modifier = Modifier.width(Spacing.xs))
@@ -162,9 +173,9 @@ private fun OpenWaitButton(
         }
 
         else -> {
-            // NOT_SYNCED or OPENED - show disabled button
+            // NOT_SYNCED - show disabled button
             OutlinedButton(
-                onClick = { /* Story 4 */ },
+                onClick = {},
                 modifier = modifier,
                 enabled = false,
             ) {

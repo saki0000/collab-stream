@@ -8,6 +8,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalUriHandler
 import org.example.project.feature.timeline_sync.TimelineSyncIntent
 import org.example.project.feature.timeline_sync.TimelineSyncSideEffect
 import org.example.project.feature.timeline_sync.TimelineSyncViewModel
@@ -20,7 +21,7 @@ import org.koin.compose.viewmodel.koinViewModel
  * Container -> Screen -> Content -> Component
  *
  * Epic: Timeline Sync (EPIC-002)
- * Story: US-1 (Timeline Display), US-2 (Channel Add/Remove)
+ * Story: US-1 (Timeline Display), US-2 (Channel Add/Remove), US-4 (External App Navigation)
  */
 @Composable
 fun TimelineSyncContainer(
@@ -32,6 +33,7 @@ fun TimelineSyncContainer(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+    val uriHandler = LocalUriHandler.current
 
     // Load screen data on first composition
     LaunchedEffect(Unit) {
@@ -51,7 +53,18 @@ fun TimelineSyncContainer(
                 }
 
                 is TimelineSyncSideEffect.NavigateToExternalApp -> {
-                    // Story 4 implementation - placeholder for now
+                    try {
+                        uriHandler.openUri(sideEffect.deepLinkUri)
+                    } catch (_: Exception) {
+                        try {
+                            uriHandler.openUri(sideEffect.fallbackUrl)
+                        } catch (_: Exception) {
+                            snackbarHostState.showSnackbar(
+                                message = "外部アプリを開けませんでした",
+                                duration = SnackbarDuration.Short,
+                            )
+                        }
+                    }
                 }
 
                 // Story 2: Channel Add/Remove

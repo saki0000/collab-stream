@@ -121,6 +121,9 @@ fun TimelineContent(
                 onSyncTimeChange = { newTime ->
                     onIntent(TimelineSyncIntent.UpdateSyncTime(newTime))
                 },
+                onOpenClick = { channelId ->
+                    onIntent(TimelineSyncIntent.OpenExternalApp(channelId))
+                },
                 modifier = Modifier.fillMaxWidth(),
             )
         }

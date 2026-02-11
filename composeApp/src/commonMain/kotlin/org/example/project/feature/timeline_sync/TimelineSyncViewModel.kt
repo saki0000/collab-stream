@@ -26,6 +26,7 @@ import org.example.project.domain.model.SelectedStreamInfo
 import org.example.project.domain.model.SyncChannel
 import org.example.project.domain.model.SyncStatus
 import org.example.project.domain.model.VideoServiceType
+import org.example.project.domain.model.toDeepLinkInfo
 import org.example.project.domain.repository.TimelineSyncRepository
 import org.example.project.domain.usecase.ChannelSearchUseCase
 
@@ -75,6 +76,8 @@ class TimelineSyncViewModel(
             is TimelineSyncIntent.RemoveChannel -> removeChannel(intent.channelId)
             TimelineSyncIntent.UndoRemoveChannel -> undoRemoveChannel()
             TimelineSyncIntent.ClearChannelAddError -> clearChannelAddError()
+            // Story 4: External App Navigation
+            is TimelineSyncIntent.OpenExternalApp -> openExternalApp(intent.channelId)
         }
     }
 
@@ -252,10 +255,19 @@ class TimelineSyncViewModel(
                 syncStatus = SyncStatus.WAITING,
                 targetSeekPosition = 0f,
             )
-            syncTime in startTime..endTime -> channel.copy(
-                syncStatus = SyncStatus.READY,
-                targetSeekPosition = (syncTime - startTime).inWholeSeconds.toFloat(),
-            )
+            syncTime in startTime..endTime -> {
+                val newSeekPosition = (syncTime - startTime).inWholeSeconds.toFloat()
+                // Story 4: OPENED状態のチャンネルはREADY範囲内なら維持
+                val newStatus = if (channel.syncStatus == SyncStatus.OPENED) {
+                    SyncStatus.OPENED
+                } else {
+                    SyncStatus.READY
+                }
+                channel.copy(
+                    syncStatus = newStatus,
+                    targetSeekPosition = newSeekPosition,
+                )
+            }
             else -> channel.copy(
                 syncStatus = SyncStatus.NOT_SYNCED,
                 targetSeekPosition = null,
@@ -467,6 +479,39 @@ class TimelineSyncViewModel(
      */
     private fun clearChannelAddError() {
         _uiState.value = _uiState.value.copy(channelAddError = null)
+    }
+
+    // ============================================
+    // Story 4: External App Navigation
+    // ============================================
+
+    /**
+     * 外部アプリでチャンネルの動画を開く。
+     * DeepLinkInfoを生成してSideEffectを発行し、SyncStatusをOPENEDに更新する。
+     */
+    private fun openExternalApp(channelId: String) {
+        val channel = _uiState.value.channels.find { it.channelId == channelId } ?: return
+
+        val deepLinkInfo = channel.toDeepLinkInfo() ?: return
+
+        // SyncStatusをOPENEDに更新
+        val updatedChannels = _uiState.value.channels.map {
+            if (it.channelId == channelId) {
+                it.copy(syncStatus = SyncStatus.OPENED)
+            } else {
+                it
+            }
+        }
+        _uiState.value = _uiState.value.copy(channels = updatedChannels)
+
+        viewModelScope.launch {
+            _sideEffect.emit(
+                TimelineSyncSideEffect.NavigateToExternalApp(
+                    deepLinkUri = deepLinkInfo.deepLinkUri,
+                    fallbackUrl = deepLinkInfo.fallbackUrl,
+                ),
+            )
+        }
     }
 
     /**
