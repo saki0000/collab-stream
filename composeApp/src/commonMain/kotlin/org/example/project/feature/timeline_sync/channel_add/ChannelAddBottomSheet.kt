@@ -28,7 +28,10 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SheetState
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -45,14 +48,15 @@ import org.example.project.core.theme.Dimensions
 import org.example.project.core.theme.Spacing
 import org.example.project.domain.model.ChannelInfo
 import org.example.project.domain.model.SyncChannel
+import org.example.project.domain.model.VideoServiceType
 
 /**
- * Bottom sheet for adding channels to the timeline.
+ * チャンネル追加用ボトムシート。
  *
- * Displays a search field, channel suggestions, and added channels list.
+ * プラットフォーム選択タブ、検索フィールド、チャンネル候補、追加済みチャンネルリストを表示する。
  *
  * Epic: Timeline Sync (EPIC-002)
- * Story: US-2 (Channel Add/Remove)
+ * Story: US-2 (Channel Add/Remove), US-5 (Multi-Platform Search)
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -63,6 +67,8 @@ fun ChannelAddBottomSheet(
     addedChannels: List<SyncChannel>,
     isSearching: Boolean,
     errorMessage: String?,
+    selectedPlatform: VideoServiceType,
+    onPlatformSelect: (VideoServiceType) -> Unit,
     onSearchQueryChange: (String) -> Unit,
     onChannelSelect: (ChannelInfo) -> Unit,
     onChannelRemove: (String) -> Unit,
@@ -82,6 +88,8 @@ fun ChannelAddBottomSheet(
                 addedChannels = addedChannels,
                 isSearching = isSearching,
                 errorMessage = errorMessage,
+                selectedPlatform = selectedPlatform,
+                onPlatformSelect = onPlatformSelect,
                 onSearchQueryChange = onSearchQueryChange,
                 onChannelSelect = onChannelSelect,
                 onChannelRemove = onChannelRemove,
@@ -91,8 +99,9 @@ fun ChannelAddBottomSheet(
 }
 
 /**
- * Content for the channel add bottom sheet.
+ * チャンネル追加ボトムシートのコンテンツ。
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ChannelAddContent(
     searchQuery: String,
@@ -100,6 +109,8 @@ private fun ChannelAddContent(
     addedChannels: List<SyncChannel>,
     isSearching: Boolean,
     errorMessage: String?,
+    selectedPlatform: VideoServiceType,
+    onPlatformSelect: (VideoServiceType) -> Unit,
     onSearchQueryChange: (String) -> Unit,
     onChannelSelect: (ChannelInfo) -> Unit,
     onChannelRemove: (String) -> Unit,
@@ -112,7 +123,7 @@ private fun ChannelAddContent(
             .padding(bottom = Spacing.xxl),
         verticalArrangement = Arrangement.spacedBy(Spacing.sm),
     ) {
-        // Title
+        // タイトル
         item {
             Text(
                 text = "チャンネルを追加",
@@ -122,7 +133,16 @@ private fun ChannelAddContent(
             )
         }
 
-        // Search field
+        // プラットフォーム選択タブ（US-5）
+        item {
+            PlatformSelectionTabs(
+                selectedPlatform = selectedPlatform,
+                onPlatformSelect = onPlatformSelect,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+
+        // 検索フィールド
         item {
             ChannelSearchField(
                 query = searchQuery,
@@ -132,7 +152,7 @@ private fun ChannelAddContent(
             )
         }
 
-        // Error message
+        // エラーメッセージ
         if (errorMessage != null) {
             item {
                 Text(
@@ -143,7 +163,7 @@ private fun ChannelAddContent(
             }
         }
 
-        // Search suggestions
+        // 検索候補
         if (channelSuggestions.isNotEmpty()) {
             item {
                 Text(
@@ -170,14 +190,14 @@ private fun ChannelAddContent(
             }
         }
 
-        // Divider
+        // 区切り線
         if (addedChannels.isNotEmpty()) {
             item {
                 HorizontalDivider(modifier = Modifier.padding(vertical = Spacing.sm))
             }
         }
 
-        // Added channels
+        // 追加済みチャンネル
         if (addedChannels.isNotEmpty()) {
             item {
                 Text(
@@ -197,7 +217,43 @@ private fun ChannelAddContent(
 }
 
 /**
- * Search field for channel search.
+ * プラットフォーム選択タブ（SegmentedButton）。
+ * Twitch / YouTube の切り替えを行う。
+ * Story 5: Multi-Platform Search
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun PlatformSelectionTabs(
+    selectedPlatform: VideoServiceType,
+    onPlatformSelect: (VideoServiceType) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val platforms = listOf(VideoServiceType.TWITCH, VideoServiceType.YOUTUBE)
+
+    SingleChoiceSegmentedButtonRow(modifier = modifier) {
+        platforms.forEachIndexed { index, platform ->
+            SegmentedButton(
+                shape = SegmentedButtonDefaults.itemShape(
+                    index = index,
+                    count = platforms.size,
+                ),
+                onClick = { onPlatformSelect(platform) },
+                selected = selectedPlatform == platform,
+                label = {
+                    Text(
+                        text = when (platform) {
+                            VideoServiceType.TWITCH -> "Twitch"
+                            VideoServiceType.YOUTUBE -> "YouTube"
+                        },
+                    )
+                },
+            )
+        }
+    }
+}
+
+/**
+ * チャンネル検索フィールド。
  */
 @Composable
 private fun ChannelSearchField(
@@ -240,7 +296,7 @@ private fun ChannelSearchField(
 }
 
 /**
- * Single channel suggestion item.
+ * チャンネル候補アイテム（プラットフォームアイコン付き）。
  */
 @Composable
 private fun ChannelSuggestionItem(
@@ -256,7 +312,7 @@ private fun ChannelSuggestionItem(
             .padding(Spacing.sm),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        // Channel avatar
+        // チャンネルアバター
         AsyncImage(
             model = channel.thumbnailUrl,
             contentDescription = channel.displayName,
@@ -266,9 +322,14 @@ private fun ChannelSuggestionItem(
             contentScale = ContentScale.Crop,
         )
 
-        Spacer(modifier = Modifier.width(Spacing.md))
+        Spacer(modifier = Modifier.width(Spacing.sm))
 
-        // Channel info
+        // プラットフォームアイコン（US-5）
+        PlatformIcon(serviceType = channel.serviceType)
+
+        Spacer(modifier = Modifier.width(Spacing.sm))
+
+        // チャンネル情報
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = channel.displayName,
@@ -288,7 +349,7 @@ private fun ChannelSuggestionItem(
             }
         }
 
-        // Add icon
+        // 追加アイコン
         Box(
             modifier = Modifier
                 .size(Dimensions.iconXl)
@@ -309,7 +370,7 @@ private fun ChannelSuggestionItem(
 }
 
 /**
- * Single added channel item with remove button.
+ * 追加済みチャンネルアイテム（プラットフォームアイコン付き）。
  */
 @Composable
 private fun AddedChannelItem(
@@ -325,7 +386,7 @@ private fun AddedChannelItem(
             .padding(Spacing.sm),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        // Channel avatar
+        // チャンネルアバター
         AsyncImage(
             model = channel.channelIconUrl,
             contentDescription = channel.channelName,
@@ -335,9 +396,14 @@ private fun AddedChannelItem(
             contentScale = ContentScale.Crop,
         )
 
-        Spacer(modifier = Modifier.width(Spacing.md))
+        Spacer(modifier = Modifier.width(Spacing.sm))
 
-        // Channel name
+        // プラットフォームアイコン（US-5）
+        PlatformIcon(serviceType = channel.serviceType)
+
+        Spacer(modifier = Modifier.width(Spacing.sm))
+
+        // チャンネル名
         Text(
             text = channel.channelName,
             style = MaterialTheme.typography.bodyMedium,
@@ -347,7 +413,7 @@ private fun AddedChannelItem(
             modifier = Modifier.weight(1f),
         )
 
-        // Remove button
+        // 削除ボタン
         IconButton(
             onClick = onRemove,
             modifier = Modifier.size(Dimensions.iconXl),
@@ -360,4 +426,29 @@ private fun AddedChannelItem(
             )
         }
     }
+}
+
+/**
+ * プラットフォームアイコン表示。
+ * Twitch / YouTube のアイコンをテキストで表示する。
+ * Story 5: Multi-Platform Search
+ */
+@Composable
+private fun PlatformIcon(
+    serviceType: VideoServiceType,
+    modifier: Modifier = Modifier,
+) {
+    Text(
+        text = when (serviceType) {
+            VideoServiceType.TWITCH -> "Tw"
+            VideoServiceType.YOUTUBE -> "YT"
+        },
+        style = MaterialTheme.typography.labelSmall,
+        fontWeight = FontWeight.Bold,
+        color = when (serviceType) {
+            VideoServiceType.TWITCH -> MaterialTheme.colorScheme.primary
+            VideoServiceType.YOUTUBE -> MaterialTheme.colorScheme.error
+        },
+        modifier = modifier,
+    )
 }

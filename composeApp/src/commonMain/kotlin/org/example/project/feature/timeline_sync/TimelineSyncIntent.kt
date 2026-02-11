@@ -6,6 +6,7 @@ import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 import kotlinx.datetime.LocalDate
 import org.example.project.domain.model.ChannelInfo
+import org.example.project.domain.model.VideoServiceType
 
 /**
  * Sealed interface defining all possible user intents for Timeline Sync screen.
@@ -74,6 +75,13 @@ sealed interface TimelineSyncIntent {
     // ============================================
     // Story 2: Channel Add/Remove
     // ============================================
+
+    /**
+     * チャンネル追加モーダルのプラットフォームを選択する。
+     * 検索結果はクリアされ、クエリが空でない場合は再検索が実行される。
+     * Story 5: Multi-Platform Search
+     */
+    data class SelectPlatform(val platform: VideoServiceType) : TimelineSyncIntent
 
     /**
      * Open the channel add modal (bottom sheet).

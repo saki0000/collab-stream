@@ -28,8 +28,11 @@ import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.minus
 import kotlinx.datetime.plus
 import org.example.project.data.datasource.TwitchSearchDataSource
+import org.example.project.data.datasource.YouTubeSearchDataSource
 import org.example.project.data.model.TwitchSearchResponse
 import org.example.project.data.model.TwitchUserResponse
+import org.example.project.data.model.YouTubeChannelSearchResponse
+import org.example.project.data.model.YouTubeSearchResponse
 import org.example.project.domain.model.SearchQuery
 import org.example.project.domain.model.SelectedStreamInfo
 import org.example.project.domain.model.SyncChannel
@@ -66,7 +69,7 @@ class SyncTimeCalculationViewModelTest {
         Dispatchers.setMain(testDispatcher)
         mockRepository = TestTimelineSyncRepository()
         mockDataSource = TestTwitchSearchDataSource()
-        channelSearchUseCase = ChannelSearchUseCase(mockDataSource)
+        channelSearchUseCase = ChannelSearchUseCase(mockDataSource, TestYouTubeSearchDataSource())
         viewModel = TimelineSyncViewModel(mockRepository, channelSearchUseCase)
     }
 
@@ -727,5 +730,21 @@ class TestTwitchSearchDataSource : TwitchSearchDataSource {
         maxResults: Int,
     ): Result<TwitchUserResponse> {
         return Result.success(TwitchUserResponse(data = emptyList()))
+    }
+}
+
+/**
+ * テスト用YouTubeSearchDataSource実装
+ */
+class TestYouTubeSearchDataSource : YouTubeSearchDataSource {
+    override suspend fun searchVideos(searchQuery: SearchQuery): Result<YouTubeSearchResponse> {
+        return Result.failure(NotImplementedError())
+    }
+
+    override suspend fun searchChannels(
+        query: String,
+        maxResults: Int,
+    ): Result<YouTubeChannelSearchResponse> {
+        return Result.success(YouTubeChannelSearchResponse(items = emptyList()))
     }
 }

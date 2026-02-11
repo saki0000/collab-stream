@@ -13,6 +13,7 @@ import kotlinx.datetime.plus
 import kotlinx.datetime.todayIn
 import org.example.project.domain.model.ChannelInfo
 import org.example.project.domain.model.SyncChannel
+import org.example.project.domain.model.VideoServiceType
 
 /**
  * Data class representing the UI state for Timeline Sync screen.
@@ -65,8 +66,15 @@ data class TimelineSyncUiState(
     val isDragging: Boolean = false,
 
     // ============================================
-    // Story 2: Channel Add/Remove
+    // Story 2: Channel Add/Remove, Story 5: Multi-Platform Search
     // ============================================
+
+    /**
+     * チャンネル追加モーダルで選択中のプラットフォーム。
+     * デフォルトは Twitch。
+     * Story 5: Multi-Platform Search
+     */
+    val selectedPlatform: VideoServiceType = VideoServiceType.TWITCH,
 
     /**
      * Whether the channel add modal (bottom sheet) is visible.

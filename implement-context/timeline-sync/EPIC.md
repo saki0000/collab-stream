@@ -33,9 +33,9 @@ config:
 kanban
   backlog[Backlog]
   spec[Spec]
-    us5[US-5: マルチプラットフォーム検索]
   design[Design]
   dev[Dev]
+    us5[US-5: マルチプラットフォーム検索]
   review[Review]
     us4[US-4: 外部アプリ連携]
   done[Done]

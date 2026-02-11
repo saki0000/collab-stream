@@ -100,7 +100,7 @@ fun TimelineSyncScreen(
                 }
             }
 
-            // Story 2: Channel Add Bottom Sheet
+            // Story 2: Channel Add Bottom Sheet, Story 5: Multi-Platform Search
             ChannelAddBottomSheet(
                 isVisible = uiState.isChannelAddModalVisible,
                 searchQuery = uiState.channelSearchQuery,
@@ -108,6 +108,10 @@ fun TimelineSyncScreen(
                 addedChannels = uiState.channels,
                 isSearching = uiState.isSearchingChannels,
                 errorMessage = uiState.channelAddError,
+                selectedPlatform = uiState.selectedPlatform,
+                onPlatformSelect = { platform ->
+                    onIntent(TimelineSyncIntent.SelectPlatform(platform))
+                },
                 onSearchQueryChange = { query ->
                     onIntent(TimelineSyncIntent.UpdateChannelSearchQuery(query))
                 },

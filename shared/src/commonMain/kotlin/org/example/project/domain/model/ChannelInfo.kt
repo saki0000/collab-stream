@@ -1,8 +1,8 @@
 package org.example.project.domain.model
 
 /**
- * Domain model for channel information.
- * Used for displaying channel search suggestions.
+ * チャンネル検索結果のドメインモデル。
+ * 検索候補の表示やチャンネル追加に使用する。
  */
 data class ChannelInfo(
     val id: String,
@@ -11,4 +11,5 @@ data class ChannelInfo(
     val broadcasterLanguage: String? = null,
     val gameId: String? = null,
     val gameName: String? = null,
+    val serviceType: VideoServiceType = VideoServiceType.TWITCH,
 )

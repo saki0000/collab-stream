@@ -39,6 +39,7 @@ class ExternalAppNavigationViewModelTest {
     private val testDispatcher = StandardTestDispatcher()
     private lateinit var mockRepository: FakeTimelineSyncRepository
     private lateinit var mockDataSource: FakeTwitchSearchDataSource
+    private lateinit var mockYouTubeDataSource: FakeYouTubeSearchDataSource
     private lateinit var viewModel: TimelineSyncViewModel
 
     private val baseTime = Instant.parse("2024-01-01T10:00:00Z")
@@ -48,7 +49,8 @@ class ExternalAppNavigationViewModelTest {
         Dispatchers.setMain(testDispatcher)
         mockRepository = FakeTimelineSyncRepository()
         mockDataSource = FakeTwitchSearchDataSource()
-        val channelSearchUseCase = org.example.project.domain.usecase.ChannelSearchUseCase(mockDataSource)
+        mockYouTubeDataSource = FakeYouTubeSearchDataSource()
+        val channelSearchUseCase = org.example.project.domain.usecase.ChannelSearchUseCase(mockDataSource, mockYouTubeDataSource)
         viewModel = TimelineSyncViewModel(mockRepository, channelSearchUseCase)
     }
 

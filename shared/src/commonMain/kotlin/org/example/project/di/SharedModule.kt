@@ -55,6 +55,6 @@ val sharedModule = module {
     }
 
     single<ChannelSearchUseCase> {
-        ChannelSearchUseCase(get())
+        ChannelSearchUseCase(get(), get())
     }
 }

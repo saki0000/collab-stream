@@ -2,14 +2,15 @@ package org.example.project.data.mapper
 
 import org.example.project.data.model.TwitchUser
 import org.example.project.domain.model.ChannelInfo
+import org.example.project.domain.model.VideoServiceType
 
 /**
- * Mapper for converting Twitch API channel data to domain models
+ * Twitch API のチャンネルデータをドメインモデルに変換するマッパー。
  */
 object TwitchChannelMapper {
 
     /**
-     * Converts a TwitchUser to ChannelInfo domain model
+     * TwitchUser を ChannelInfo ドメインモデルに変換する。
      */
     fun TwitchUser.toChannelInfo(): ChannelInfo {
         return ChannelInfo(
@@ -19,11 +20,12 @@ object TwitchChannelMapper {
             broadcasterLanguage = broadcasterLanguage,
             gameId = gameId,
             gameName = gameName,
+            serviceType = VideoServiceType.TWITCH,
         )
     }
 
     /**
-     * Converts a list of TwitchUsers to a list of ChannelInfo domain models
+     * TwitchUser のリストを ChannelInfo のリストに変換する。
      */
     fun List<TwitchUser>.toChannelInfoList(): List<ChannelInfo> {
         return map { it.toChannelInfo() }

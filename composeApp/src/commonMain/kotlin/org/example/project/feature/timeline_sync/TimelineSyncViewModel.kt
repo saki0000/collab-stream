@@ -68,7 +68,8 @@ class TimelineSyncViewModel(
             is TimelineSyncIntent.UpdateSyncTime -> updateSyncTime(intent.syncTime)
             TimelineSyncIntent.StartDragging -> startDragging()
             TimelineSyncIntent.StopDragging -> stopDragging()
-            // Story 2: Channel Add/Remove
+            // Story 2: Channel Add/Remove, Story 5: Multi-Platform Search
+            is TimelineSyncIntent.SelectPlatform -> selectPlatform(intent.platform)
             TimelineSyncIntent.OpenChannelAddModal -> openChannelAddModal()
             TimelineSyncIntent.CloseChannelAddModal -> closeChannelAddModal()
             is TimelineSyncIntent.UpdateChannelSearchQuery -> updateChannelSearchQuery(intent.query)
@@ -296,6 +297,28 @@ class TimelineSyncViewModel(
     // ============================================
 
     /**
+     * プラットフォームを選択する。
+     * 検索結果をクリアし、検索クエリが空でない場合は再検索を実行する。
+     * Story 5: Multi-Platform Search
+     */
+    private fun selectPlatform(platform: VideoServiceType) {
+        _uiState.value = _uiState.value.copy(
+            selectedPlatform = platform,
+            channelSuggestions = emptyList(),
+        )
+
+        // クエリが空でない場合は選択プラットフォームで再検索
+        val currentQuery = _uiState.value.channelSearchQuery
+        if (currentQuery.isNotBlank()) {
+            channelSearchJob?.cancel()
+            channelSearchJob = viewModelScope.launch {
+                delay(SEARCH_DEBOUNCE_MS)
+                searchChannels(currentQuery)
+            }
+        }
+    }
+
+    /**
      * Opens the channel add modal (bottom sheet).
      */
     private fun openChannelAddModal() {
@@ -345,14 +368,16 @@ class TimelineSyncViewModel(
     }
 
     /**
-     * Executes channel search.
+     * チャンネル検索を実行する。
+     * 選択中のプラットフォームに応じて適切な検索を行う。
      */
     private suspend fun searchChannels(query: String) {
         _uiState.value = _uiState.value.copy(isSearchingChannels = true)
 
         try {
-            channelSearchUseCase.searchTwitchChannels(
+            channelSearchUseCase.searchChannels(
                 query = query,
+                serviceType = _uiState.value.selectedPlatform,
                 maxResults = 5,
             ).fold(
                 onSuccess = { channels ->
@@ -515,13 +540,14 @@ class TimelineSyncViewModel(
     }
 
     /**
-     * Extension function to convert ChannelInfo to SyncChannel.
+     * ChannelInfo を SyncChannel に変換する拡張関数。
+     * ChannelInfo の serviceType をそのまま使用する。
      */
     private fun ChannelInfo.toSyncChannel(): SyncChannel = SyncChannel(
         channelId = id,
         channelName = displayName,
         channelIconUrl = thumbnailUrl ?: "",
-        serviceType = VideoServiceType.TWITCH,
+        serviceType = serviceType,
         selectedStream = null,
         syncStatus = SyncStatus.NOT_SYNCED,
     )

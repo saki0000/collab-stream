@@ -21,9 +21,12 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import kotlinx.datetime.LocalDate
 import org.example.project.data.datasource.TwitchSearchDataSource
+import org.example.project.data.datasource.YouTubeSearchDataSource
 import org.example.project.data.model.TwitchSearchResponse
 import org.example.project.data.model.TwitchUser
 import org.example.project.data.model.TwitchUserResponse
+import org.example.project.data.model.YouTubeChannelSearchResponse
+import org.example.project.data.model.YouTubeSearchResponse
 import org.example.project.domain.model.ChannelInfo
 import org.example.project.domain.model.SearchQuery
 import org.example.project.domain.model.SyncChannel
@@ -48,6 +51,7 @@ class ChannelAddViewModelTest {
     private val testDispatcher = StandardTestDispatcher()
     private lateinit var mockRepository: FakeTimelineSyncRepository
     private lateinit var mockDataSource: FakeTwitchSearchDataSource
+    private lateinit var mockYouTubeDataSource: FakeYouTubeSearchDataSource
     private lateinit var channelSearchUseCase: ChannelSearchUseCase
     private lateinit var viewModel: TimelineSyncViewModel
 
@@ -56,7 +60,8 @@ class ChannelAddViewModelTest {
         Dispatchers.setMain(testDispatcher)
         mockRepository = FakeTimelineSyncRepository()
         mockDataSource = FakeTwitchSearchDataSource()
-        channelSearchUseCase = ChannelSearchUseCase(mockDataSource)
+        mockYouTubeDataSource = FakeYouTubeSearchDataSource()
+        channelSearchUseCase = ChannelSearchUseCase(mockDataSource, mockYouTubeDataSource)
         viewModel = TimelineSyncViewModel(mockRepository, channelSearchUseCase)
     }
 
@@ -530,6 +535,36 @@ class FakeTimelineSyncRepository : TimelineSyncRepository {
             Result.failure(errorToReturn)
         } else {
             Result.success(emptyList())
+        }
+    }
+}
+
+/**
+ * テスト用 YouTubeSearchDataSource のフェイク実装。
+ */
+class FakeYouTubeSearchDataSource : YouTubeSearchDataSource {
+    var searchChannelsWasCalled = false
+    var searchChannelsCount = 0
+    var lastChannelQuery: String? = null
+    var channelResultToReturn: YouTubeChannelSearchResponse = YouTubeChannelSearchResponse(items = emptyList())
+    var shouldReturnError = false
+
+    override suspend fun searchVideos(searchQuery: SearchQuery): Result<YouTubeSearchResponse> {
+        return Result.failure(NotImplementedError())
+    }
+
+    override suspend fun searchChannels(
+        query: String,
+        maxResults: Int,
+    ): Result<YouTubeChannelSearchResponse> {
+        searchChannelsWasCalled = true
+        searchChannelsCount++
+        lastChannelQuery = query
+
+        return if (shouldReturnError) {
+            Result.failure(RuntimeException("Search error"))
+        } else {
+            Result.success(channelResultToReturn)
         }
     }
 }

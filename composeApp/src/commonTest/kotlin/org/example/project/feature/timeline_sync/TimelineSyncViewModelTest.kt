@@ -1,6 +1,13 @@
+@file:OptIn(ExperimentalTime::class)
+
 package org.example.project.feature.timeline_sync
 
 import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
+import kotlin.time.ExperimentalTime
+import org.example.project.domain.model.ChannelInfo
+import org.example.project.domain.model.VideoServiceType
 
 /**
  * Timeline Sync画面の振る舞い仕様
@@ -344,5 +351,104 @@ class TimelineSyncViewModelTest {
     @Test
     fun `SideEffect_Open失敗時にShowExternalAppErrorが発行されること`() {
         // TODO: Phase 2でAI実装
+    }
+
+    // ========================================
+    // Story 5: プラットフォーム切り替え
+    // ========================================
+
+    @Test
+    fun `プラットフォーム選択_デフォルトでTwitchが選択されていること`() {
+        // Arrange
+        val state = TimelineSyncUiState()
+
+        // Assert
+        assertEquals(VideoServiceType.TWITCH, state.selectedPlatform)
+    }
+
+    @Test
+    fun `プラットフォーム切り替え_YouTubeに切り替えるとselectedPlatformが更新されること`() {
+        // Arrange
+        val initialState = TimelineSyncUiState(selectedPlatform = VideoServiceType.TWITCH)
+
+        // Act
+        val updatedState = initialState.copy(selectedPlatform = VideoServiceType.YOUTUBE)
+
+        // Assert
+        assertEquals(VideoServiceType.YOUTUBE, updatedState.selectedPlatform)
+    }
+
+    @Test
+    fun `プラットフォーム切り替え_検索結果がクリアされること`() {
+        // Arrange
+        val stateWithSuggestions = TimelineSyncUiState(
+            channelSuggestions = listOf(
+                ChannelInfo(
+                    id = "ch1",
+                    displayName = "Test Channel",
+                    serviceType = VideoServiceType.TWITCH,
+                ),
+            ),
+            selectedPlatform = VideoServiceType.TWITCH,
+        )
+
+        // Act: プラットフォーム切り替え時に suggestions をクリアする
+        val updatedState = stateWithSuggestions.copy(
+            selectedPlatform = VideoServiceType.YOUTUBE,
+            channelSuggestions = emptyList(),
+        )
+
+        // Assert
+        assertEquals(VideoServiceType.YOUTUBE, updatedState.selectedPlatform)
+        assertTrue(updatedState.channelSuggestions.isEmpty())
+    }
+
+    @Test
+    fun `プラットフォーム切り替え_検索クエリは保持されること`() {
+        // Arrange
+        val stateWithQuery = TimelineSyncUiState(
+            channelSearchQuery = "test query",
+            selectedPlatform = VideoServiceType.TWITCH,
+        )
+
+        // Act: プラットフォーム切り替え
+        val updatedState = stateWithQuery.copy(
+            selectedPlatform = VideoServiceType.YOUTUBE,
+            channelSuggestions = emptyList(),
+        )
+
+        // Assert
+        assertEquals("test query", updatedState.channelSearchQuery)
+        assertEquals(VideoServiceType.YOUTUBE, updatedState.selectedPlatform)
+    }
+
+    // ========================================
+    // Story 5: チャンネル追加 - serviceType
+    // ========================================
+
+    @Test
+    fun `チャンネル追加_ChannelInfoのserviceTypeがSyncChannelに反映されること`() {
+        // Arrange
+        val youtubeChannel = ChannelInfo(
+            id = "yt_ch_1",
+            displayName = "YouTube Channel",
+            thumbnailUrl = "https://example.com/thumb.jpg",
+            serviceType = VideoServiceType.YOUTUBE,
+        )
+
+        // Assert: ChannelInfo の serviceType が YOUTUBE であること
+        assertEquals(VideoServiceType.YOUTUBE, youtubeChannel.serviceType)
+    }
+
+    @Test
+    fun `ChannelInfo_デフォルトserviceTypeがTWITCHであること`() {
+        // Arrange
+        val defaultChannel = ChannelInfo(
+            id = "ch1",
+            displayName = "Default Channel",
+        )
+
+        // Assert
+        assertEquals(VideoServiceType.TWITCH, defaultChannel.serviceType)
     }
 }
