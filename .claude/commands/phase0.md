@@ -125,20 +125,39 @@ kanban
 
 ---
 
-### Step 3: 各USのSPECIFICATION.md作成
+### Step 3: SPECIFICATION.md作成（画面単位）
 
-各USに対応する SPECIFICATION.md を作成します。
+**画面単位**で SPECIFICATION.md を作成します。USではなく画面が単位です。
 
-**配置場所**:
+#### 3.1 画面単位の原則
+
+- **1画面 = 1 SPECIFICATION.md**（複数USが1画面に関わる場合は統合）
+- UI を持たないUS（データ層のみ等）は SPECIFICATION.md を作成しない
+- 画面内で状態遷移が複雑な場合は、サブ画面（モーダル等）ごとに分割可
+
+#### 3.2 配置場所
+
 ```
 composeApp/src/commonMain/kotlin/org/example/project/feature/{feature_name}/SPECIFICATION.md
+composeApp/src/commonMain/kotlin/org/example/project/feature/{feature_name}/{sub_feature}/SPECIFICATION.md
 ```
+
+#### 3.3 既存例
+
+| ファイル | カバー範囲 |
+|---------|-----------|
+| `feature/timeline_sync/SPECIFICATION.md` | TimelineSync画面（US-1, 3, 4） |
+| `feature/timeline_sync/channel_add/SPECIFICATION.md` | チャンネル追加モーダル（US-2, 5） |
+
+→ 画面単位で作成し、ビジネスルールテーブルの「US」列でどのUSに属するか記録。
+
+#### 3.4 構成
 
 テンプレート `docs/design-doc/template/specification-template.md` を参考に作成。
 
 **SPECIFICATION.md の構成（3セクション統合仕様書）**:
 1. **ユーザーストーリー**: ユーザー操作と期待する動作を箇条書き
-2. **ビジネスルール**: 機能要件、制約条件をテーブル形式
+2. **ビジネスルール**: 機能要件、制約条件をテーブル形式（US列でUS番号を記録）
 3. **状態遷移**: Mermaid図で画面内部の状態遷移を表現
 
 ---
@@ -242,7 +261,7 @@ Phase 0完了の条件：
   - [ ] 依存関係明記
 
 - [ ] **SPECIFICATION.md作成完了**
-  - [ ] 各USのSPECIFICATION.md作成済み
+  - [ ] 画面単位でSPECIFICATION.md作成済み（UIを持たないUSは対象外）
   - [ ] 3セクション構成（ユーザーストーリー、ビジネスルール、状態遷移）
 
 - [ ] **Shared Domain実装完了**（最小限）
