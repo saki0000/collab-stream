@@ -312,7 +312,6 @@ class TimelineSyncViewModel(
         if (currentQuery.isNotBlank()) {
             channelSearchJob?.cancel()
             channelSearchJob = viewModelScope.launch {
-                delay(SEARCH_DEBOUNCE_MS)
                 searchChannels(currentQuery)
             }
         }

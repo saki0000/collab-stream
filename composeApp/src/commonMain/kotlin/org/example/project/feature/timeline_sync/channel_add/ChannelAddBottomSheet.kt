@@ -228,7 +228,7 @@ private fun PlatformSelectionTabs(
     onPlatformSelect: (VideoServiceType) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val platforms = listOf(VideoServiceType.TWITCH, VideoServiceType.YOUTUBE)
+    val platforms = VideoServiceType.entries
 
     SingleChoiceSegmentedButtonRow(modifier = modifier) {
         platforms.forEachIndexed { index, platform ->
