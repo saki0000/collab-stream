@@ -39,7 +39,6 @@ kanban
   spec[Spec]
   design[Design]
   dev[Dev]
-  review[Review]
   done[Done]
 ```
 
@@ -51,8 +50,7 @@ kanban
 | Spec | Step 2 | SPECIFICATION.md 作成済み |
 | Design | Step 3 | DESIGN.md + PROGRESS.md + Worktree |
 | Dev | Step 4 | Shared + Server 実装 + 全テスト通過 |
-| Review | Step 5 | PR作成済み |
-| Done | - | PRマージ済み |
+| Done | Step 5 | PR作成済み |
 
 ---
 

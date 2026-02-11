@@ -36,9 +36,8 @@ kanban
     us5[US-5: マルチプラットフォーム検索]
   design[Design]
   dev[Dev]
-  review[Review]
-    us4[US-4: 外部アプリ連携]
   done[Done]
+    us4[US-4: 外部アプリ連携]
     us1[US-1: タイムライン基本表示]@{ priority: 'High' }
     us2[US-2: チャンネル追加・管理]
     us3[US-3: 同期時刻計算と表示]
@@ -52,8 +51,7 @@ kanban
 | Spec | Step 2 | SPECIFICATION.md 作成済み |
 | Design | Step 3 | DESIGN.md + PROGRESS.md + Worktree |
 | Dev | Step 4 | Shared + UI 実装 + 全テスト通過 |
-| Review | Step 5 | PR作成済み |
-| Done | - | PRマージ済み |
+| Done | Step 5 | PR作成済み |
 
 ---
 
