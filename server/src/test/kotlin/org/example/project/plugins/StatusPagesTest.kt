@@ -48,7 +48,7 @@ class StatusPagesTest {
         assertTrue(json.containsKey("message"))
         assertTrue(json.containsKey("code"))
         assertEquals(400, json["code"]?.jsonPrimitive?.content?.toInt())
-        assertTrue(json["message"]?.jsonPrimitive?.content?.contains("Invalid parameter") == true)
+        assertTrue(json["message"]?.jsonPrimitive?.content?.contains("Invalid parameter") ?: false)
     }
 
     // ========================================
@@ -78,7 +78,7 @@ class StatusPagesTest {
         assertTrue(json.containsKey("message"))
         assertTrue(json.containsKey("code"))
         assertEquals(404, json["code"]?.jsonPrimitive?.content?.toInt())
-        assertTrue(json["message"]?.jsonPrimitive?.content?.contains("Resource not found") == true)
+        assertTrue(json["message"]?.jsonPrimitive?.content?.contains("Resource not found") ?: false)
     }
 
     // ========================================

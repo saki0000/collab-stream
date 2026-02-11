@@ -8,7 +8,6 @@ import kotlinx.serialization.json.Json
 import org.example.project.module
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 /**
  * ヘルスチェックエンドポイントのテスト
@@ -31,14 +30,9 @@ class HealthRoutesTest {
         // HTTPステータス確認
         assertEquals(HttpStatusCode.OK, response.status)
 
-        // レスポンス内容確認
-        val body = response.bodyAsText()
-        assertTrue(body.contains("\"status\""))
-        assertTrue(body.contains("\"ok\""))
-
-        // JSON形式の検証
-        val json = Json.parseToJsonElement(body)
-        assertTrue(json.toString().contains("ok"))
+        // 型安全なデシリアライズで検証
+        val healthResponse = Json.decodeFromString<HealthResponse>(response.bodyAsText())
+        assertEquals("ok", healthResponse.status)
     }
 
     @Test
