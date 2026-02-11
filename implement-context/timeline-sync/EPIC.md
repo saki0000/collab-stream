@@ -33,7 +33,6 @@ config:
 kanban
   backlog[Backlog]
   spec[Spec]
-    us5[US-5: マルチプラットフォーム検索]
   design[Design]
   dev[Dev]
   done[Done]
@@ -41,6 +40,7 @@ kanban
     us1[US-1: タイムライン基本表示]@{ priority: 'High' }
     us2[US-2: チャンネル追加・管理]
     us3[US-3: 同期時刻計算と表示]
+    us5[US-5: マルチプラットフォーム検索]
 ```
 
 **カラム = `/develop` ステップ対応**:
