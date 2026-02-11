@@ -38,8 +38,8 @@ kanban
   spec[Spec]
   design[Design]
   dev[Dev]
-    us1[US-1: 共通基盤 & サーバー骨格構築]@{ priority: 'High' }
   review[Review]
+    us1[US-1: 共通基盤 & サーバー骨格構築]@{ priority: 'High' }
   done[Done]
 ```
 
