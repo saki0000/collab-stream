@@ -117,7 +117,6 @@ kanban
   spec[Spec]
   design[Design]
   dev[Dev]
-  review[Review]
   done[Done]
 ```
 
