@@ -2,46 +2,57 @@
 
 CollabStream では AI（Claude Code）を活用した仕様駆動開発（SDD）を採用。
 
-## Phase 概要
+## コマンド体制
 
-| Phase | 名称 | 内容 |
-|-------|------|------|
-| 0 | Epic 定義 | 大規模機能（3 Story 以上）の分割 |
-| 1 | 仕様定義 | SPECIFICATION.md（統合仕様書）、インターフェース定義 |
-| 2 | AI 実装 | Claude Code による実装 |
-| 3 | レビュー | 仕様適合性、ADR 準拠の確認 |
+| コマンド | 用途 | 対象 |
+|---------|------|------|
+| `/phase0` | Epic定義 & 共通基盤の切り出し | 大規模機能（3 US以上） |
+| `/develop` | 仕様定義 → 実装 → PR作成 | 全機能（メインコマンド） |
 
 ## クイックスタート
 
-### 新機能開発
+### 大規模機能（3 US以上）
 
-- **3 Story 以上** → Phase 0 から（Epic 作成）
-- **小規模機能** → Phase 1 から（SPECIFICATION.md 作成）
+```
+/phase0 → Epic定義 & US分割 & SPECIFICATION.md作成
+    ↓
+/develop → 各USの実装（US選択 → 設計 → 実装 → PR）
+```
 
-### Phase 1: 仕様定義
+### 小規模機能
 
-1. `feature/{feature}/SPECIFICATION.md` を作成（3セクション統合仕様書）
-   - Section 1: ユーザーストーリー
-   - Section 2: ビジネスルール
-   - Section 3: 画面内状態遷移（Mermaid図）
-2. 必要に応じて `docs/navigation/{module}-module.md` を作成
-3. レビュー合意後に GitHub Issue 作成
+```
+/develop → US新規作成 → SPECIFICATION.md作成 → 実装 → PR
+```
 
-### Phase 2: AI 実装
+## タスク管理
 
-**実装開始前の確認事項**:
+タスクは `implement-context/` 内のmarkdownファイルで管理。
 
-1. **`/create-worktree`**: Git worktree で独立環境を準備
-2. **`/implement-plan`**: plan ファイルを解析しエージェント起動
+```
+implement-context/
+├── {epic_name}/              # Epic単位
+│   ├── EPIC.md               # Epic概要、US一覧、依存関係
+│   └── us-{n}-{name}/
+│       ├── US.md             # ユーザーストーリー概要
+│       ├── DESIGN.md         # 設計メモ
+│       └── PROGRESS.md       # タスク管理
+└── {us_name}/                # 小規模（Epic不要）
+    ├── US.md
+    ├── DESIGN.md
+    └── PROGRESS.md
+```
 
-これらは ExitPlanMode 後に自動呼び出し。
+## 仕様のSSOT
 
-### Phase 3: レビュー
+SPECIFICATION.md は機能仕様のSSOT（Single Source of Truth）。
 
-1. 仕様適合性を確認
-2. ADR 準拠を確認
-3. PR 作成
-4. 実装記録を `docs/context/{issue}/` に保存
+**配置**: `composeApp/.../feature/{feature_name}/SPECIFICATION.md`
+
+**構成**: 3セクション統合仕様書
+1. ユーザーストーリー
+2. ビジネスルール
+3. 状態遷移（Mermaid図）
 
 ## 詳細ガイド
 
