@@ -7,7 +7,10 @@ import io.ktor.server.routing.*
 import io.ktor.server.testing.*
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.json.Json
-import org.example.project.domain.model.ApiResponse
+import kotlinx.serialization.json.int
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import org.example.project.domain.model.LiveStreamingDetails
 import org.example.project.domain.model.TwitchStreamInfo
 import org.example.project.domain.model.TwitchVideoDetails
@@ -18,12 +21,13 @@ import org.example.project.plugins.configureStatusPages
 import org.example.project.service.VideoService
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 /**
  * VideoRoutes のテスト
  */
 class VideoRoutesTest {
+
+    private val json = Json { ignoreUnknownKeys = true }
 
     // ========================================
     // GET /api/videos/{id} - 動画詳細
@@ -42,7 +46,10 @@ class VideoRoutesTest {
         val response = client.get("/api/videos/test-youtube-id?service=youtube")
 
         assertEquals(HttpStatusCode.OK, response.status)
-        assertTrue(response.bodyAsText().contains("Test YouTube Video"))
+        val body = json.parseToJsonElement(response.bodyAsText()).jsonObject
+        val data = body["data"]!!.jsonObject
+        assertEquals("test-youtube-id", data["id"]!!.jsonPrimitive.content)
+        assertEquals("Test YouTube Video", data["snippet"]!!.jsonObject["title"]!!.jsonPrimitive.content)
     }
 
     @Test
@@ -58,7 +65,10 @@ class VideoRoutesTest {
         val response = client.get("/api/videos/test-twitch-id?service=twitch")
 
         assertEquals(HttpStatusCode.OK, response.status)
-        assertTrue(response.bodyAsText().contains("Test Twitch Video"))
+        val body = json.parseToJsonElement(response.bodyAsText()).jsonObject
+        val data = body["data"]!!.jsonObject
+        assertEquals("test-twitch-id", data["id"]!!.jsonPrimitive.content)
+        assertEquals("Test Twitch Video", data["snippet"]!!.jsonObject["title"]!!.jsonPrimitive.content)
     }
 
     @Test
@@ -74,7 +84,9 @@ class VideoRoutesTest {
         val response = client.get("/api/videos/test-id")
 
         assertEquals(HttpStatusCode.BadRequest, response.status)
-        assertTrue(response.bodyAsText().contains("service query parameter is required"))
+        val body = json.parseToJsonElement(response.bodyAsText()).jsonObject
+        assertEquals("service query parameter is required", body["message"]!!.jsonPrimitive.content)
+        assertEquals(400, body["code"]!!.jsonPrimitive.int)
     }
 
     @Test
@@ -90,7 +102,9 @@ class VideoRoutesTest {
         val response = client.get("/api/videos/test-id?service=invalid")
 
         assertEquals(HttpStatusCode.BadRequest, response.status)
-        assertTrue(response.bodyAsText().contains("Invalid service type"))
+        val body = json.parseToJsonElement(response.bodyAsText()).jsonObject
+        assertEquals("Invalid service type: invalid", body["message"]!!.jsonPrimitive.content)
+        assertEquals(400, body["code"]!!.jsonPrimitive.int)
     }
 
     // ========================================
@@ -110,7 +124,11 @@ class VideoRoutesTest {
         val response = client.get("/api/channels/test-channel-id/videos?service=youtube&startDate=2026-01-01&endDate=2026-01-31")
 
         assertEquals(HttpStatusCode.OK, response.status)
-        assertTrue(response.bodyAsText().contains("Test YouTube Video"))
+        val body = json.parseToJsonElement(response.bodyAsText()).jsonObject
+        val dataArray = body["data"]!!.jsonArray
+        assertEquals(1, dataArray.size)
+        val firstVideo = dataArray[0].jsonObject
+        assertEquals("Test YouTube Video", firstVideo["snippet"]!!.jsonObject["title"]!!.jsonPrimitive.content)
     }
 
     @Test
@@ -126,7 +144,11 @@ class VideoRoutesTest {
         val response = client.get("/api/channels/test-channel-id/videos?service=twitch&startDate=2026-01-01&endDate=2026-01-31")
 
         assertEquals(HttpStatusCode.OK, response.status)
-        assertTrue(response.bodyAsText().contains("Test Twitch Video"))
+        val body = json.parseToJsonElement(response.bodyAsText()).jsonObject
+        val dataArray = body["data"]!!.jsonArray
+        assertEquals(1, dataArray.size)
+        val firstVideo = dataArray[0].jsonObject
+        assertEquals("Test Twitch Video", firstVideo["snippet"]!!.jsonObject["title"]!!.jsonPrimitive.content)
     }
 
     @Test
@@ -142,7 +164,9 @@ class VideoRoutesTest {
         val response = client.get("/api/channels/test-id/videos?startDate=2026-01-01&endDate=2026-01-31")
 
         assertEquals(HttpStatusCode.BadRequest, response.status)
-        assertTrue(response.bodyAsText().contains("service query parameter is required"))
+        val body = json.parseToJsonElement(response.bodyAsText()).jsonObject
+        assertEquals("service query parameter is required", body["message"]!!.jsonPrimitive.content)
+        assertEquals(400, body["code"]!!.jsonPrimitive.int)
     }
 
     @Test
@@ -158,7 +182,9 @@ class VideoRoutesTest {
         val response = client.get("/api/channels/test-id/videos?service=youtube&endDate=2026-01-31")
 
         assertEquals(HttpStatusCode.BadRequest, response.status)
-        assertTrue(response.bodyAsText().contains("startDate query parameter is required"))
+        val body = json.parseToJsonElement(response.bodyAsText()).jsonObject
+        assertEquals("startDate query parameter is required", body["message"]!!.jsonPrimitive.content)
+        assertEquals(400, body["code"]!!.jsonPrimitive.int)
     }
 
     @Test
@@ -174,7 +200,9 @@ class VideoRoutesTest {
         val response = client.get("/api/channels/test-id/videos?service=youtube&startDate=2026-01-01")
 
         assertEquals(HttpStatusCode.BadRequest, response.status)
-        assertTrue(response.bodyAsText().contains("endDate query parameter is required"))
+        val body = json.parseToJsonElement(response.bodyAsText()).jsonObject
+        assertEquals("endDate query parameter is required", body["message"]!!.jsonPrimitive.content)
+        assertEquals(400, body["code"]!!.jsonPrimitive.int)
     }
 
     @Test
@@ -190,7 +218,9 @@ class VideoRoutesTest {
         val response = client.get("/api/channels/test-id/videos?service=youtube&startDate=invalid&endDate=2026-01-31")
 
         assertEquals(HttpStatusCode.BadRequest, response.status)
-        assertTrue(response.bodyAsText().contains("Invalid startDate format"))
+        val body = json.parseToJsonElement(response.bodyAsText()).jsonObject
+        assertEquals("Invalid startDate format. Expected YYYY-MM-DD", body["message"]!!.jsonPrimitive.content)
+        assertEquals(400, body["code"]!!.jsonPrimitive.int)
     }
 
     // ========================================

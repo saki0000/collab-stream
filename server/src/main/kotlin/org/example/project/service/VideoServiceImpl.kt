@@ -5,6 +5,7 @@ package org.example.project.service
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.request.*
+import io.ktor.client.request.forms.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import kotlinx.datetime.DateTimeUnit
@@ -12,6 +13,8 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.plus
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 import org.example.project.config.ApiKeyConfig
 import org.example.project.data.mapper.TwitchVideoMapper
 import org.example.project.data.mapper.YouTubeVideoMapper
@@ -34,6 +37,24 @@ class VideoServiceImpl(
     private val httpClient: HttpClient
 ) : VideoService {
 
+    companion object {
+        // YouTube API
+        private const val YOUTUBE_API_BASE_URL = "https://www.googleapis.com/youtube/v3"
+        private const val YOUTUBE_VIDEOS_ENDPOINT = "$YOUTUBE_API_BASE_URL/videos"
+        private const val YOUTUBE_SEARCH_ENDPOINT = "$YOUTUBE_API_BASE_URL/search"
+        private const val YOUTUBE_VIDEO_PART = "liveStreamingDetails,snippet"
+        private const val YOUTUBE_SEARCH_MAX_RESULTS = "50"
+
+        // Twitch API
+        private const val TWITCH_API_BASE_URL = "https://api.twitch.tv/helix"
+        private const val TWITCH_VIDEOS_ENDPOINT = "$TWITCH_API_BASE_URL/videos"
+        private const val TWITCH_OAUTH_TOKEN_URL = "https://id.twitch.tv/oauth2/token"
+        private const val TWITCH_CHANNEL_VIDEOS_FIRST = "100"
+    }
+
+    // Twitch OAuthアクセストークンのキャッシュ
+    private var twitchAccessToken: String? = null
+
     // ========================================
     // YouTube API
     // ========================================
@@ -42,9 +63,9 @@ class VideoServiceImpl(
         val apiKey = ApiKeyConfig.youtubeApiKey
             ?: throw ServiceUnavailableException("YouTube API key is not configured")
 
-        try {
-            val response: HttpResponse = httpClient.get("https://www.googleapis.com/youtube/v3/videos") {
-                parameter("part", "liveStreamingDetails,snippet")
+        return safeApiCall("Failed to fetch YouTube video details") {
+            val response: HttpResponse = httpClient.get(YOUTUBE_VIDEOS_ENDPOINT) {
+                parameter("part", YOUTUBE_VIDEO_PART)
                 parameter("id", videoId)
                 parameter("key", apiKey)
             }
@@ -59,12 +80,7 @@ class VideoServiceImpl(
                 throw NotFoundException("YouTube video not found: $videoId")
             }
 
-            return YouTubeVideoMapper.toDomainModel(apiResponse.items.first())
-        } catch (e: Exception) {
-            when (e) {
-                is ServiceUnavailableException, is NotFoundException, is ExternalApiException -> throw e
-                else -> throw ExternalApiException("Failed to fetch YouTube video details", e)
-            }
+            YouTubeVideoMapper.toDomainModel(apiResponse.items.first())
         }
     }
 
@@ -81,15 +97,15 @@ class VideoServiceImpl(
         val endDatePlusOne = endDate.plus(1, DateTimeUnit.DAY)
         val publishedBefore = "${endDatePlusOne}T00:00:00Z"
 
-        try {
+        return safeApiCall("Failed to fetch YouTube channel videos") {
             // Step 1: search.list で動画IDを取得
-            val searchResponse: HttpResponse = httpClient.get("https://www.googleapis.com/youtube/v3/search") {
+            val searchResponse: HttpResponse = httpClient.get(YOUTUBE_SEARCH_ENDPOINT) {
                 parameter("part", "snippet")
                 parameter("channelId", channelId)
                 parameter("type", "video")
                 parameter("eventType", "completed")
                 parameter("order", "date")
-                parameter("maxResults", "50")
+                parameter("maxResults", YOUTUBE_SEARCH_MAX_RESULTS)
                 parameter("publishedAfter", publishedAfter)
                 parameter("publishedBefore", publishedBefore)
                 parameter("key", apiKey)
@@ -102,14 +118,14 @@ class VideoServiceImpl(
             val searchResult: YouTubeSearchResponse = searchResponse.body()
 
             if (searchResult.items.isEmpty()) {
-                return emptyList()
+                return@safeApiCall emptyList()
             }
 
             // Step 2: videos.list で詳細情報を取得
             val videoIds = searchResult.items.map { it.id.videoId }.joinToString(",")
 
-            val videosResponse: HttpResponse = httpClient.get("https://www.googleapis.com/youtube/v3/videos") {
-                parameter("part", "liveStreamingDetails,snippet")
+            val videosResponse: HttpResponse = httpClient.get(YOUTUBE_VIDEOS_ENDPOINT) {
+                parameter("part", YOUTUBE_VIDEO_PART)
                 parameter("id", videoIds)
                 parameter("key", apiKey)
             }
@@ -120,12 +136,7 @@ class VideoServiceImpl(
 
             val videosResult: YouTubeApiResponse = videosResponse.body()
 
-            return videosResult.items.map { YouTubeVideoMapper.toDomainModel(it) }
-        } catch (e: Exception) {
-            when (e) {
-                is ServiceUnavailableException, is ExternalApiException -> throw e
-                else -> throw ExternalApiException("Failed to fetch YouTube channel videos", e)
-            }
+            videosResult.items.map { YouTubeVideoMapper.toDomainModel(it) }
         }
     }
 
@@ -134,16 +145,15 @@ class VideoServiceImpl(
     // ========================================
 
     override suspend fun getTwitchVideoDetails(videoId: String): TwitchVideoDetails {
+        val accessToken = getTwitchAccessToken()
         val clientId = ApiKeyConfig.twitchClientId
             ?: throw ServiceUnavailableException("Twitch Client ID is not configured")
-        val clientSecret = ApiKeyConfig.twitchClientSecret
-            ?: throw ServiceUnavailableException("Twitch Client Secret is not configured")
 
-        try {
-            val response: HttpResponse = httpClient.get("https://api.twitch.tv/helix/videos") {
+        return safeApiCall("Failed to fetch Twitch video details") {
+            val response: HttpResponse = httpClient.get(TWITCH_VIDEOS_ENDPOINT) {
                 parameter("id", videoId)
                 header("Client-ID", clientId)
-                header("Authorization", "Bearer $clientSecret")
+                header("Authorization", "Bearer $accessToken")
             }
 
             if (!response.status.isSuccess()) {
@@ -152,7 +162,6 @@ class VideoServiceImpl(
 
             val apiResponse: TwitchApiResponse = response.body()
 
-            // エラーレスポンスのチェック
             if (apiResponse.error != null) {
                 throw ExternalApiException("Twitch API error: ${apiResponse.message}")
             }
@@ -161,12 +170,7 @@ class VideoServiceImpl(
                 throw NotFoundException("Twitch video not found: $videoId")
             }
 
-            return TwitchVideoMapper.toDomainModel(apiResponse.data.first())
-        } catch (e: Exception) {
-            when (e) {
-                is ServiceUnavailableException, is NotFoundException, is ExternalApiException -> throw e
-                else -> throw ExternalApiException("Failed to fetch Twitch video details", e)
-            }
+            TwitchVideoMapper.toDomainModel(apiResponse.data.first())
         }
     }
 
@@ -175,18 +179,17 @@ class VideoServiceImpl(
         startDate: LocalDate,
         endDate: LocalDate
     ): List<TwitchVideoDetails> {
+        val accessToken = getTwitchAccessToken()
         val clientId = ApiKeyConfig.twitchClientId
             ?: throw ServiceUnavailableException("Twitch Client ID is not configured")
-        val clientSecret = ApiKeyConfig.twitchClientSecret
-            ?: throw ServiceUnavailableException("Twitch Client Secret is not configured")
 
-        try {
-            val response: HttpResponse = httpClient.get("https://api.twitch.tv/helix/videos") {
+        return safeApiCall("Failed to fetch Twitch channel videos") {
+            val response: HttpResponse = httpClient.get(TWITCH_VIDEOS_ENDPOINT) {
                 parameter("user_id", channelId)
                 parameter("type", "archive")
-                parameter("first", "100")
+                parameter("first", TWITCH_CHANNEL_VIDEOS_FIRST)
                 header("Client-ID", clientId)
-                header("Authorization", "Bearer $clientSecret")
+                header("Authorization", "Bearer $accessToken")
             }
 
             if (!response.status.isSuccess()) {
@@ -195,7 +198,6 @@ class VideoServiceImpl(
 
             val apiResponse: TwitchApiResponse = response.body()
 
-            // エラーレスポンスのチェック
             if (apiResponse.error != null) {
                 throw ExternalApiException("Twitch API error: ${apiResponse.message}")
             }
@@ -209,12 +211,79 @@ class VideoServiceImpl(
                 createdAt != null && createdAt >= startInstant && createdAt < endInstant
             }
 
-            return filteredVideos.map { TwitchVideoMapper.toDomainModel(it) }
+            filteredVideos.map { TwitchVideoMapper.toDomainModel(it) }
+        }
+    }
+
+    // ========================================
+    // Twitch OAuth
+    // ========================================
+
+    /**
+     * Twitch OAuth Client Credentials フローでアクセストークンを取得する。
+     * キャッシュ済みトークンがある場合はそれを返す。
+     */
+    private suspend fun getTwitchAccessToken(): String {
+        twitchAccessToken?.let { return it }
+
+        val clientId = ApiKeyConfig.twitchClientId
+            ?: throw ServiceUnavailableException("Twitch Client ID is not configured")
+        val clientSecret = ApiKeyConfig.twitchClientSecret
+            ?: throw ServiceUnavailableException("Twitch Client Secret is not configured")
+
+        try {
+            val response: HttpResponse = httpClient.submitForm(
+                url = TWITCH_OAUTH_TOKEN_URL,
+                formParameters = parameters {
+                    append("client_id", clientId)
+                    append("client_secret", clientSecret)
+                    append("grant_type", "client_credentials")
+                }
+            )
+
+            if (!response.status.isSuccess()) {
+                throw ExternalApiException("Twitch OAuth token request failed: ${response.status}")
+            }
+
+            val tokenResponse: TwitchTokenResponse = response.body()
+            twitchAccessToken = tokenResponse.accessToken
+            return tokenResponse.accessToken
         } catch (e: Exception) {
             when (e) {
                 is ServiceUnavailableException, is ExternalApiException -> throw e
-                else -> throw ExternalApiException("Failed to fetch Twitch channel videos", e)
+                else -> throw ExternalApiException("Failed to obtain Twitch access token", e)
+            }
+        }
+    }
+
+    // ========================================
+    // ヘルパー
+    // ========================================
+
+    /**
+     * 外部API呼び出しの共通例外ハンドリング
+     */
+    private suspend fun <T> safeApiCall(errorMessage: String, block: suspend () -> T): T {
+        try {
+            return block()
+        } catch (e: Exception) {
+            when (e) {
+                is ServiceUnavailableException, is NotFoundException, is ExternalApiException -> throw e
+                else -> throw ExternalApiException(errorMessage, e)
             }
         }
     }
 }
+
+/**
+ * Twitch OAuth トークンレスポンス
+ */
+@Serializable
+private data class TwitchTokenResponse(
+    @SerialName("access_token")
+    val accessToken: String,
+    @SerialName("expires_in")
+    val expiresIn: Int,
+    @SerialName("token_type")
+    val tokenType: String,
+)

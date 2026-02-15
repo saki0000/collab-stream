@@ -50,6 +50,7 @@ fun Application.configureStatusPages() {
 
         // 503 Service Unavailable (サービス利用不可)
         exception<ServiceUnavailableException> { call, cause ->
+            call.application.log.warn("Service unavailable", cause)
             call.respond(
                 HttpStatusCode.ServiceUnavailable,
                 ApiResponse.Error(

@@ -6,6 +6,7 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.datetime.LocalDate
 import org.example.project.domain.model.ApiResponse
+import org.example.project.domain.model.VideoServiceType
 import org.example.project.service.VideoService
 
 /**
@@ -20,31 +21,22 @@ fun Route.videoRoutes(videoService: VideoService) {
         // GET /api/videos/{id}?service=youtube|twitch
         get("/videos/{id}") {
             val videoId = call.parameters["id"]
-                ?: return@get call.respond(
-                    HttpStatusCode.BadRequest,
-                    ApiResponse.Error("Video ID is required", HttpStatusCode.BadRequest.value)
-                )
+                ?: return@get call.respondBadRequest("Video ID is required")
 
-            val service = call.request.queryParameters["service"]?.lowercase()
-                ?: return@get call.respond(
-                    HttpStatusCode.BadRequest,
-                    ApiResponse.Error("service query parameter is required", HttpStatusCode.BadRequest.value)
-                )
+            val serviceParam = call.request.queryParameters["service"]
+                ?: return@get call.respondBadRequest("service query parameter is required")
 
-            when (service) {
-                "youtube" -> {
+            val serviceType = parseServiceType(serviceParam)
+                ?: return@get call.respondBadRequest("Invalid service type: $serviceParam")
+
+            when (serviceType) {
+                VideoServiceType.YOUTUBE -> {
                     val videoDetails = videoService.getYouTubeVideoDetails(videoId)
                     call.respond(HttpStatusCode.OK, ApiResponse.Success(videoDetails))
                 }
-                "twitch" -> {
+                VideoServiceType.TWITCH -> {
                     val videoDetails = videoService.getTwitchVideoDetails(videoId)
                     call.respond(HttpStatusCode.OK, ApiResponse.Success(videoDetails))
-                }
-                else -> {
-                    call.respond(
-                        HttpStatusCode.BadRequest,
-                        ApiResponse.Error("Invalid service type: $service", HttpStatusCode.BadRequest.value)
-                    )
                 }
             }
         }
@@ -52,64 +44,65 @@ fun Route.videoRoutes(videoService: VideoService) {
         // GET /api/channels/{id}/videos?service=youtube|twitch&startDate=YYYY-MM-DD&endDate=YYYY-MM-DD
         get("/channels/{id}/videos") {
             val channelId = call.parameters["id"]
-                ?: return@get call.respond(
-                    HttpStatusCode.BadRequest,
-                    ApiResponse.Error("Channel ID is required", HttpStatusCode.BadRequest.value)
-                )
+                ?: return@get call.respondBadRequest("Channel ID is required")
 
-            val service = call.request.queryParameters["service"]?.lowercase()
-                ?: return@get call.respond(
-                    HttpStatusCode.BadRequest,
-                    ApiResponse.Error("service query parameter is required", HttpStatusCode.BadRequest.value)
-                )
+            val serviceParam = call.request.queryParameters["service"]
+                ?: return@get call.respondBadRequest("service query parameter is required")
+
+            val serviceType = parseServiceType(serviceParam)
+                ?: return@get call.respondBadRequest("Invalid service type: $serviceParam")
 
             val startDateStr = call.request.queryParameters["startDate"]
-                ?: return@get call.respond(
-                    HttpStatusCode.BadRequest,
-                    ApiResponse.Error("startDate query parameter is required", HttpStatusCode.BadRequest.value)
-                )
+                ?: return@get call.respondBadRequest("startDate query parameter is required")
 
             val endDateStr = call.request.queryParameters["endDate"]
-                ?: return@get call.respond(
-                    HttpStatusCode.BadRequest,
-                    ApiResponse.Error("endDate query parameter is required", HttpStatusCode.BadRequest.value)
-                )
+                ?: return@get call.respondBadRequest("endDate query parameter is required")
 
             // 日付パース
             val startDate = try {
                 LocalDate.parse(startDateStr)
             } catch (e: Exception) {
-                return@get call.respond(
-                    HttpStatusCode.BadRequest,
-                    ApiResponse.Error("Invalid startDate format. Expected YYYY-MM-DD", HttpStatusCode.BadRequest.value)
-                )
+                return@get call.respondBadRequest("Invalid startDate format. Expected YYYY-MM-DD")
             }
 
             val endDate = try {
                 LocalDate.parse(endDateStr)
             } catch (e: Exception) {
-                return@get call.respond(
-                    HttpStatusCode.BadRequest,
-                    ApiResponse.Error("Invalid endDate format. Expected YYYY-MM-DD", HttpStatusCode.BadRequest.value)
-                )
+                return@get call.respondBadRequest("Invalid endDate format. Expected YYYY-MM-DD")
             }
 
-            when (service) {
-                "youtube" -> {
+            when (serviceType) {
+                VideoServiceType.YOUTUBE -> {
                     val videos = videoService.getYouTubeChannelVideos(channelId, startDate, endDate)
                     call.respond(HttpStatusCode.OK, ApiResponse.Success(videos))
                 }
-                "twitch" -> {
+                VideoServiceType.TWITCH -> {
                     val videos = videoService.getTwitchChannelVideos(channelId, startDate, endDate)
                     call.respond(HttpStatusCode.OK, ApiResponse.Success(videos))
-                }
-                else -> {
-                    call.respond(
-                        HttpStatusCode.BadRequest,
-                        ApiResponse.Error("Invalid service type: $service", HttpStatusCode.BadRequest.value)
-                    )
                 }
             }
         }
     }
+}
+
+/**
+ * サービスタイプ文字列を VideoServiceType に変換する。
+ * 不正な値の場合は null を返す。
+ */
+private fun parseServiceType(value: String): VideoServiceType? {
+    return when (value.lowercase()) {
+        "youtube" -> VideoServiceType.YOUTUBE
+        "twitch" -> VideoServiceType.TWITCH
+        else -> null
+    }
+}
+
+/**
+ * 400 Bad Request レスポンスを返すヘルパー
+ */
+private suspend fun ApplicationCall.respondBadRequest(message: String) {
+    respond(
+        HttpStatusCode.BadRequest,
+        ApiResponse.Error(message, HttpStatusCode.BadRequest.value)
+    )
 }
