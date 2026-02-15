@@ -2,8 +2,11 @@ package org.example.project.di
 
 import org.example.project.data.local.AppDatabase
 import org.example.project.data.local.DatabaseBuilder
+import org.example.project.data.local.FollowedChannelDao
 import org.example.project.data.local.SyncHistoryDao
+import org.example.project.data.repository.ChannelFollowRepositoryImpl
 import org.example.project.data.repository.SyncHistoryRepositoryImpl
+import org.example.project.domain.repository.ChannelFollowRepository
 import org.example.project.domain.repository.SyncHistoryRepository
 import org.koin.dsl.module
 
@@ -13,7 +16,7 @@ import org.koin.dsl.module
  * AppDatabase、DAO、Repositoryの依存関係を定義する。
  * DatabaseBuilderはプラットフォーム固有モジュールで提供される。
  *
- * Story Issue: #36
+ * Story Issue: #36, US-1
  * Epic: EPIC-003（同期チャンネル履歴保存）
  */
 val databaseModule = module {
@@ -27,8 +30,16 @@ val databaseModule = module {
         get<AppDatabase>().syncHistoryDao()
     }
 
+    single<FollowedChannelDao> {
+        get<AppDatabase>().followedChannelDao()
+    }
+
     // Repository
     single<SyncHistoryRepository> {
         SyncHistoryRepositoryImpl(get())
+    }
+
+    single<ChannelFollowRepository> {
+        ChannelFollowRepositoryImpl(get())
     }
 }
