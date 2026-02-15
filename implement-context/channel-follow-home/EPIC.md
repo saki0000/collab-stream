@@ -37,8 +37,8 @@ kanban
   spec[Spec]
   design[Design]
   dev[Dev]
-    us1[US-1: チャンネルフォロー データ層]@{ priority: 'High' }
   done[Done]
+    us1[US-1: チャンネルフォロー データ層]@{ priority: 'High' }
 ```
 
 **カラム = `/develop` ステップ対応**:
