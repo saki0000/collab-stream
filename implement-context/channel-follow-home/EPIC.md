@@ -36,8 +36,8 @@ kanban
   spec[Spec]
   design[Design]
   dev[Dev]
-    us2[US-2: フォロー/アンフォロー UI]
   done[Done]
+    us2[US-2: フォロー/アンフォロー UI]
     us1[US-1: チャンネルフォロー データ層]@{ priority: 'High' }
 ```
 
