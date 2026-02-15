@@ -30,7 +30,6 @@ config:
 ---
 kanban
   backlog[Backlog]
-    us2[US-2: 匿名認証（デバイスID）]
     us3[US-3: RevenueCat SDK統合]
     us4[US-4: サブスクリプション管理UI]
     us5[US-5: サーバーサイド検証API]
@@ -38,6 +37,7 @@ kanban
   design[Design]
   dev[Dev]
   review[Review]
+    us2[US-2: 匿名認証（デバイスID）]
   done[Done]
     us1[US-1: ドメインモデル & Feature Gate基盤]@{ priority: 'High' }
 ```
