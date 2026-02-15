@@ -36,8 +36,8 @@ kanban
   spec[Spec]
   design[Design]
   dev[Dev]
-    us2[US-2: 匿名認証（デバイスID）]
   review[Review]
+    us2[US-2: 匿名認証（デバイスID）]
   done[Done]
     us1[US-1: ドメインモデル & Feature Gate基盤]@{ priority: 'High' }
 ```
