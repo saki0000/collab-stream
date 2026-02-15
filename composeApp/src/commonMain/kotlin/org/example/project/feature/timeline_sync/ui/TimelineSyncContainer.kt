@@ -85,6 +85,14 @@ fun TimelineSyncContainer(
                         duration = SnackbarDuration.Short,
                     )
                 }
+
+                // Channel Follow (US-2)
+                is TimelineSyncSideEffect.ShowFollowFeedback -> {
+                    snackbarHostState.showSnackbar(
+                        message = sideEffect.message,
+                        duration = SnackbarDuration.Short,
+                    )
+                }
             }
         }
     }

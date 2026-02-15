@@ -33,6 +33,8 @@ import org.example.project.domain.model.SyncChannel
 import org.example.project.domain.model.SyncStatus
 import org.example.project.domain.model.VideoDetails
 import org.example.project.domain.model.VideoServiceType
+import org.example.project.domain.model.FollowedChannel
+import org.example.project.domain.repository.ChannelFollowRepository
 import org.example.project.domain.repository.TimelineSyncRepository
 import org.example.project.domain.usecase.ChannelSearchUseCase
 
@@ -53,6 +55,7 @@ class ChannelAddViewModelTest {
     private lateinit var mockDataSource: FakeTwitchSearchDataSource
     private lateinit var mockYouTubeDataSource: FakeYouTubeSearchDataSource
     private lateinit var channelSearchUseCase: ChannelSearchUseCase
+    private lateinit var mockChannelFollowRepository: FakeChannelFollowRepository
     private lateinit var viewModel: TimelineSyncViewModel
 
     @BeforeTest
@@ -62,7 +65,8 @@ class ChannelAddViewModelTest {
         mockDataSource = FakeTwitchSearchDataSource()
         mockYouTubeDataSource = FakeYouTubeSearchDataSource()
         channelSearchUseCase = ChannelSearchUseCase(mockDataSource, mockYouTubeDataSource)
-        viewModel = TimelineSyncViewModel(mockRepository, channelSearchUseCase)
+        mockChannelFollowRepository = FakeChannelFollowRepository()
+        viewModel = TimelineSyncViewModel(mockRepository, channelSearchUseCase, mockChannelFollowRepository)
     }
 
     @AfterTest
@@ -623,6 +627,51 @@ class FakeYouTubeSearchDataSource : YouTubeSearchDataSource {
 /**
  * Fake implementation of TwitchSearchDataSource for testing.
  */
+/**
+ * テスト用 ChannelFollowRepository のフェイク実装。
+ */
+class FakeChannelFollowRepository : ChannelFollowRepository {
+    private val followedChannels = mutableListOf<FollowedChannel>()
+    private val _flow = kotlinx.coroutines.flow.MutableStateFlow<List<FollowedChannel>>(emptyList())
+
+    override suspend fun follow(
+        channelId: String,
+        channelName: String,
+        channelIconUrl: String,
+        serviceType: VideoServiceType,
+    ): Result<FollowedChannel> {
+        val channel = FollowedChannel(
+            channelId = channelId,
+            channelName = channelName,
+            channelIconUrl = channelIconUrl,
+            serviceType = serviceType,
+            followedAt = kotlin.time.Clock.System.now(),
+        )
+        followedChannels.removeAll { it.channelId == channelId && it.serviceType == serviceType }
+        followedChannels.add(channel)
+        _flow.value = followedChannels.toList()
+        return Result.success(channel)
+    }
+
+    override suspend fun unfollow(channelId: String, serviceType: VideoServiceType): Result<Unit> {
+        followedChannels.removeAll { it.channelId == channelId && it.serviceType == serviceType }
+        _flow.value = followedChannels.toList()
+        return Result.success(Unit)
+    }
+
+    override suspend fun isFollowing(channelId: String, serviceType: VideoServiceType): Boolean {
+        return followedChannels.any { it.channelId == channelId && it.serviceType == serviceType }
+    }
+
+    override suspend fun getAllFollowedChannels(): Result<List<FollowedChannel>> {
+        return Result.success(followedChannels.toList())
+    }
+
+    override fun observeFollowedChannels(): kotlinx.coroutines.flow.Flow<List<FollowedChannel>> {
+        return _flow
+    }
+}
+
 class FakeTwitchSearchDataSource : TwitchSearchDataSource {
     var searchChannelsWasCalled = false
     var searchChannelsCount = 0

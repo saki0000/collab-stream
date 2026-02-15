@@ -46,6 +46,7 @@ val appModule = module {
         TimelineSyncViewModel(
             timelineSyncRepository = get(),
             channelSearchUseCase = get(),
+            channelFollowRepository = get(),
         )
     }
 }

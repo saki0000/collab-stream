@@ -101,6 +101,7 @@ fun TimelineSyncScreen(
             }
 
             // Story 2: Channel Add Bottom Sheet, Story 5: Multi-Platform Search
+            // Channel Follow (US-2): フォローボタンとフォロー状態の受け渡し
             ChannelAddBottomSheet(
                 isVisible = uiState.isChannelAddModalVisible,
                 searchQuery = uiState.channelSearchQuery,
@@ -109,6 +110,7 @@ fun TimelineSyncScreen(
                 isSearching = uiState.isSearchingChannels,
                 errorMessage = uiState.channelAddError,
                 selectedPlatform = uiState.selectedPlatform,
+                followedChannelIds = uiState.followedChannelIds,
                 onPlatformSelect = { platform ->
                     onIntent(TimelineSyncIntent.SelectPlatform(platform))
                 },
@@ -120,6 +122,9 @@ fun TimelineSyncScreen(
                 },
                 onChannelRemove = { channelId ->
                     onIntent(TimelineSyncIntent.RemoveChannel(channelId))
+                },
+                onToggleFollow = { channel ->
+                    onIntent(TimelineSyncIntent.ToggleFollow(channel))
                 },
                 onDismiss = {
                     onIntent(TimelineSyncIntent.CloseChannelAddModal)

@@ -31,12 +31,12 @@ config:
 ---
 kanban
   backlog[Backlog]
-    us2[US-2: フォロー/アンフォロー UI]
     us3[US-3: アーカイブHome画面 - フィード表示]
     us4[US-4: アーカイブ選択 & 同期画面遷移]
   spec[Spec]
   design[Design]
   dev[Dev]
+    us2[US-2: フォロー/アンフォロー UI]
   done[Done]
     us1[US-1: チャンネルフォロー データ層]@{ priority: 'High' }
 ```

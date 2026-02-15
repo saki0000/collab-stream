@@ -107,6 +107,16 @@ data class TimelineSyncUiState(
      * Null when no channel was recently deleted.
      */
     val recentlyDeletedChannel: SyncChannel? = null,
+
+    // ============================================
+    // Channel Follow (US-2)
+    // ============================================
+
+    /**
+     * フォロー済みチャンネルIDのセット。
+     * 選択中のプラットフォームでフィルタ済み。
+     */
+    val followedChannelIds: Set<String> = emptySet(),
 ) {
     /**
      * Whether the channel list is empty (and not loading).

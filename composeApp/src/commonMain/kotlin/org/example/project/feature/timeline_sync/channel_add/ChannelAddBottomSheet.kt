@@ -19,6 +19,8 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -68,10 +70,12 @@ fun ChannelAddBottomSheet(
     isSearching: Boolean,
     errorMessage: String?,
     selectedPlatform: VideoServiceType,
+    followedChannelIds: Set<String>,
     onPlatformSelect: (VideoServiceType) -> Unit,
     onSearchQueryChange: (String) -> Unit,
     onChannelSelect: (ChannelInfo) -> Unit,
     onChannelRemove: (String) -> Unit,
+    onToggleFollow: (ChannelInfo) -> Unit,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
     sheetState: SheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
@@ -89,10 +93,12 @@ fun ChannelAddBottomSheet(
                 isSearching = isSearching,
                 errorMessage = errorMessage,
                 selectedPlatform = selectedPlatform,
+                followedChannelIds = followedChannelIds,
                 onPlatformSelect = onPlatformSelect,
                 onSearchQueryChange = onSearchQueryChange,
                 onChannelSelect = onChannelSelect,
                 onChannelRemove = onChannelRemove,
+                onToggleFollow = onToggleFollow,
             )
         }
     }
@@ -110,10 +116,12 @@ private fun ChannelAddContent(
     isSearching: Boolean,
     errorMessage: String?,
     selectedPlatform: VideoServiceType,
+    followedChannelIds: Set<String>,
     onPlatformSelect: (VideoServiceType) -> Unit,
     onSearchQueryChange: (String) -> Unit,
     onChannelSelect: (ChannelInfo) -> Unit,
     onChannelRemove: (String) -> Unit,
+    onToggleFollow: (ChannelInfo) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(
@@ -176,7 +184,9 @@ private fun ChannelAddContent(
             items(channelSuggestions, key = { it.id }) { channel ->
                 ChannelSuggestionItem(
                     channel = channel,
+                    isFollowed = followedChannelIds.contains(channel.id),
                     onClick = { onChannelSelect(channel) },
+                    onToggleFollow = { onToggleFollow(channel) },
                 )
             }
         } else if (searchQuery.isNotBlank() && !isSearching) {
@@ -296,12 +306,15 @@ private fun ChannelSearchField(
 }
 
 /**
- * チャンネル候補アイテム（プラットフォームアイコン付き）。
+ * チャンネル候補アイテム（プラットフォームアイコン + フォローボタン付き）。
+ * Channel Follow (US-2): フォローアイコンを追加アイコンの左に配置。
  */
 @Composable
 private fun ChannelSuggestionItem(
     channel: ChannelInfo,
+    isFollowed: Boolean,
     onClick: () -> Unit,
+    onToggleFollow: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -347,6 +360,19 @@ private fun ChannelSuggestionItem(
                     overflow = TextOverflow.Ellipsis,
                 )
             }
+        }
+
+        // フォローアイコン（US-2）
+        IconButton(
+            onClick = onToggleFollow,
+            modifier = Modifier.size(Dimensions.iconXl),
+        ) {
+            Icon(
+                imageVector = if (isFollowed) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                contentDescription = if (isFollowed) "フォロー解除" else "フォロー",
+                tint = if (isFollowed) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.size(Dimensions.iconMd),
+            )
         }
 
         // 追加アイコン

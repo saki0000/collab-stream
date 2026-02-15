@@ -21,9 +21,11 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.example.project.domain.model.SelectedStreamInfo
+import org.example.project.domain.model.FollowedChannel
 import org.example.project.domain.model.SyncChannel
 import org.example.project.domain.model.SyncStatus
 import org.example.project.domain.model.VideoServiceType
+import org.example.project.domain.repository.ChannelFollowRepository
 
 /**
  * ViewModelテスト: TimelineSyncViewModel - 外部アプリ連携
@@ -40,6 +42,7 @@ class ExternalAppNavigationViewModelTest {
     private lateinit var mockRepository: FakeTimelineSyncRepository
     private lateinit var mockDataSource: FakeTwitchSearchDataSource
     private lateinit var mockYouTubeDataSource: FakeYouTubeSearchDataSource
+    private lateinit var mockChannelFollowRepository: FakeChannelFollowRepository
     private lateinit var viewModel: TimelineSyncViewModel
 
     private val baseTime = Instant.parse("2024-01-01T10:00:00Z")
@@ -50,8 +53,9 @@ class ExternalAppNavigationViewModelTest {
         mockRepository = FakeTimelineSyncRepository()
         mockDataSource = FakeTwitchSearchDataSource()
         mockYouTubeDataSource = FakeYouTubeSearchDataSource()
+        mockChannelFollowRepository = FakeChannelFollowRepository()
         val channelSearchUseCase = org.example.project.domain.usecase.ChannelSearchUseCase(mockDataSource, mockYouTubeDataSource)
-        viewModel = TimelineSyncViewModel(mockRepository, channelSearchUseCase)
+        viewModel = TimelineSyncViewModel(mockRepository, channelSearchUseCase, mockChannelFollowRepository)
     }
 
     @AfterTest

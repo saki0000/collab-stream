@@ -132,6 +132,16 @@ sealed interface TimelineSyncIntent {
      * READY または OPENED 状態のチャンネルで有効。
      */
     data class OpenExternalApp(val channelId: String) : TimelineSyncIntent
+
+    // ============================================
+    // Channel Follow (US-2)
+    // ============================================
+
+    /**
+     * チャンネルをフォロー/アンフォローする。
+     * フォロー済みの場合はアンフォロー、未フォローの場合はフォローを実行する。
+     */
+    data class ToggleFollow(val channel: ChannelInfo) : TimelineSyncIntent
 }
 
 /**
@@ -168,4 +178,13 @@ sealed interface TimelineSyncSideEffect {
      * Auto-dismisses after 2 seconds.
      */
     data class ShowChannelAddError(val message: String) : TimelineSyncSideEffect
+
+    // ============================================
+    // Channel Follow (US-2)
+    // ============================================
+
+    /**
+     * フォロー/アンフォロー後のフィードバックSnackbarを表示する。
+     */
+    data class ShowFollowFeedback(val message: String) : TimelineSyncSideEffect
 }
