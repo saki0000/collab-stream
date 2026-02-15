@@ -5,6 +5,8 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.test.runTest
 import org.example.project.data.local.UserDeviceDao
 import org.example.project.data.local.entity.UserDeviceEntity
@@ -101,20 +103,21 @@ class UserRepositoryImplTest {
     // ========================================
 
     @Test
-    fun `複数回の初回呼び出し_同じIDが返されること`() = runTest {
+    fun `並行呼び出し_全て同じIDが返されること`() = runTest {
         // Arrange
         val dao = FakeUserDeviceDao()
         val repository = UserRepositoryImpl(dao)
 
-        // Act - 複数のgetDeviceId()呼び出しをシミュレート
-        val deviceId1 = repository.getDeviceId()
-        val deviceId2 = repository.getDeviceId()
+        // Act - 複数のコルーチンから同時にgetDeviceId()を呼び出し
+        val results = (1..10).map {
+            async { repository.getDeviceId() }
+        }.awaitAll()
 
-        // Assert
-        assertEquals(deviceId1, deviceId2)
-        // DAOには1回のみ保存される（REPLACE動作により重複しない）
-        val savedId = dao.getDeviceId()
-        assertEquals(deviceId1, savedId)
+        // Assert - 全て同じIDであること
+        val uniqueIds = results.toSet()
+        assertEquals(1, uniqueIds.size)
+        // DBに保存されたIDと一致すること
+        assertEquals(results.first(), dao.getDeviceId())
     }
 }
 

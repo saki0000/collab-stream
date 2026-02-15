@@ -2,6 +2,8 @@ package org.example.project.data.repository
 
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import org.example.project.data.local.UserDeviceDao
 import org.example.project.data.local.entity.UserDeviceEntity
 import org.example.project.domain.repository.UserRepository
@@ -20,33 +22,40 @@ class UserRepositoryImpl(
     private val userDeviceDao: UserDeviceDao,
 ) : UserRepository {
 
+    private val mutex = Mutex()
+
     /**
      * デバイスIDを取得する。
      *
      * 未生成の場合は新しいUUID v4を生成・永続化して返す。
-     * Room のsuspend関数により、複数の同時呼び出しは自動的に直列化される。
+     * Mutexにより、複数の同時呼び出しでも競合状態なく安全に処理される。
      *
      * @return デバイスID（UUID v4形式の文字列）
      */
     override suspend fun getDeviceId(): String {
-        // 既存のデバイスIDを取得
-        val existingId = userDeviceDao.getDeviceId()
-        if (existingId != null) {
-            return existingId
-        }
+        // 既存のデバイスIDがあれば即時返す（ロックのオーバーヘッドを避ける）
+        userDeviceDao.getDeviceId()?.let { return it }
 
-        // 新しいUUID v4を生成
-        val newDeviceId = Uuid.random().toString()
+        return mutex.withLock {
+            // ロック取得後、再度チェック（Double-Checked Locking）
+            val existingId = userDeviceDao.getDeviceId()
+            if (existingId != null) {
+                return@withLock existingId
+            }
 
-        // DBに保存
-        userDeviceDao.insert(
-            UserDeviceEntity(
-                id = 1,
-                deviceId = newDeviceId,
+            // 新しいUUID v4を生成
+            val newDeviceId = Uuid.random().toString()
+
+            // DBに保存
+            userDeviceDao.insert(
+                UserDeviceEntity(
+                    id = 1,
+                    deviceId = newDeviceId,
+                )
             )
-        )
 
-        return newDeviceId
+            newDeviceId
+        }
     }
 
     /**
