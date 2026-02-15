@@ -5,6 +5,10 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import kotlin.time.ExperimentalTime
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.test.runTest
 import org.example.project.data.local.FollowedChannelDao
 import org.example.project.data.local.entity.FollowedChannelEntity
@@ -70,8 +74,9 @@ class ChannelFollowRepositoryImplTest {
 
         // Assert
         assertTrue(result.isSuccess)
-        assertEquals(1, dao.channels.size)
-        assertEquals("Test Channel Updated", dao.channels[0].channelName)
+        val allChannels = dao.getAll()
+        assertEquals(1, allChannels.size)
+        assertEquals("Test Channel Updated", allChannels[0].channelName)
     }
 
     // ========================================
@@ -217,8 +222,6 @@ class ChannelFollowRepositoryImplTest {
         val channels = result.getOrThrow()
         assertEquals(3, channels.size)
         // 新しいフォローが先頭（降順）であることを確認
-        // ただし、同じミリ秒内でフォローされる可能性があるため、
-        // followedAtが単調増加していることのみ確認
         assertTrue(channels[0].followedAt >= channels[1].followedAt)
         assertTrue(channels[1].followedAt >= channels[2].followedAt)
     }
@@ -236,38 +239,88 @@ class ChannelFollowRepositoryImplTest {
         assertTrue(result.isSuccess)
         assertTrue(result.getOrThrow().isEmpty())
     }
+
+    // ========================================
+    // フォロー一覧監視（Flow）
+    // ========================================
+
+    @Test
+    fun `フォロー一覧監視_フォロー追加でFlowが更新されること`() = runTest {
+        // Arrange
+        val dao = FakeFollowedChannelDao()
+        val repository = ChannelFollowRepositoryImpl(dao)
+
+        // Act - 初期状態を確認
+        val initialList = repository.observeFollowedChannels().first()
+        assertEquals(0, initialList.size)
+
+        // フォロー追加
+        repository.follow(
+            channelId = "channel1",
+            channelName = "Test Channel",
+            channelIconUrl = "https://example.com/icon.png",
+            serviceType = VideoServiceType.YOUTUBE,
+        )
+
+        // Assert - 追加後のFlowを確認
+        val updatedList = repository.observeFollowedChannels().first()
+        assertEquals(1, updatedList.size)
+        assertEquals("channel1", updatedList[0].channelId)
+    }
+
+    @Test
+    fun `フォロー一覧監視_アンフォローでFlowが更新されること`() = runTest {
+        // Arrange
+        val dao = FakeFollowedChannelDao()
+        val repository = ChannelFollowRepositoryImpl(dao)
+
+        repository.follow(
+            channelId = "channel1",
+            channelName = "Test Channel",
+            channelIconUrl = "https://example.com/icon.png",
+            serviceType = VideoServiceType.YOUTUBE,
+        )
+
+        // Act - アンフォロー
+        repository.unfollow("channel1", VideoServiceType.YOUTUBE)
+
+        // Assert - 削除後のFlowを確認
+        val updatedList = repository.observeFollowedChannels().first()
+        assertTrue(updatedList.isEmpty())
+    }
 }
 
 /**
  * テスト用のFake DAO実装。
  *
- * インメモリでデータを管理し、実際のRoomの動作をシミュレートする。
+ * MutableStateFlowを使用してリアクティブな更新をシミュレートする。
  */
 private class FakeFollowedChannelDao : FollowedChannelDao {
-    val channels = mutableListOf<FollowedChannelEntity>()
+    private val channelsFlow = MutableStateFlow<List<FollowedChannelEntity>>(emptyList())
 
     override suspend fun insert(channel: FollowedChannelEntity) {
         // REPLACE動作をシミュレート：既存があれば削除して追加
-        channels.removeAll { it.channelId == channel.channelId && it.serviceType == channel.serviceType }
-        channels.add(channel)
+        val current = channelsFlow.value.toMutableList()
+        current.removeAll { it.channelId == channel.channelId && it.serviceType == channel.serviceType }
+        current.add(channel)
+        channelsFlow.value = current
     }
 
     override suspend fun delete(channelId: String, serviceType: VideoServiceType) {
-        channels.removeAll { it.channelId == channelId && it.serviceType == serviceType }
+        channelsFlow.value = channelsFlow.value.filterNot {
+            it.channelId == channelId && it.serviceType == serviceType
+        }
     }
 
     override suspend fun isFollowing(channelId: String, serviceType: VideoServiceType): Boolean {
-        return channels.any { it.channelId == channelId && it.serviceType == serviceType }
+        return channelsFlow.value.any { it.channelId == channelId && it.serviceType == serviceType }
     }
 
     override suspend fun getAll(): List<FollowedChannelEntity> {
-        // followedAtの降順でソート
-        return channels.sortedByDescending { it.followedAt }
+        return channelsFlow.value.sortedByDescending { it.followedAt }
     }
 
-    override fun observeAll(): kotlinx.coroutines.flow.Flow<List<FollowedChannelEntity>> {
-        // Flow監視は今回のテストでは使用しないため、シンプルに現在のリストを返す
-        // followedAtの降順でソート
-        return kotlinx.coroutines.flow.flowOf(channels.sortedByDescending { it.followedAt })
+    override fun observeAll(): Flow<List<FollowedChannelEntity>> {
+        return channelsFlow.map { list -> list.sortedByDescending { it.followedAt } }
     }
 }
