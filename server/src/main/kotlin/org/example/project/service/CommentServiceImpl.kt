@@ -46,6 +46,7 @@ class CommentServiceImpl(
                 parameter("videoId", videoId)
                 parameter("maxResults", maxResults.coerceIn(1, 100))
                 parameter("order", order)
+                parameter("textFormat", "plainText")
                 if (pageToken != null) {
                     parameter("pageToken", pageToken)
                 }

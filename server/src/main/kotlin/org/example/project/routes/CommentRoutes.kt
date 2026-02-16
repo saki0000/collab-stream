@@ -27,16 +27,12 @@ fun Route.commentRoutes(commentService: CommentService) {
                 )
 
             // クエリパラメータの取得とバリデーション
-            val maxResultsStr = call.request.queryParameters["maxResults"]
-            val maxResults = if (maxResultsStr != null) {
-                maxResultsStr.toIntOrNull()?.coerceIn(1, 100)
-                    ?: return@get call.respond(
-                        HttpStatusCode.BadRequest,
-                        ApiResponse.Error("maxResults must be between 1 and 100", HttpStatusCode.BadRequest.value)
-                    )
-            } else {
-                100 // デフォルト値
-            }
+            val maxResults = call.request.queryParameters["maxResults"]?.let {
+                it.toIntOrNull()?.coerceIn(1, 100) ?: return@get call.respond(
+                    HttpStatusCode.BadRequest,
+                    ApiResponse.Error("maxResults must be between 1 and 100", HttpStatusCode.BadRequest.value)
+                )
+            } ?: 100
 
             val pageToken = call.request.queryParameters["pageToken"]
 
