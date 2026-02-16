@@ -11,6 +11,10 @@ import kotlinx.serialization.Serializable
 data class YouTubeChannelSearchResponse(
     @SerialName("items")
     val items: List<YouTubeChannelSearchItem> = emptyList(),
+    @SerialName("nextPageToken")
+    val nextPageToken: String? = null,
+    @SerialName("pageInfo")
+    val pageInfo: YouTubePageInfo? = null,
 )
 
 /**

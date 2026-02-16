@@ -1,9 +1,12 @@
 package org.example.project.domain.model
 
+import kotlinx.serialization.Serializable
+
 /**
  * チャンネル検索結果のドメインモデル。
  * 検索候補の表示やチャンネル追加に使用する。
  */
+@Serializable
 data class ChannelInfo(
     val id: String,
     val displayName: String,
