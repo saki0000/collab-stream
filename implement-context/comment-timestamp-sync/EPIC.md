@@ -41,8 +41,8 @@ kanban
   spec[Spec]
   design[Design]
   dev[Dev]
-    us1[US-1: コメントAPIプロキシエンドポイント]@{ priority: 'High' }
   done[Done]
+    us1[US-1: コメントAPIプロキシエンドポイント]@{ priority: 'High' }
 ```
 
 **カラム = `/develop` ステップ対応**:
