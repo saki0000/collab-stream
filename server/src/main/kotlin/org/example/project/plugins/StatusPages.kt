@@ -48,6 +48,17 @@ fun Application.configureStatusPages() {
             )
         }
 
+        // 403 Forbidden (コメント無効化)
+        exception<CommentsDisabledException> { call, cause ->
+            call.respond(
+                HttpStatusCode.Forbidden,
+                ApiResponse.Error(
+                    message = cause.message ?: "Comments are disabled for this video",
+                    code = HttpStatusCode.Forbidden.value
+                )
+            )
+        }
+
         // 503 Service Unavailable (サービス利用不可)
         exception<ServiceUnavailableException> { call, cause ->
             call.respond(
@@ -87,3 +98,8 @@ class ExternalApiException(message: String, cause: Throwable? = null) : Exceptio
  * カスタム例外: サービス利用不可 (503 Service Unavailable)
  */
 class ServiceUnavailableException(message: String) : Exception(message)
+
+/**
+ * カスタム例外: コメントが無効化されている (403 Forbidden)
+ */
+class CommentsDisabledException(message: String) : Exception(message)

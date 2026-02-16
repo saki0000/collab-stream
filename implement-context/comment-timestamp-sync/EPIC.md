@@ -35,7 +35,6 @@ config:
 ---
 kanban
   backlog[Backlog]
-    us1[US-1: コメントAPIプロキシエンドポイント]
     us2[US-2: タイムスタンプ抽出ドメイン & データ層]
     us3[US-3: タイムスタンプマーカーUI]
     us4[US-4: コメントリスト表示 & 同期連携]
@@ -43,6 +42,7 @@ kanban
   design[Design]
   dev[Dev]
   done[Done]
+    us1[US-1: コメントAPIプロキシエンドポイント]@{ priority: 'High' }
 ```
 
 **カラム = `/develop` ステップ対応**:

@@ -16,6 +16,4 @@ import kotlinx.serialization.Serializable
  * @property requiredTier この機能を利用するために必要なプラン種別
  */
 @Serializable
-enum class Feature(val requiredTier: SubscriptionTier) {
-    ;
-}
+enum class Feature(val requiredTier: SubscriptionTier)
