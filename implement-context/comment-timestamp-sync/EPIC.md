@@ -61,7 +61,7 @@ kanban
 
 ```mermaid
 graph TD
-    EXT["api-proxy-server US-1（Review中）"]
+    EXT["api-proxy-server US-1（Done）"]
     US1["US-1: コメントAPIプロキシエンドポイント"]
     US2["US-2: タイムスタンプ抽出ドメイン & データ層"]
     US3["US-3: タイムスタンプマーカーUI"]

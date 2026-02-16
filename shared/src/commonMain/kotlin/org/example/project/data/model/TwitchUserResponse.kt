@@ -12,6 +12,9 @@ data class TwitchUserResponse(
     @SerialName("data")
     val data: List<TwitchUser> = emptyList(),
 
+    @SerialName("pagination")
+    val pagination: TwitchPagination? = null,
+
     @SerialName("error")
     val error: String? = null,
 

@@ -30,16 +30,15 @@ config:
 ---
 kanban
   backlog[Backlog]
-    us2[US-2: 匿名認証（デバイスID）]
     us3[US-3: RevenueCat SDK統合]
     us4[US-4: サブスクリプション管理UI]
     us5[US-5: サーバーサイド検証API]
   spec[Spec]
   design[Design]
   dev[Dev]
-  review[Review]
   done[Done]
     us1[US-1: ドメインモデル & Feature Gate基盤]@{ priority: 'High' }
+    us2[US-2: 匿名認証（デバイスID）]
 ```
 
 **カラム = `/develop` ステップ対応**:
@@ -50,8 +49,7 @@ kanban
 | Spec | Step 2 | SPECIFICATION.md 作成済み |
 | Design | Step 3 | DESIGN.md + PROGRESS.md + Worktree |
 | Dev | Step 4 | Shared + UI 実装 + 全テスト通過 |
-| Review | Step 5 | PR作成済み |
-| Done | - | PRマージ済み |
+| Done | Step 5 | PR作成済み |
 
 ---
 

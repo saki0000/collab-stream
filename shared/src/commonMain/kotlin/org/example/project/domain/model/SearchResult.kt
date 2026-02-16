@@ -1,24 +1,27 @@
+@file:OptIn(kotlin.time.ExperimentalTime::class)
+
 package org.example.project.domain.model
 
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.builtins.InstantComponentSerializer
 
-data class SearchResult
-@OptIn(ExperimentalTime::class)
-constructor(
+@Serializable
+data class SearchResult(
     val videoId: String,
     val title: String,
     val description: String,
     val thumbnailUrl: String,
     val channelTitle: String,
+    @Serializable(with = InstantComponentSerializer::class)
     val publishedAt: Instant,
     val isLiveBroadcast: Boolean,
     val serviceType: VideoServiceType,
 )
 
-data class SearchQuery
-@OptIn(ExperimentalTime::class)
-constructor(
+@Serializable
+data class SearchQuery(
     val query: String,
     val maxResults: Int = 25,
     val pageToken: String? = null,
@@ -30,6 +33,7 @@ constructor(
     val targetServices: Set<VideoServiceType> = setOf(VideoServiceType.YOUTUBE, VideoServiceType.TWITCH),
 )
 
+@Serializable
 enum class SearchEventType(val value: String) {
     COMPLETED("completed"),
     LIVE("live"),
@@ -37,6 +41,7 @@ enum class SearchEventType(val value: String) {
     ANY("any"),
 }
 
+@Serializable
 enum class SearchOrder(val value: String) {
     VIEW_COUNT("viewCount"),
     DATE("date"),
@@ -44,6 +49,7 @@ enum class SearchOrder(val value: String) {
     RATING("rating"),
 }
 
+@Serializable
 data class SearchResponse(
     val results: List<SearchResult>,
     val nextPageToken: String? = null,
