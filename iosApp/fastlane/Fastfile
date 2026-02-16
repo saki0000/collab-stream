@@ -1,0 +1,93 @@
+default_platform(:ios)
+
+platform :ios do
+  # ======================================
+  # Kotlin Multiplatform フレームワークビルド
+  # ======================================
+
+  desc "Kotlin Multiplatform フレームワークをビルド"
+  private_lane :build_kotlin_framework do
+    Dir.chdir(File.expand_path('../../', __dir__)) do
+      sh("./gradlew :composeApp:assembleXCFramework")
+    end
+  end
+
+  # ======================================
+  # Match（証明書管理）
+  # ======================================
+
+  desc "開発用証明書を取得"
+  lane :sync_certificates_development do
+    match(type: "development")
+  end
+
+  desc "配布用証明書を取得"
+  lane :sync_certificates_appstore do
+    match(type: "appstore")
+  end
+
+  # ======================================
+  # ビルドのみ（CI検証用）
+  # ======================================
+
+  desc "iOSアプリをビルドのみ（ビルド検証）"
+  lane :build_only do
+    build_kotlin_framework
+
+    build_app(
+      project: "iosApp.xcodeproj",
+      scheme: "iosApp",
+      skip_codesigning: true,
+      skip_archive: true,
+      destination: "generic/platform=iOS Simulator"
+    )
+  end
+
+  # ======================================
+  # TestFlight 配信
+  # ======================================
+
+  desc "TestFlightにベータ版を配信"
+  lane :beta do |options|
+    # CI環境向けに一時キーチェーンを作成
+    setup_ci if is_ci?
+
+    # App Store Connect API Key の設定（CI環境）
+    if ENV["APP_STORE_CONNECT_API_KEY_ID"]
+      app_store_connect_api_key(
+        key_id: ENV["APP_STORE_CONNECT_API_KEY_ID"],
+        issuer_id: ENV["APP_STORE_CONNECT_ISSUER_ID"],
+        key_content: ENV["APP_STORE_CONNECT_API_KEY_CONTENT"],
+        is_key_content_base64: true
+      )
+    end
+
+    # 証明書の同期
+    sync_certificates_appstore
+
+    # Kotlin Framework ビルド
+    build_kotlin_framework
+
+    # ビルド番号の設定（CI環境: github.run_numberを使用）
+    if options[:build_number]
+      increment_build_number(
+        build_number: options[:build_number],
+        xcodeproj: "iosApp.xcodeproj"
+      )
+    end
+
+    # アプリのビルド
+    build_app(
+      project: "iosApp.xcodeproj",
+      scheme: "iosApp",
+      export_method: "app-store",
+      output_directory: "build",
+      output_name: "CollabStream.ipa"
+    )
+
+    # TestFlight にアップロード
+    upload_to_testflight(
+      skip_waiting_for_build_processing: true
+    )
+  end
+end
