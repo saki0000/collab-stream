@@ -57,6 +57,7 @@ class SyncTimeCalculationViewModelTest {
     private lateinit var mockRepository: TestTimelineSyncRepository
     private lateinit var mockDataSource: TestTwitchSearchDataSource
     private lateinit var channelSearchUseCase: ChannelSearchUseCase
+    private lateinit var mockChannelFollowRepository: FakeChannelFollowRepository
     private lateinit var viewModel: TimelineSyncViewModel
 
     // テスト用の固定時刻
@@ -70,7 +71,8 @@ class SyncTimeCalculationViewModelTest {
         mockRepository = TestTimelineSyncRepository()
         mockDataSource = TestTwitchSearchDataSource()
         channelSearchUseCase = ChannelSearchUseCase(mockDataSource, TestYouTubeSearchDataSource())
-        viewModel = TimelineSyncViewModel(mockRepository, channelSearchUseCase)
+        mockChannelFollowRepository = FakeChannelFollowRepository()
+        viewModel = TimelineSyncViewModel(mockRepository, channelSearchUseCase, mockChannelFollowRepository)
     }
 
     @AfterTest

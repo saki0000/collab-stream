@@ -22,11 +22,13 @@ import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 import org.example.project.domain.model.ChannelInfo
+import org.example.project.domain.model.FollowedChannel
 import org.example.project.domain.model.SelectedStreamInfo
 import org.example.project.domain.model.SyncChannel
 import org.example.project.domain.model.SyncStatus
 import org.example.project.domain.model.VideoServiceType
 import org.example.project.domain.model.toDeepLinkInfo
+import org.example.project.domain.repository.ChannelFollowRepository
 import org.example.project.domain.repository.TimelineSyncRepository
 import org.example.project.domain.usecase.ChannelSearchUseCase
 
@@ -41,6 +43,7 @@ import org.example.project.domain.usecase.ChannelSearchUseCase
 class TimelineSyncViewModel(
     private val timelineSyncRepository: TimelineSyncRepository,
     private val channelSearchUseCase: ChannelSearchUseCase,
+    private val channelFollowRepository: ChannelFollowRepository,
     private val clock: kotlin.time.Clock = kotlin.time.Clock.System,
 ) : ViewModel() {
 
@@ -52,6 +55,11 @@ class TimelineSyncViewModel(
 
     // Story 2: Channel search debounce job
     private var channelSearchJob: Job? = null
+
+    init {
+        // Channel Follow (US-2): フォロー済みチャンネルをFlowで監視
+        observeFollowedChannels()
+    }
 
     /**
      * Handles user intents and updates state accordingly.
@@ -79,6 +87,8 @@ class TimelineSyncViewModel(
             TimelineSyncIntent.ClearChannelAddError -> clearChannelAddError()
             // Story 4: External App Navigation
             is TimelineSyncIntent.OpenExternalApp -> openExternalApp(intent.channelId)
+            // Channel Follow (US-2)
+            is TimelineSyncIntent.ToggleFollow -> toggleFollow(intent.channel)
         }
     }
 
@@ -300,12 +310,16 @@ class TimelineSyncViewModel(
      * プラットフォームを選択する。
      * 検索結果をクリアし、検索クエリが空でない場合は再検索を実行する。
      * Story 5: Multi-Platform Search
+     * Channel Follow (US-2): プラットフォーム切替時にフォローIDリストを再計算
      */
     private fun selectPlatform(platform: VideoServiceType) {
         _uiState.value = _uiState.value.copy(
             selectedPlatform = platform,
             channelSuggestions = emptyList(),
         )
+
+        // Channel Follow (US-2): プラットフォーム切替時にフォローIDリストを再計算
+        recalculateFollowedChannelIds()
 
         // クエリが空でない場合は選択プラットフォームで再検索
         val currentQuery = _uiState.value.channelSearchQuery
@@ -558,6 +572,98 @@ class TimelineSyncViewModel(
         // Timeline bar positions are calculated in UI layer based on
         // channel streams and selected date.
         // This method can be used for additional server-side filtering if needed.
+    }
+
+    // ============================================
+    // Channel Follow (US-2)
+    // ============================================
+
+    /**
+     * フォロー済みチャンネルの変更をFlowで監視し、UiStateを更新する。
+     */
+    private fun observeFollowedChannels() {
+        viewModelScope.launch {
+            channelFollowRepository.observeFollowedChannels().collect { followedChannels ->
+                updateFollowedChannelIds(followedChannels)
+            }
+        }
+    }
+
+    /**
+     * 選択中のプラットフォームでフィルタしたフォロー済みチャンネルIDのセットを再計算する。
+     * プラットフォーム切替時など、Flowからの通知外で再フィルタが必要な場合に使用。
+     */
+    private fun recalculateFollowedChannelIds() {
+        viewModelScope.launch {
+            channelFollowRepository.getAllFollowedChannels().fold(
+                onSuccess = { updateFollowedChannelIds(it) },
+                onFailure = { /* エラーは無視（フォロー状態は表示に必須ではない） */ },
+            )
+        }
+    }
+
+    /**
+     * フォロー済みチャンネルリストから選択中プラットフォームのIDセットを抽出し、UiStateを更新する。
+     */
+    private fun updateFollowedChannelIds(followedChannels: List<FollowedChannel>) {
+        val selectedPlatform = _uiState.value.selectedPlatform
+        val followedIds = followedChannels
+            .filter { it.serviceType == selectedPlatform }
+            .map { it.channelId }
+            .toSet()
+        _uiState.value = _uiState.value.copy(followedChannelIds = followedIds)
+    }
+
+    /**
+     * チャンネルをフォロー/アンフォローする。
+     * フォロー済みの場合はアンフォロー、未フォローの場合はフォローを実行する。
+     */
+    private fun toggleFollow(channel: ChannelInfo) {
+        val isFollowing = _uiState.value.followedChannelIds.contains(channel.id)
+
+        viewModelScope.launch {
+            if (isFollowing) {
+                // アンフォロー
+                channelFollowRepository.unfollow(
+                    channelId = channel.id,
+                    serviceType = channel.serviceType,
+                ).fold(
+                    onSuccess = {
+                        _sideEffect.emit(
+                            TimelineSyncSideEffect.ShowFollowFeedback(
+                                "${channel.displayName}のフォローを解除しました",
+                            ),
+                        )
+                    },
+                    onFailure = { error ->
+                        _sideEffect.emit(
+                            TimelineSyncSideEffect.ShowError("フォロー解除に失敗しました"),
+                        )
+                    },
+                )
+            } else {
+                // フォロー
+                channelFollowRepository.follow(
+                    channelId = channel.id,
+                    channelName = channel.displayName,
+                    channelIconUrl = channel.thumbnailUrl ?: "",
+                    serviceType = channel.serviceType,
+                ).fold(
+                    onSuccess = {
+                        _sideEffect.emit(
+                            TimelineSyncSideEffect.ShowFollowFeedback(
+                                "${channel.displayName}をフォローしました",
+                            ),
+                        )
+                    },
+                    onFailure = { error ->
+                        _sideEffect.emit(
+                            TimelineSyncSideEffect.ShowError("フォローに失敗しました"),
+                        )
+                    },
+                )
+            }
+        }
     }
 
     /**

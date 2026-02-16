@@ -53,6 +53,7 @@ class ChannelAddViewModelTest {
     private lateinit var mockDataSource: FakeTwitchSearchDataSource
     private lateinit var mockYouTubeDataSource: FakeYouTubeSearchDataSource
     private lateinit var channelSearchUseCase: ChannelSearchUseCase
+    private lateinit var mockChannelFollowRepository: FakeChannelFollowRepository
     private lateinit var viewModel: TimelineSyncViewModel
 
     @BeforeTest
@@ -62,7 +63,8 @@ class ChannelAddViewModelTest {
         mockDataSource = FakeTwitchSearchDataSource()
         mockYouTubeDataSource = FakeYouTubeSearchDataSource()
         channelSearchUseCase = ChannelSearchUseCase(mockDataSource, mockYouTubeDataSource)
-        viewModel = TimelineSyncViewModel(mockRepository, channelSearchUseCase)
+        mockChannelFollowRepository = FakeChannelFollowRepository()
+        viewModel = TimelineSyncViewModel(mockRepository, channelSearchUseCase, mockChannelFollowRepository)
     }
 
     @AfterTest

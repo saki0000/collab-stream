@@ -19,6 +19,8 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -46,9 +48,11 @@ import coil3.compose.AsyncImage
 import org.example.project.core.theme.AppShapes
 import org.example.project.core.theme.Dimensions
 import org.example.project.core.theme.Spacing
+import org.example.project.core.theme.AppTheme
 import org.example.project.domain.model.ChannelInfo
 import org.example.project.domain.model.SyncChannel
 import org.example.project.domain.model.VideoServiceType
+import org.jetbrains.compose.ui.tooling.preview.Preview
 
 /**
  * チャンネル追加用ボトムシート。
@@ -68,10 +72,12 @@ fun ChannelAddBottomSheet(
     isSearching: Boolean,
     errorMessage: String?,
     selectedPlatform: VideoServiceType,
+    followedChannelIds: Set<String>,
     onPlatformSelect: (VideoServiceType) -> Unit,
     onSearchQueryChange: (String) -> Unit,
     onChannelSelect: (ChannelInfo) -> Unit,
     onChannelRemove: (String) -> Unit,
+    onToggleFollow: (ChannelInfo) -> Unit,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
     sheetState: SheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
@@ -89,10 +95,12 @@ fun ChannelAddBottomSheet(
                 isSearching = isSearching,
                 errorMessage = errorMessage,
                 selectedPlatform = selectedPlatform,
+                followedChannelIds = followedChannelIds,
                 onPlatformSelect = onPlatformSelect,
                 onSearchQueryChange = onSearchQueryChange,
                 onChannelSelect = onChannelSelect,
                 onChannelRemove = onChannelRemove,
+                onToggleFollow = onToggleFollow,
             )
         }
     }
@@ -110,10 +118,12 @@ private fun ChannelAddContent(
     isSearching: Boolean,
     errorMessage: String?,
     selectedPlatform: VideoServiceType,
+    followedChannelIds: Set<String>,
     onPlatformSelect: (VideoServiceType) -> Unit,
     onSearchQueryChange: (String) -> Unit,
     onChannelSelect: (ChannelInfo) -> Unit,
     onChannelRemove: (String) -> Unit,
+    onToggleFollow: (ChannelInfo) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(
@@ -176,7 +186,9 @@ private fun ChannelAddContent(
             items(channelSuggestions, key = { it.id }) { channel ->
                 ChannelSuggestionItem(
                     channel = channel,
+                    isFollowed = followedChannelIds.contains(channel.id),
                     onClick = { onChannelSelect(channel) },
+                    onToggleFollow = { onToggleFollow(channel) },
                 )
             }
         } else if (searchQuery.isNotBlank() && !isSearching) {
@@ -296,12 +308,15 @@ private fun ChannelSearchField(
 }
 
 /**
- * チャンネル候補アイテム（プラットフォームアイコン付き）。
+ * チャンネル候補アイテム（プラットフォームアイコン + フォローボタン付き）。
+ * Channel Follow (US-2): フォローアイコンを追加アイコンの左に配置。
  */
 @Composable
 private fun ChannelSuggestionItem(
     channel: ChannelInfo,
+    isFollowed: Boolean,
     onClick: () -> Unit,
+    onToggleFollow: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -347,6 +362,19 @@ private fun ChannelSuggestionItem(
                     overflow = TextOverflow.Ellipsis,
                 )
             }
+        }
+
+        // フォローアイコン（US-2）
+        IconButton(
+            onClick = onToggleFollow,
+            modifier = Modifier.size(Dimensions.iconXl),
+        ) {
+            Icon(
+                imageVector = if (isFollowed) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                contentDescription = if (isFollowed) "フォロー解除" else "フォロー",
+                tint = if (isFollowed) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.size(Dimensions.iconMd),
+            )
         }
 
         // 追加アイコン
@@ -451,4 +479,129 @@ private fun PlatformIcon(
         },
         modifier = modifier,
     )
+}
+
+// ============================================
+// Previews
+// ============================================
+
+/**
+ * Preview: 検索結果あり（フォロー状態混在）。
+ */
+@Preview
+@Composable
+private fun ChannelAddContentPreview() {
+    val mockSuggestions = listOf(
+        ChannelInfo(
+            id = "tw_1",
+            displayName = "StreamerA",
+            thumbnailUrl = "",
+            gameName = "Apex Legends",
+            serviceType = VideoServiceType.TWITCH,
+        ),
+        ChannelInfo(
+            id = "tw_2",
+            displayName = "StreamerB",
+            thumbnailUrl = "",
+            gameName = "Valorant",
+            serviceType = VideoServiceType.TWITCH,
+        ),
+    )
+    val mockAdded = listOf(
+        SyncChannel(
+            channelId = "tw_3",
+            channelName = "AddedChannel",
+            channelIconUrl = "",
+            serviceType = VideoServiceType.TWITCH,
+        ),
+    )
+
+    AppTheme {
+        ChannelAddContent(
+            searchQuery = "streamer",
+            channelSuggestions = mockSuggestions,
+            addedChannels = mockAdded,
+            isSearching = false,
+            errorMessage = null,
+            selectedPlatform = VideoServiceType.TWITCH,
+            followedChannelIds = setOf("tw_1"),
+            onPlatformSelect = {},
+            onSearchQueryChange = {},
+            onChannelSelect = {},
+            onChannelRemove = {},
+            onToggleFollow = {},
+        )
+    }
+}
+
+/**
+ * Preview: 検索中状態。
+ */
+@Preview
+@Composable
+private fun ChannelAddContentSearchingPreview() {
+    AppTheme {
+        ChannelAddContent(
+            searchQuery = "search",
+            channelSuggestions = emptyList(),
+            addedChannels = emptyList(),
+            isSearching = true,
+            errorMessage = null,
+            selectedPlatform = VideoServiceType.TWITCH,
+            followedChannelIds = emptySet(),
+            onPlatformSelect = {},
+            onSearchQueryChange = {},
+            onChannelSelect = {},
+            onChannelRemove = {},
+            onToggleFollow = {},
+        )
+    }
+}
+
+/**
+ * Preview: エラー状態。
+ */
+@Preview
+@Composable
+private fun ChannelAddContentErrorPreview() {
+    AppTheme {
+        ChannelAddContent(
+            searchQuery = "error",
+            channelSuggestions = emptyList(),
+            addedChannels = emptyList(),
+            isSearching = false,
+            errorMessage = "検索に失敗しました",
+            selectedPlatform = VideoServiceType.YOUTUBE,
+            followedChannelIds = emptySet(),
+            onPlatformSelect = {},
+            onSearchQueryChange = {},
+            onChannelSelect = {},
+            onChannelRemove = {},
+            onToggleFollow = {},
+        )
+    }
+}
+
+/**
+ * Preview: 空の初期状態。
+ */
+@Preview
+@Composable
+private fun ChannelAddContentEmptyPreview() {
+    AppTheme {
+        ChannelAddContent(
+            searchQuery = "",
+            channelSuggestions = emptyList(),
+            addedChannels = emptyList(),
+            isSearching = false,
+            errorMessage = null,
+            selectedPlatform = VideoServiceType.TWITCH,
+            followedChannelIds = emptySet(),
+            onPlatformSelect = {},
+            onSearchQueryChange = {},
+            onChannelSelect = {},
+            onChannelRemove = {},
+            onToggleFollow = {},
+        )
+    }
 }
