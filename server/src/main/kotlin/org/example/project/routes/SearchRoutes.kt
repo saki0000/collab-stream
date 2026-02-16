@@ -19,29 +19,8 @@ fun Route.searchRoutes(searchService: SearchService) {
     route("/api/search") {
         // GET /api/search/videos?q=keyword&service=youtube|twitch&maxResults=25&pageToken=...&cursor=...&eventType=completed&order=viewCount
         get("/videos") {
-            val query = call.request.queryParameters["q"]
-                ?: return@get call.respond(
-                    HttpStatusCode.BadRequest,
-                    ApiResponse.Error("q query parameter is required", HttpStatusCode.BadRequest.value)
-                )
-
-            if (query.isBlank()) {
-                return@get call.respond(
-                    HttpStatusCode.BadRequest,
-                    ApiResponse.Error("Search query must not be empty", HttpStatusCode.BadRequest.value)
-                )
-            }
-
-            val serviceParam = call.request.queryParameters["service"]?.lowercase()
-            val serviceType = when {
-                serviceParam == null -> null // 統合検索
-                serviceParam == "youtube" -> VideoServiceType.YOUTUBE
-                serviceParam == "twitch" -> VideoServiceType.TWITCH
-                else -> return@get call.respond(
-                    HttpStatusCode.BadRequest,
-                    ApiResponse.Error("Invalid service type. Use 'youtube' or 'twitch'", HttpStatusCode.BadRequest.value)
-                )
-            }
+            val (query, serviceType) = call.parseSearchParams()
+                ?: return@get // レスポンス済み
 
             val maxResults = call.request.queryParameters["maxResults"]?.toIntOrNull() ?: 25
             val pageToken = call.request.queryParameters["pageToken"]
@@ -64,29 +43,8 @@ fun Route.searchRoutes(searchService: SearchService) {
 
         // GET /api/search/channels?q=keyword&service=youtube|twitch&maxResults=25&pageToken=...&cursor=...
         get("/channels") {
-            val query = call.request.queryParameters["q"]
-                ?: return@get call.respond(
-                    HttpStatusCode.BadRequest,
-                    ApiResponse.Error("q query parameter is required", HttpStatusCode.BadRequest.value)
-                )
-
-            if (query.isBlank()) {
-                return@get call.respond(
-                    HttpStatusCode.BadRequest,
-                    ApiResponse.Error("Search query must not be empty", HttpStatusCode.BadRequest.value)
-                )
-            }
-
-            val serviceParam = call.request.queryParameters["service"]?.lowercase()
-            val serviceType = when {
-                serviceParam == null -> null // 統合検索
-                serviceParam == "youtube" -> VideoServiceType.YOUTUBE
-                serviceParam == "twitch" -> VideoServiceType.TWITCH
-                else -> return@get call.respond(
-                    HttpStatusCode.BadRequest,
-                    ApiResponse.Error("Invalid service type. Use 'youtube' or 'twitch'", HttpStatusCode.BadRequest.value)
-                )
-            }
+            val (query, serviceType) = call.parseSearchParams()
+                ?: return@get // レスポンス済み
 
             val maxResults = call.request.queryParameters["maxResults"]?.toIntOrNull() ?: 25
             val pageToken = call.request.queryParameters["pageToken"]
@@ -103,4 +61,51 @@ fun Route.searchRoutes(searchService: SearchService) {
             call.respond(HttpStatusCode.OK, ApiResponse.Success(channelSearchResponse))
         }
     }
+}
+
+/**
+ * 検索パラメータのパース結果
+ */
+private data class SearchParams(
+    val query: String,
+    val serviceType: VideoServiceType?,
+)
+
+/**
+ * 検索共通パラメータ（q, service）をパース・バリデーションする。
+ * バリデーションエラー時はレスポンスを送信し null を返す。
+ */
+private suspend fun ApplicationCall.parseSearchParams(): SearchParams? {
+    val query = request.queryParameters["q"]
+    if (query == null) {
+        respond(
+            HttpStatusCode.BadRequest,
+            ApiResponse.Error("q query parameter is required", HttpStatusCode.BadRequest.value)
+        )
+        return null
+    }
+
+    if (query.isBlank()) {
+        respond(
+            HttpStatusCode.BadRequest,
+            ApiResponse.Error("Search query must not be empty", HttpStatusCode.BadRequest.value)
+        )
+        return null
+    }
+
+    val serviceParam = request.queryParameters["service"]?.lowercase()
+    val serviceType = when (serviceParam) {
+        null -> null
+        "youtube" -> VideoServiceType.YOUTUBE
+        "twitch" -> VideoServiceType.TWITCH
+        else -> {
+            respond(
+                HttpStatusCode.BadRequest,
+                ApiResponse.Error("Invalid service type. Use 'youtube' or 'twitch'", HttpStatusCode.BadRequest.value)
+            )
+            return null
+        }
+    }
+
+    return SearchParams(query, serviceType)
 }

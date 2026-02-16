@@ -11,6 +11,6 @@ data class ChannelSearchResponse(
     val results: List<ChannelInfo>,
     val nextPageToken: String? = null,
     val totalResults: Int,
-    val hasMoreResults: Boolean = nextPageToken != null,
     val servicePageTokens: Map<VideoServiceType, String?> = emptyMap(),
+    val hasMoreResults: Boolean = nextPageToken != null || servicePageTokens.values.any { it != null },
 )

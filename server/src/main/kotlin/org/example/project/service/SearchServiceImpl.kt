@@ -276,7 +276,7 @@ class SearchServiceImpl(
 
             return ChannelSearchResponse(
                 results = channels,
-                nextPageToken = null, // YouTubeChannelSearchResponse にはページトークンがない
+                nextPageToken = apiResponse.nextPageToken,
                 totalResults = channels.size,
             )
         } catch (e: Exception) {
@@ -325,7 +325,7 @@ class SearchServiceImpl(
 
             return ChannelSearchResponse(
                 results = channels,
-                nextPageToken = null, // カーソルベースなので直接ページトークンには変換しない
+                nextPageToken = apiResponse.pagination?.cursor,
                 totalResults = channels.size,
             )
         } catch (e: Exception) {
