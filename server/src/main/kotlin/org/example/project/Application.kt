@@ -14,8 +14,10 @@ import org.example.project.config.ApiKeyConfig
 import org.example.project.plugins.configureCors
 import org.example.project.plugins.configureSerialization
 import org.example.project.plugins.configureStatusPages
+import org.example.project.routes.commentRoutes
 import org.example.project.routes.healthRoutes
 import org.example.project.routes.videoRoutes
+import org.example.project.service.CommentServiceImpl
 import org.example.project.service.VideoServiceImpl
 
 fun main() {
@@ -44,6 +46,7 @@ fun Application.module() {
 
     // サービス初期化
     val videoService = VideoServiceImpl(httpClient)
+    val commentService = CommentServiceImpl(httpClient)
 
     // ルーティング設定
     routing {
@@ -57,6 +60,9 @@ fun Application.module() {
 
         // 動画API
         videoRoutes(videoService)
+
+        // コメントAPI
+        commentRoutes(commentService)
     }
 
     // アプリケーション終了時にHttpClientをクローズ
