@@ -23,6 +23,18 @@ captures
 screenshots/components/
 .claude/settings.local.json
 
+# iOS ローカル設定（TEAM_ID等の個人情報）
+iosApp/Configuration/Config.local.xcconfig
+
+# Fastlane
+iosApp/fastlane/report.xml
+iosApp/fastlane/Preview.html
+iosApp/fastlane/screenshots/**/*.png
+iosApp/fastlane/test_output
+iosApp/build/
+iosApp/Gemfile.lock
+iosApp/vendor/
+
 # Roborazzi reference screenshots (tracked in Git for comparison)
 !composeApp/build
 composeApp/build/*

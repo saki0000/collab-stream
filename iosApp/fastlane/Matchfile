@@ -1,0 +1,14 @@
+# Fastlane Match 設定
+# 証明書とプロビジョニングプロファイルをGitリポジトリで管理
+
+# 証明書を保管するプライベートリポジトリ（要作成）
+# git_url("https://github.com/YOUR_ORG/collabstream-certificates.git")
+
+type("appstore")
+app_identifier("com.collabstream.app")
+
+# Xcode管理の証明書を読み取り専用で使用（Match初期化前の暫定設定）
+readonly(true)
+
+# CI環境ではKeychainを新規作成
+# setup_ci メソッドを Fastfile 側で呼び出すことで対応
