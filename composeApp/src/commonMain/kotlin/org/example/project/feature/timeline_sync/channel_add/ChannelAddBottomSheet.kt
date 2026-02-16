@@ -48,9 +48,11 @@ import coil3.compose.AsyncImage
 import org.example.project.core.theme.AppShapes
 import org.example.project.core.theme.Dimensions
 import org.example.project.core.theme.Spacing
+import org.example.project.core.theme.AppTheme
 import org.example.project.domain.model.ChannelInfo
 import org.example.project.domain.model.SyncChannel
 import org.example.project.domain.model.VideoServiceType
+import org.jetbrains.compose.ui.tooling.preview.Preview
 
 /**
  * チャンネル追加用ボトムシート。
@@ -477,4 +479,129 @@ private fun PlatformIcon(
         },
         modifier = modifier,
     )
+}
+
+// ============================================
+// Previews
+// ============================================
+
+/**
+ * Preview: 検索結果あり（フォロー状態混在）。
+ */
+@Preview
+@Composable
+private fun ChannelAddContentPreview() {
+    val mockSuggestions = listOf(
+        ChannelInfo(
+            id = "tw_1",
+            displayName = "StreamerA",
+            thumbnailUrl = "",
+            gameName = "Apex Legends",
+            serviceType = VideoServiceType.TWITCH,
+        ),
+        ChannelInfo(
+            id = "tw_2",
+            displayName = "StreamerB",
+            thumbnailUrl = "",
+            gameName = "Valorant",
+            serviceType = VideoServiceType.TWITCH,
+        ),
+    )
+    val mockAdded = listOf(
+        SyncChannel(
+            channelId = "tw_3",
+            channelName = "AddedChannel",
+            channelIconUrl = "",
+            serviceType = VideoServiceType.TWITCH,
+        ),
+    )
+
+    AppTheme {
+        ChannelAddContent(
+            searchQuery = "streamer",
+            channelSuggestions = mockSuggestions,
+            addedChannels = mockAdded,
+            isSearching = false,
+            errorMessage = null,
+            selectedPlatform = VideoServiceType.TWITCH,
+            followedChannelIds = setOf("tw_1"),
+            onPlatformSelect = {},
+            onSearchQueryChange = {},
+            onChannelSelect = {},
+            onChannelRemove = {},
+            onToggleFollow = {},
+        )
+    }
+}
+
+/**
+ * Preview: 検索中状態。
+ */
+@Preview
+@Composable
+private fun ChannelAddContentSearchingPreview() {
+    AppTheme {
+        ChannelAddContent(
+            searchQuery = "search",
+            channelSuggestions = emptyList(),
+            addedChannels = emptyList(),
+            isSearching = true,
+            errorMessage = null,
+            selectedPlatform = VideoServiceType.TWITCH,
+            followedChannelIds = emptySet(),
+            onPlatformSelect = {},
+            onSearchQueryChange = {},
+            onChannelSelect = {},
+            onChannelRemove = {},
+            onToggleFollow = {},
+        )
+    }
+}
+
+/**
+ * Preview: エラー状態。
+ */
+@Preview
+@Composable
+private fun ChannelAddContentErrorPreview() {
+    AppTheme {
+        ChannelAddContent(
+            searchQuery = "error",
+            channelSuggestions = emptyList(),
+            addedChannels = emptyList(),
+            isSearching = false,
+            errorMessage = "検索に失敗しました",
+            selectedPlatform = VideoServiceType.YOUTUBE,
+            followedChannelIds = emptySet(),
+            onPlatformSelect = {},
+            onSearchQueryChange = {},
+            onChannelSelect = {},
+            onChannelRemove = {},
+            onToggleFollow = {},
+        )
+    }
+}
+
+/**
+ * Preview: 空の初期状態。
+ */
+@Preview
+@Composable
+private fun ChannelAddContentEmptyPreview() {
+    AppTheme {
+        ChannelAddContent(
+            searchQuery = "",
+            channelSuggestions = emptyList(),
+            addedChannels = emptyList(),
+            isSearching = false,
+            errorMessage = null,
+            selectedPlatform = VideoServiceType.TWITCH,
+            followedChannelIds = emptySet(),
+            onPlatformSelect = {},
+            onSearchQueryChange = {},
+            onChannelSelect = {},
+            onChannelRemove = {},
+            onToggleFollow = {},
+        )
+    }
 }
