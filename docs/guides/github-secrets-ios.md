@@ -67,7 +67,11 @@ Fastlane Match で証明書を暗号化するためのパスフレーズ。
 2. Base64エンコード:
 
 ```bash
+# macOS
 base64 -i AuthKey_XXXXXXXXXX.p8
+
+# Linux（改行なしで出力）
+base64 -w 0 AuthKey_XXXXXXXXXX.p8
 ```
 
 3. 出力された文字列を Secret に設定

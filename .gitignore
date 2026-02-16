@@ -32,7 +32,6 @@ iosApp/fastlane/Preview.html
 iosApp/fastlane/screenshots/**/*.png
 iosApp/fastlane/test_output
 iosApp/build/
-iosApp/Gemfile.lock
 iosApp/vendor/
 
 # Roborazzi reference screenshots (tracked in Git for comparison)

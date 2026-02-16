@@ -7,7 +7,7 @@ platform :ios do
 
   desc "Kotlin Multiplatform フレームワークをビルド"
   private_lane :build_kotlin_framework do
-    Dir.chdir("..") do
+    Dir.chdir(File.expand_path('../../', __dir__)) do
       sh("./gradlew :composeApp:assembleXCFramework")
     end
   end
@@ -30,7 +30,7 @@ platform :ios do
   # ビルドのみ（CI検証用）
   # ======================================
 
-  desc "iOSアプリをビルドのみ（Archive検証）"
+  desc "iOSアプリをビルドのみ（ビルド検証）"
   lane :build_only do
     build_kotlin_framework
 
@@ -49,6 +49,9 @@ platform :ios do
 
   desc "TestFlightにベータ版を配信"
   lane :beta do |options|
+    # CI環境向けに一時キーチェーンを作成
+    setup_ci if is_ci?
+
     # App Store Connect API Key の設定（CI環境）
     if ENV["APP_STORE_CONNECT_API_KEY_ID"]
       app_store_connect_api_key(

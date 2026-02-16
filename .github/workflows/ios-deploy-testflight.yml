@@ -63,8 +63,6 @@ jobs:
           APP_STORE_CONNECT_API_KEY_CONTENT: ${{ secrets.APP_STORE_CONNECT_API_KEY_CONTENT }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
-          # CI環境用Keychain設定
-          bundle exec fastlane run setup_ci
-
           # ビルド番号にgithub.run_numberを使用してTestFlight配信
+          # setup_ci はFastfile内のbeta laneで自動実行される
           bundle exec fastlane beta build_number:${{ github.run_number }}
