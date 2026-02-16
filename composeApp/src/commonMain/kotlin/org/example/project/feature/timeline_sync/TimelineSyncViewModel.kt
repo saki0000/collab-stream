@@ -22,6 +22,7 @@ import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 import org.example.project.domain.model.ChannelInfo
+import org.example.project.domain.model.FollowedChannel
 import org.example.project.domain.model.SelectedStreamInfo
 import org.example.project.domain.model.SyncChannel
 import org.example.project.domain.model.SyncStatus
@@ -583,28 +584,34 @@ class TimelineSyncViewModel(
     private fun observeFollowedChannels() {
         viewModelScope.launch {
             channelFollowRepository.observeFollowedChannels().collect { followedChannels ->
-                recalculateFollowedChannelIds()
+                updateFollowedChannelIds(followedChannels)
             }
         }
     }
 
     /**
      * 選択中のプラットフォームでフィルタしたフォロー済みチャンネルIDのセットを再計算する。
+     * プラットフォーム切替時など、Flowからの通知外で再フィルタが必要な場合に使用。
      */
     private fun recalculateFollowedChannelIds() {
         viewModelScope.launch {
             channelFollowRepository.getAllFollowedChannels().fold(
-                onSuccess = { followedChannels ->
-                    val selectedPlatform = _uiState.value.selectedPlatform
-                    val followedIds = followedChannels
-                        .filter { it.serviceType == selectedPlatform }
-                        .map { it.channelId }
-                        .toSet()
-                    _uiState.value = _uiState.value.copy(followedChannelIds = followedIds)
-                },
+                onSuccess = { updateFollowedChannelIds(it) },
                 onFailure = { /* エラーは無視（フォロー状態は表示に必須ではない） */ },
             )
         }
+    }
+
+    /**
+     * フォロー済みチャンネルリストから選択中プラットフォームのIDセットを抽出し、UiStateを更新する。
+     */
+    private fun updateFollowedChannelIds(followedChannels: List<FollowedChannel>) {
+        val selectedPlatform = _uiState.value.selectedPlatform
+        val followedIds = followedChannels
+            .filter { it.serviceType == selectedPlatform }
+            .map { it.channelId }
+            .toSet()
+        _uiState.value = _uiState.value.copy(followedChannelIds = followedIds)
     }
 
     /**
