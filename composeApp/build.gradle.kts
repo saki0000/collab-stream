@@ -69,15 +69,10 @@ kotlin {
         }
 
         // iOS Screenshot Test (appleTest)
-        val appleTest by creating {
-            dependsOn(commonTest.get())
-            dependencies {
-                implementation(libs.roborazzi.compose.ios)
-            }
+        // デフォルト階層テンプレートが作成する appleTest を使用
+        appleTest.dependencies {
+            implementation(libs.roborazzi.compose.ios)
         }
-        iosX64Test.get().dependsOn(appleTest)
-        iosArm64Test.get().dependsOn(appleTest)
-        iosSimulatorArm64Test.get().dependsOn(appleTest)
     }
 }
 
