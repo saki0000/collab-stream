@@ -35,8 +35,8 @@ kanban
   spec[Spec]
   design[Design]
   dev[Dev]
-    us3[US-3: アーカイブHome画面 - フィード表示]
   done[Done]
+    us3[US-3: アーカイブHome画面 - フィード表示]
     us2[US-2: フォロー/アンフォロー UI]
     us1[US-1: チャンネルフォロー データ層]@{ priority: 'High' }
 ```
