@@ -65,6 +65,7 @@ platform :ios do
       project: "iosApp.xcodeproj",
       scheme: "iosApp",
       export_method: "app-store",
+      xcargs: "DEVELOPMENT_TEAM='#{ENV['APPLE_TEAM_ID']}'",
       output_directory: "build",
       output_name: "CollabStream.ipa"
     )
