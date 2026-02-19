@@ -1,0 +1,9 @@
+// ローカル開発用設定ファイル
+// このファイルを Config.local.xcconfig にコピーして使用してください。
+// Config.local.xcconfig は .gitignore に登録されており、リポジトリには含まれません。
+//
+// 使い方:
+//   cp Config.local.xcconfig.template Config.local.xcconfig
+//   TEAM_ID に自分の Apple Developer Team ID を設定
+
+TEAM_ID=YOUR_TEAM_ID_HERE

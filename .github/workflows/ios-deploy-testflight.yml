@@ -1,0 +1,71 @@
+name: iOS Deploy to TestFlight
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'iosApp/**'
+      - 'composeApp/**'
+      - 'shared/**'
+      - 'gradle/**'
+      - 'build.gradle.kts'
+      - 'settings.gradle.kts'
+      - 'gradle.properties'
+
+concurrency:
+  group: ios-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: TestFlight 配信
+    runs-on: macos-15
+    timeout-minutes: 45
+
+    steps:
+      - name: チェックアウト
+        uses: actions/checkout@v4
+
+      - name: JDK セットアップ
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Gradle キャッシュ
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Ruby セットアップ
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+          bundler-cache: true
+          working-directory: iosApp
+
+      - name: Xcode バージョン選択
+        run: sudo xcode-select -s /Applications/Xcode_16.2.app/Contents/Developer
+
+      - name: iOS プラットフォームインストール
+        run: xcodebuild -downloadPlatform iOS
+
+      - name: Fastlane Match で証明書取得 & TestFlight 配信
+        working-directory: iosApp
+        env:
+          MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY_CONTENT: ${{ secrets.APP_STORE_CONNECT_API_KEY_CONTENT }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          # ビルド番号にgithub.run_numberを使用してTestFlight配信
+          # setup_ci はFastfile内のbeta laneで自動実行される
+          bundle exec fastlane beta build_number:${{ github.run_number }}

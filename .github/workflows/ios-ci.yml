@@ -1,0 +1,83 @@
+name: iOS CI
+
+on:
+  pull_request:
+    paths:
+      - 'iosApp/**'
+      - 'composeApp/**'
+      - 'shared/**'
+      - 'gradle/**'
+      - 'build.gradle.kts'
+      - 'settings.gradle.kts'
+      - 'gradle.properties'
+
+concurrency:
+  group: ios-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: iOS ビルド検証
+    runs-on: macos-15
+    timeout-minutes: 30
+
+    steps:
+      - name: チェックアウト
+        uses: actions/checkout@v4
+
+      - name: JDK セットアップ
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Gradle キャッシュ
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Xcode バージョン選択
+        run: sudo xcode-select -s /Applications/Xcode_16.2.app/Contents/Developer
+
+      - name: iOS プラットフォームインストール
+        run: xcodebuild -downloadPlatform iOS
+
+      - name: Xcode プロジェクト設定検証
+        working-directory: iosApp
+        run: |
+          echo "=== スキーム解決 ==="
+          xcodebuild -project iosApp.xcodeproj \
+            -scheme iosApp \
+            -showBuildSettings \
+            -destination "generic/platform=iOS Simulator" \
+            > /tmp/build_settings.txt 2>&1
+
+          echo "=== Bundle ID 検証 ==="
+          BUNDLE_ID=$(grep "PRODUCT_BUNDLE_IDENTIFIER" /tmp/build_settings.txt | head -1 | awk '{print $NF}')
+          echo "Bundle ID: $BUNDLE_ID"
+          if [ "$BUNDLE_ID" != "com.collabstream.app" ]; then
+            echo "::error::Bundle ID mismatch: expected 'com.collabstream.app', got '$BUNDLE_ID'"
+            exit 1
+          fi
+
+          echo "=== バージョン情報 ==="
+          grep "MARKETING_VERSION" /tmp/build_settings.txt | head -1
+          grep "CURRENT_PROJECT_VERSION" /tmp/build_settings.txt | head -1
+
+      # TODO: iOS actual宣言（VideoPlayerView, platformModule）の実装後に
+      #       xcodebuild build によるフルビルド検証を有効化する
+      # - name: iOS フルビルド検証
+      #   working-directory: iosApp
+      #   run: |
+      #     xcodebuild build \
+      #       -project iosApp.xcodeproj \
+      #       -scheme iosApp \
+      #       -configuration Debug \
+      #       -destination "generic/platform=iOS Simulator" \
+      #       -skipMacroValidation \
+      #       CODE_SIGNING_ALLOWED=NO
