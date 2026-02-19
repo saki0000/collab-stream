@@ -10,6 +10,7 @@ import androidx.navigation.toRoute
 import kotlin.time.ExperimentalTime
 import org.example.project.domain.model.StreamInfo
 import org.example.project.domain.model.VideoServiceType
+import org.example.project.feature.archive_home.ui.ArchiveHomeContainer
 import org.example.project.feature.home.ui.HomeContainer
 import org.example.project.feature.streamer_search.ui.StreamerSearchContainer
 import org.example.project.feature.timeline_sync.ui.TimelineSyncContainer
@@ -19,7 +20,8 @@ import org.example.project.feature.video_playback.ui.VideoContainer
  * Main navigation graph for the application.
  *
  * This sets up the NavHost with all app destinations:
- * - TimelineSyncRoute: Main screen for timeline synchronization (start destination)
+ * - ArchiveHomeRoute: Archive home screen (start destination - US-3)
+ * - TimelineSyncRoute: Timeline synchronization screen
  * - HomeRoute: Initial screen with group selection (hidden in release)
  * - StreamerSearchRoute: Streamer search bottom sheet (MAIN or SUB mode)
  * - MainPlayerRoute: Main video player screen with sync functionality (hidden in release)
@@ -29,7 +31,7 @@ import org.example.project.feature.video_playback.ui.VideoContainer
  * @param modifier Modifier to be applied to the NavHost
  * @param navController The NavHostController managing navigation state (default: rememberNavController)
  */
-@OptIn(ExperimentalTime::class)
+@OptIn(ExperimentalTime::class, androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 fun AppNavGraph(
     modifier: Modifier = Modifier,
@@ -37,9 +39,16 @@ fun AppNavGraph(
 ) {
     NavHost(
         navController = navController,
-        startDestination = TimelineSyncRoute,
+        startDestination = ArchiveHomeRoute,
         modifier = modifier,
     ) {
+        // Archive Home screen (main screen - US-3)
+        composable<ArchiveHomeRoute> {
+            ArchiveHomeContainer(
+                modifier = Modifier,
+            )
+        }
+
         // Timeline Sync screen (main screen)
         composable<TimelineSyncRoute> {
             TimelineSyncContainer(
