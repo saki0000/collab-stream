@@ -51,7 +51,7 @@ class UserRepositoryImpl(
                 UserDeviceEntity(
                     id = 1,
                     deviceId = newDeviceId,
-                )
+                ),
             )
 
             newDeviceId
