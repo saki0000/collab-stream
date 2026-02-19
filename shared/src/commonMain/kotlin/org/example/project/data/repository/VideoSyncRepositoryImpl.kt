@@ -4,6 +4,8 @@ import io.ktor.client.HttpClient
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
+import io.ktor.http.path
+import io.ktor.http.takeFrom
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 import org.example.project.SERVER_BASE_URL
@@ -44,7 +46,11 @@ class VideoSyncRepositoryImpl(
 
     override suspend fun getVideoDetails(videoId: String, serviceType: VideoServiceType): Result<VideoDetails> {
         return try {
-            val response = httpClient.get("$SERVER_BASE_URL/api/videos/$videoId") {
+            val response = httpClient.get {
+                url {
+                    takeFrom(SERVER_BASE_URL)
+                    path("api", "videos", videoId)
+                }
                 parameter("service", serviceType.name.lowercase())
             }
 

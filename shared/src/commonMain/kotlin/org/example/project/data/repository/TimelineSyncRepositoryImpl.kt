@@ -3,6 +3,8 @@ package org.example.project.data.repository
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
+import io.ktor.http.path
+import io.ktor.http.takeFrom
 import kotlinx.datetime.LocalDate
 import org.example.project.SERVER_BASE_URL
 import org.example.project.data.util.ApiResponseHandler
@@ -24,7 +26,11 @@ class TimelineSyncRepositoryImpl(
 
     override suspend fun getVideoDetails(videoId: String, serviceType: VideoServiceType): Result<VideoDetails> {
         return try {
-            val response = httpClient.get("$SERVER_BASE_URL/api/videos/$videoId") {
+            val response = httpClient.get {
+                url {
+                    takeFrom(SERVER_BASE_URL)
+                    path("api", "videos", videoId)
+                }
                 parameter("service", serviceType.name.lowercase())
             }
 
@@ -42,7 +48,11 @@ class TimelineSyncRepositoryImpl(
         dateRange: ClosedRange<LocalDate>,
     ): Result<List<VideoDetails>> {
         return try {
-            val response = httpClient.get("$SERVER_BASE_URL/api/channels/$channelId/videos") {
+            val response = httpClient.get {
+                url {
+                    takeFrom(SERVER_BASE_URL)
+                    path("api", "channels", channelId, "videos")
+                }
                 parameter("service", serviceType.name.lowercase())
                 parameter("startDate", dateRange.start.toString())
                 parameter("endDate", dateRange.endInclusive.toString())

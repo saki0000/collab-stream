@@ -5,6 +5,8 @@ package org.example.project.data.repository
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
+import io.ktor.http.path
+import io.ktor.http.takeFrom
 import kotlin.time.ExperimentalTime
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -77,7 +79,11 @@ class VideoSearchRepositoryImpl(
         serviceType: VideoServiceType,
     ): Result<SearchResponse> {
         return try {
-            val response = httpClient.get("$SERVER_BASE_URL/api/search/videos") {
+            val response = httpClient.get {
+                url {
+                    takeFrom(SERVER_BASE_URL)
+                    path("api", "search", "videos")
+                }
                 parameter("q", searchQuery.query)
                 parameter("service", serviceType.name.lowercase())
                 parameter("maxResults", searchQuery.maxResults)
@@ -105,7 +111,11 @@ class VideoSearchRepositoryImpl(
         }
 
         return try {
-            val response = httpClient.get("$SERVER_BASE_URL/api/search/channels") {
+            val response = httpClient.get {
+                url {
+                    takeFrom(SERVER_BASE_URL)
+                    path("api", "search", "channels")
+                }
                 parameter("q", query.trim())
                 parameter("service", serviceType.name.lowercase())
                 parameter("maxResults", maxResults.coerceIn(1, 20))
