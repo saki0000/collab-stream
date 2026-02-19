@@ -20,20 +20,15 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import kotlinx.datetime.LocalDate
-import org.example.project.data.datasource.TwitchSearchDataSource
-import org.example.project.data.datasource.YouTubeSearchDataSource
-import org.example.project.data.model.TwitchSearchResponse
-import org.example.project.data.model.TwitchUser
-import org.example.project.data.model.TwitchUserResponse
-import org.example.project.data.model.YouTubeChannelSearchResponse
-import org.example.project.data.model.YouTubeSearchResponse
 import org.example.project.domain.model.ChannelInfo
 import org.example.project.domain.model.SearchQuery
+import org.example.project.domain.model.SearchResponse
 import org.example.project.domain.model.SyncChannel
 import org.example.project.domain.model.SyncStatus
 import org.example.project.domain.model.VideoDetails
 import org.example.project.domain.model.VideoServiceType
 import org.example.project.domain.repository.TimelineSyncRepository
+import org.example.project.domain.repository.VideoSearchRepository
 import org.example.project.domain.usecase.ChannelSearchUseCase
 
 /**
@@ -50,8 +45,7 @@ class ChannelAddViewModelTest {
 
     private val testDispatcher = StandardTestDispatcher()
     private lateinit var mockRepository: FakeTimelineSyncRepository
-    private lateinit var mockDataSource: FakeTwitchSearchDataSource
-    private lateinit var mockYouTubeDataSource: FakeYouTubeSearchDataSource
+    private lateinit var mockVideoSearchRepository: FakeVideoSearchRepository
     private lateinit var channelSearchUseCase: ChannelSearchUseCase
     private lateinit var mockChannelFollowRepository: FakeChannelFollowRepository
     private lateinit var viewModel: TimelineSyncViewModel
@@ -60,9 +54,8 @@ class ChannelAddViewModelTest {
     fun setup() {
         Dispatchers.setMain(testDispatcher)
         mockRepository = FakeTimelineSyncRepository()
-        mockDataSource = FakeTwitchSearchDataSource()
-        mockYouTubeDataSource = FakeYouTubeSearchDataSource()
-        channelSearchUseCase = ChannelSearchUseCase(mockDataSource, mockYouTubeDataSource)
+        mockVideoSearchRepository = FakeVideoSearchRepository()
+        channelSearchUseCase = ChannelSearchUseCase(mockVideoSearchRepository)
         mockChannelFollowRepository = FakeChannelFollowRepository()
         viewModel = TimelineSyncViewModel(mockRepository, channelSearchUseCase, mockChannelFollowRepository)
     }
@@ -126,7 +119,7 @@ class ChannelAddViewModelTest {
         advanceTimeBy(600)
         advanceUntilIdle()
 
-        assertTrue(mockDataSource.searchChannelsWasCalled)
+        assertTrue(mockVideoSearchRepository.searchChannelsWasCalled)
     }
 
     @Test
@@ -140,8 +133,8 @@ class ChannelAddViewModelTest {
         advanceTimeBy(600)
         advanceUntilIdle()
 
-        assertEquals(1, mockDataSource.searchChannelsCount)
-        assertEquals("nin", mockDataSource.lastChannelQuery)
+        assertEquals(1, mockVideoSearchRepository.searchChannelsCount)
+        assertEquals("nin", mockVideoSearchRepository.lastChannelQuery)
     }
 
     @Test
@@ -151,18 +144,17 @@ class ChannelAddViewModelTest {
         advanceTimeBy(600)
         advanceUntilIdle()
 
-        assertFalse(mockDataSource.searchChannelsWasCalled)
+        assertFalse(mockVideoSearchRepository.searchChannelsWasCalled)
         assertTrue(viewModel.uiState.value.channelSuggestions.isEmpty())
     }
 
     @Test
     fun `should update suggestions on successful search`() = runTest {
-        mockDataSource.channelResultToReturn = TwitchUserResponse(
-            data = listOf(
-                TwitchUser(
-                    id = "ch1",
-                    displayName = "Channel 1",
-                ),
+        mockVideoSearchRepository.channelResultToReturn = listOf(
+            ChannelInfo(
+                id = "ch1",
+                displayName = "Channel 1",
+                serviceType = VideoServiceType.TWITCH,
             ),
         )
 
@@ -185,16 +177,16 @@ class ChannelAddViewModelTest {
         advanceUntilIdle()
 
         // 2. 検索結果に同じチャンネルが含まれるようにモックを設定
-        mockDataSource.channelResultToReturn = TwitchUserResponse(
-            data = listOf(
-                TwitchUser(
-                    id = "ch1",
-                    displayName = "Channel 1",
-                ),
-                TwitchUser(
-                    id = "ch2",
-                    displayName = "Channel 2",
-                ),
+        mockVideoSearchRepository.channelResultToReturn = listOf(
+            ChannelInfo(
+                id = "ch1",
+                displayName = "Channel 1",
+                serviceType = VideoServiceType.TWITCH,
+            ),
+            ChannelInfo(
+                id = "ch2",
+                displayName = "Channel 2",
+                serviceType = VideoServiceType.TWITCH,
             ),
         )
 
@@ -472,10 +464,8 @@ class ChannelAddViewModelTest {
     @Test
     fun `プラットフォーム選択_切り替え時に検索結果がクリアされること`() = runTest {
         // Arrange: Twitchで検索して結果を取得
-        mockDataSource.channelResultToReturn = TwitchUserResponse(
-            data = listOf(
-                TwitchUser(id = "ch1", displayName = "Channel 1"),
-            ),
+        mockVideoSearchRepository.channelResultToReturn = listOf(
+            ChannelInfo(id = "ch1", displayName = "Channel 1", serviceType = VideoServiceType.TWITCH),
         )
         viewModel.handleIntent(TimelineSyncIntent.OpenChannelAddModal)
         viewModel.handleIntent(TimelineSyncIntent.UpdateChannelSearchQuery("test"))
@@ -514,14 +504,15 @@ class ChannelAddViewModelTest {
         viewModel.handleIntent(TimelineSyncIntent.UpdateChannelSearchQuery("test"))
         advanceTimeBy(600)
         advanceUntilIdle()
-        val twitchCallCount = mockDataSource.searchChannelsCount
+        val twitchCallCount = mockVideoSearchRepository.searchChannelsCount
 
         // Act: YouTubeに切り替え（クエリがあるため自動再検索される）
         viewModel.handleIntent(TimelineSyncIntent.SelectPlatform(VideoServiceType.YOUTUBE))
         advanceUntilIdle()
 
-        // Assert: YouTube APIが呼ばれた
-        assertTrue(mockYouTubeDataSource.searchChannelsWasCalled)
+        // Assert: YouTube APIが呼ばれた（serviceTypeで確認）
+        assertTrue(mockVideoSearchRepository.searchChannelsWasCalled)
+        assertEquals(VideoServiceType.YOUTUBE, mockVideoSearchRepository.lastChannelServiceType)
     }
 
     @Test
@@ -536,9 +527,9 @@ class ChannelAddViewModelTest {
         advanceTimeBy(600)
         advanceUntilIdle()
 
-        // Assert: YouTube APIが呼ばれ、Twitchは呼ばれない
-        assertTrue(mockYouTubeDataSource.searchChannelsWasCalled)
-        assertFalse(mockDataSource.searchChannelsWasCalled)
+        // Assert: YouTube APIが呼ばれた
+        assertTrue(mockVideoSearchRepository.searchChannelsWasCalled)
+        assertEquals(VideoServiceType.YOUTUBE, mockVideoSearchRepository.lastChannelServiceType)
     }
 
     @Test
@@ -593,61 +584,42 @@ class FakeTimelineSyncRepository : TimelineSyncRepository {
 }
 
 /**
- * テスト用 YouTubeSearchDataSource のフェイク実装。
+ * テスト用 VideoSearchRepository のフェイク実装。
  */
-class FakeYouTubeSearchDataSource : YouTubeSearchDataSource {
+class FakeVideoSearchRepository : VideoSearchRepository {
+    // チャンネル検索のトラッキング
     var searchChannelsWasCalled = false
     var searchChannelsCount = 0
     var lastChannelQuery: String? = null
-    var channelResultToReturn: YouTubeChannelSearchResponse = YouTubeChannelSearchResponse(items = emptyList())
+    var lastChannelServiceType: VideoServiceType? = null
+    var channelResultToReturn: List<ChannelInfo> = emptyList()
     var shouldReturnError = false
 
-    override suspend fun searchVideos(searchQuery: SearchQuery): Result<YouTubeSearchResponse> {
+    override suspend fun searchChannels(
+        query: String,
+        serviceType: VideoServiceType,
+        maxResults: Int,
+    ): Result<List<ChannelInfo>> {
+        searchChannelsWasCalled = true
+        searchChannelsCount++
+        lastChannelQuery = query
+        lastChannelServiceType = serviceType
+
+        return if (shouldReturnError) {
+            Result.failure(RuntimeException("Search error"))
+        } else {
+            Result.success(channelResultToReturn)
+        }
+    }
+
+    override suspend fun searchVideos(searchQuery: SearchQuery): Result<SearchResponse> {
         return Result.failure(NotImplementedError())
     }
 
-    override suspend fun searchChannels(
-        query: String,
-        maxResults: Int,
-    ): Result<YouTubeChannelSearchResponse> {
-        searchChannelsWasCalled = true
-        searchChannelsCount++
-        lastChannelQuery = query
-
-        return if (shouldReturnError) {
-            Result.failure(RuntimeException("Search error"))
-        } else {
-            Result.success(channelResultToReturn)
-        }
-    }
-}
-
-/**
- * Fake implementation of TwitchSearchDataSource for testing.
- */
-class FakeTwitchSearchDataSource : TwitchSearchDataSource {
-    var searchChannelsWasCalled = false
-    var searchChannelsCount = 0
-    var lastChannelQuery: String? = null
-    var channelResultToReturn: TwitchUserResponse = TwitchUserResponse(data = emptyList())
-    var shouldReturnError = false
-
-    override suspend fun searchVideos(searchQuery: SearchQuery): Result<TwitchSearchResponse> {
-        return Result.success(TwitchSearchResponse(data = emptyList()))
-    }
-
-    override suspend fun searchChannels(
-        query: String,
-        maxResults: Int,
-    ): Result<TwitchUserResponse> {
-        searchChannelsWasCalled = true
-        searchChannelsCount++
-        lastChannelQuery = query
-
-        return if (shouldReturnError) {
-            Result.failure(RuntimeException("Search error"))
-        } else {
-            Result.success(channelResultToReturn)
-        }
+    override suspend fun searchVideosByService(
+        searchQuery: SearchQuery,
+        serviceType: VideoServiceType,
+    ): Result<SearchResponse> {
+        return Result.failure(NotImplementedError())
     }
 }

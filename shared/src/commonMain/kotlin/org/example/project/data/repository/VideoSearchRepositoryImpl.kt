@@ -1,13 +1,15 @@
 package org.example.project.data.repository
 
+import io.ktor.client.HttpClient
+import io.ktor.client.request.get
+import io.ktor.client.request.parameter
 import kotlin.time.ExperimentalTime
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
-import org.example.project.data.datasource.TwitchSearchDataSource
-import org.example.project.data.datasource.YouTubeSearchDataSource
-import org.example.project.data.mapper.TwitchSearchMapper
-import org.example.project.data.mapper.YouTubeSearchMapper
+import org.example.project.SERVER_BASE_URL
+import org.example.project.data.util.ApiResponseHandler
+import org.example.project.domain.model.ChannelInfo
 import org.example.project.domain.model.SearchOrder
 import org.example.project.domain.model.SearchQuery
 import org.example.project.domain.model.SearchResponse
@@ -15,12 +17,17 @@ import org.example.project.domain.model.SearchResult
 import org.example.project.domain.model.VideoServiceType
 import org.example.project.domain.repository.VideoSearchRepository
 
+/**
+ * Implementation of VideoSearchRepository using server API proxy.
+ *
+ * サーバーAPI経由で動画検索とチャンネル検索を実行する実装。
+ * ADR-005 Phase 2: APIキーをクライアントに含めない。
+ */
+@OptIn(ExperimentalTime::class)
 class VideoSearchRepositoryImpl(
-    private val youTubeSearchDataSource: YouTubeSearchDataSource,
-    private val twitchSearchDataSource: TwitchSearchDataSource,
+    private val httpClient: HttpClient,
 ) : VideoSearchRepository {
 
-    @OptIn(ExperimentalTime::class)
     override suspend fun searchVideos(searchQuery: SearchQuery): Result<SearchResponse> {
         return try {
             // Search across all target services in parallel
@@ -47,7 +54,7 @@ class VideoSearchRepositoryImpl(
             // Sort results based on order preference
             val sortedResults = when (searchQuery.order) {
                 SearchOrder.DATE -> results.sortedByDescending { it.publishedAt }
-                else -> results // YouTube API already sorts by relevance/viewCount
+                else -> results // Server API already sorts by relevance/viewCount
             }
 
             Result.success(
@@ -68,23 +75,46 @@ class VideoSearchRepositoryImpl(
         searchQuery: SearchQuery,
         serviceType: VideoServiceType,
     ): Result<SearchResponse> {
-        return when (serviceType) {
-            VideoServiceType.YOUTUBE -> {
-                youTubeSearchDataSource.searchVideos(searchQuery)
-                    .map { apiResponse ->
-                        YouTubeSearchMapper.mapToSearchResponse(apiResponse).copy(
-                            servicePageTokens = mapOf(VideoServiceType.YOUTUBE to apiResponse.nextPageToken),
-                        )
-                    }
+        return try {
+            val response = httpClient.get("$SERVER_BASE_URL/api/search/videos") {
+                parameter("q", searchQuery.query)
+                parameter("service", serviceType.name.lowercase())
+                parameter("maxResults", searchQuery.maxResults)
+                searchQuery.pageToken?.let { parameter("pageToken", it) }
+                searchQuery.channelId?.let { parameter("channelId", it) }
+                parameter("eventType", searchQuery.eventType.value)
+                parameter("order", searchQuery.order.value)
             }
-            VideoServiceType.TWITCH -> {
-                twitchSearchDataSource.searchVideos(searchQuery)
-                    .map { apiResponse ->
-                        TwitchSearchMapper.mapToSearchResponse(apiResponse).copy(
-                            servicePageTokens = mapOf(VideoServiceType.TWITCH to apiResponse.pagination?.cursor),
-                        )
-                    }
+
+            ApiResponseHandler.handleResponse(response)
+        } catch (e: Exception) {
+            Result.failure(
+                RuntimeException("Failed to search videos for service $serviceType: ${e.message}", e),
+            )
+        }
+    }
+
+    override suspend fun searchChannels(
+        query: String,
+        serviceType: VideoServiceType,
+        maxResults: Int,
+    ): Result<List<ChannelInfo>> {
+        if (query.isBlank()) {
+            return Result.failure(IllegalArgumentException("Search query cannot be empty"))
+        }
+
+        return try {
+            val response = httpClient.get("$SERVER_BASE_URL/api/search/channels") {
+                parameter("q", query.trim())
+                parameter("service", serviceType.name.lowercase())
+                parameter("maxResults", maxResults.coerceIn(1, 20))
             }
+
+            ApiResponseHandler.handleResponse(response)
+        } catch (e: Exception) {
+            Result.failure(
+                RuntimeException("Failed to search channels for service $serviceType: ${e.message}", e),
+            )
         }
     }
 }
