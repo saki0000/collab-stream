@@ -52,10 +52,7 @@ jobs:
           working-directory: iosApp
 
       - name: Xcode バージョン選択
-        run: sudo xcode-select -s /Applications/Xcode_16.2.app/Contents/Developer
-
-      - name: iOS プラットフォームインストール
-        run: xcodebuild -downloadPlatform iOS
+        run: sudo xcode-select -s /Applications/Xcode_16.4.app/Contents/Developer
 
       - name: Fastlane Match で証明書取得 & TestFlight 配信
         working-directory: iosApp
