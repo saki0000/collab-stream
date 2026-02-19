@@ -1,5 +1,3 @@
 app_identifier("com.collabstream.app")
-
-# Apple Developer Portal / App Store Connect
-# apple_id はローカル環境では個人Apple ID、CIではAPI Keyを使用するため省略
-# team_id はCIでは環境変数 APPLE_TEAM_ID から取得
+apple_id("kouseimotoya@icloud.com")
+team_id("XJ8RMXSU85")
