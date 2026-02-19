@@ -297,6 +297,45 @@ private fun ArchiveHomeScreenEmptyArchivePreview() {
 
 @Preview
 @Composable
+private fun ArchiveHomeScreenContentPreview() {
+    val today = LocalDate.parse("2024-01-15")
+    AppTheme {
+        ArchiveHomeScreen(
+            uiState = ArchiveHomeUiState(
+                isLoading = false,
+                followedChannels = listOf(
+                    org.example.project.domain.model.FollowedChannel(
+                        channelId = "ch1",
+                        channelName = "Channel 1",
+                        channelIconUrl = "",
+                        serviceType = org.example.project.domain.model.VideoServiceType.TWITCH,
+                        followedAt = Instant.parse("2024-01-01T00:00:00Z"),
+                    ),
+                ),
+                archives = listOf(
+                    ArchiveItem(
+                        videoId = "v1",
+                        title = "配信アーカイブ #1",
+                        thumbnailUrl = "",
+                        channelId = "ch1",
+                        channelName = "Channel 1",
+                        channelIconUrl = "",
+                        serviceType = org.example.project.domain.model.VideoServiceType.TWITCH,
+                        publishedAt = Instant.parse("2024-01-15T10:00:00Z"),
+                        durationSeconds = 3600f,
+                    ),
+                ),
+                selectedDate = today,
+                displayedWeekStart = today,
+            ),
+            onIntent = {},
+            snackbarHostState = remember { SnackbarHostState() },
+        )
+    }
+}
+
+@Preview
+@Composable
 private fun ArchiveHomeScreenErrorPreview() {
     val today = LocalDate.parse("2024-01-15")
     AppTheme {
