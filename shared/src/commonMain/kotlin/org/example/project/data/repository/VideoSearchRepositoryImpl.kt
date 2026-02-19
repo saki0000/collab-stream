@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalTime::class)
+
 package org.example.project.data.repository
 
 import io.ktor.client.HttpClient
@@ -23,7 +25,6 @@ import org.example.project.domain.repository.VideoSearchRepository
  * サーバーAPI経由で動画検索とチャンネル検索を実行する実装。
  * ADR-005 Phase 2: APIキーをクライアントに含めない。
  */
-@OptIn(ExperimentalTime::class)
 class VideoSearchRepositoryImpl(
     private val httpClient: HttpClient,
 ) : VideoSearchRepository {
