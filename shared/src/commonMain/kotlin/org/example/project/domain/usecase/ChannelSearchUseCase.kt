@@ -1,19 +1,18 @@
 package org.example.project.domain.usecase
 
-import org.example.project.data.datasource.TwitchSearchDataSource
-import org.example.project.data.datasource.YouTubeSearchDataSource
-import org.example.project.data.mapper.TwitchChannelMapper.toChannelInfoList
-import org.example.project.data.mapper.YouTubeChannelMapper.toChannelInfoList
 import org.example.project.domain.model.ChannelInfo
 import org.example.project.domain.model.VideoServiceType
+import org.example.project.domain.repository.VideoSearchRepository
 
 /**
  * マルチプラットフォーム対応のチャンネル検索ユースケース。
  * Twitch と YouTube のチャンネル検索をサポートする。
+ *
+ * サーバーAPI経由でチャンネル検索を実行する。
+ * ADR-005 Phase 2: データソース依存からRepository依存に変更。
  */
 class ChannelSearchUseCase(
-    private val twitchSearchDataSource: TwitchSearchDataSource,
-    private val youTubeSearchDataSource: YouTubeSearchDataSource,
+    private val videoSearchRepository: VideoSearchRepository,
 ) {
 
     /**
@@ -29,14 +28,7 @@ class ChannelSearchUseCase(
         serviceType: VideoServiceType,
         maxResults: Int = 5,
     ): Result<List<ChannelInfo>> {
-        if (query.isBlank()) {
-            return Result.failure(IllegalArgumentException("Search query cannot be empty"))
-        }
-
-        return when (serviceType) {
-            VideoServiceType.TWITCH -> searchTwitchChannels(query, maxResults)
-            VideoServiceType.YOUTUBE -> searchYouTubeChannels(query, maxResults)
-        }
+        return videoSearchRepository.searchChannels(query, serviceType, maxResults)
     }
 
     /**
@@ -47,30 +39,6 @@ class ChannelSearchUseCase(
         query: String,
         maxResults: Int = 5,
     ): Result<List<ChannelInfo>> {
-        if (query.isBlank()) {
-            return Result.failure(IllegalArgumentException("Search query cannot be empty"))
-        }
-
-        return twitchSearchDataSource.searchChannels(
-            query = query.trim(),
-            maxResults = maxResults.coerceIn(1, 20),
-        ).map { response ->
-            response.data.toChannelInfoList()
-        }
-    }
-
-    /**
-     * YouTube チャンネルを検索する。
-     */
-    private suspend fun searchYouTubeChannels(
-        query: String,
-        maxResults: Int = 5,
-    ): Result<List<ChannelInfo>> {
-        return youTubeSearchDataSource.searchChannels(
-            query = query.trim(),
-            maxResults = maxResults.coerceIn(1, 10),
-        ).map { response ->
-            response.items.toChannelInfoList()
-        }
+        return searchChannels(query, VideoServiceType.TWITCH, maxResults)
     }
 }

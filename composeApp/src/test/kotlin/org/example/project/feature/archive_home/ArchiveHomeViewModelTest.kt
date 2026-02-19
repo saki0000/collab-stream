@@ -19,14 +19,7 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import kotlinx.datetime.LocalDate
-import org.example.project.data.datasource.TwitchSearchDataSource
-import org.example.project.data.datasource.YouTubeSearchDataSource
-import org.example.project.data.model.TwitchSearchResponse
-import org.example.project.data.model.TwitchUserResponse
-import org.example.project.data.model.YouTubeChannelSearchResponse
-import org.example.project.data.model.YouTubeSearchResponse
 import org.example.project.domain.model.ChannelInfo
-import org.example.project.domain.model.SearchQuery
 import org.example.project.domain.model.TwitchStreamInfo
 import org.example.project.domain.model.TwitchVideoDetailsImpl
 import org.example.project.domain.model.VideoDetails
@@ -35,6 +28,7 @@ import org.example.project.domain.model.VideoSnippet
 import org.example.project.domain.repository.TimelineSyncRepository
 import org.example.project.domain.usecase.ChannelSearchUseCase
 import org.example.project.feature.timeline_sync.FakeChannelFollowRepository
+import org.example.project.testing.repository.FakeVideoSearchRepository
 
 /**
  * ViewModelテスト: ArchiveHomeViewModel
@@ -64,8 +58,7 @@ class ArchiveHomeViewModelTest {
         fakeTimelineSyncRepository = FakeArchiveTimelineSyncRepository()
         fakeChannelFollowRepository = FakeChannelFollowRepository()
         channelSearchUseCase = ChannelSearchUseCase(
-            StubTwitchSearchDataSource(),
-            StubYouTubeSearchDataSource(),
+            FakeVideoSearchRepository(),
         )
 
         viewModel = ArchiveHomeViewModel(
@@ -389,31 +382,5 @@ class FakeArchiveTimelineSyncRepository : TimelineSyncRepository {
         } else {
             Result.success(channelVideosToReturn)
         }
-    }
-}
-
-/**
- * テスト用 TwitchSearchDataSource のスタブ実装。
- */
-private class StubTwitchSearchDataSource : TwitchSearchDataSource {
-    override suspend fun searchVideos(searchQuery: SearchQuery): Result<TwitchSearchResponse> {
-        return Result.success(TwitchSearchResponse(data = emptyList()))
-    }
-
-    override suspend fun searchChannels(query: String, maxResults: Int): Result<TwitchUserResponse> {
-        return Result.success(TwitchUserResponse(data = emptyList()))
-    }
-}
-
-/**
- * テスト用 YouTubeSearchDataSource のスタブ実装。
- */
-private class StubYouTubeSearchDataSource : YouTubeSearchDataSource {
-    override suspend fun searchVideos(searchQuery: SearchQuery): Result<YouTubeSearchResponse> {
-        return Result.failure(NotImplementedError())
-    }
-
-    override suspend fun searchChannels(query: String, maxResults: Int): Result<YouTubeChannelSearchResponse> {
-        return Result.success(YouTubeChannelSearchResponse(items = emptyList()))
     }
 }

@@ -38,8 +38,7 @@ class ExternalAppNavigationViewModelTest {
 
     private val testDispatcher = StandardTestDispatcher()
     private lateinit var mockRepository: FakeTimelineSyncRepository
-    private lateinit var mockDataSource: FakeTwitchSearchDataSource
-    private lateinit var mockYouTubeDataSource: FakeYouTubeSearchDataSource
+    private lateinit var mockVideoSearchRepository: FakeVideoSearchRepository
     private lateinit var mockChannelFollowRepository: FakeChannelFollowRepository
     private lateinit var viewModel: TimelineSyncViewModel
 
@@ -49,10 +48,9 @@ class ExternalAppNavigationViewModelTest {
     fun setup() {
         Dispatchers.setMain(testDispatcher)
         mockRepository = FakeTimelineSyncRepository()
-        mockDataSource = FakeTwitchSearchDataSource()
-        mockYouTubeDataSource = FakeYouTubeSearchDataSource()
+        mockVideoSearchRepository = FakeVideoSearchRepository()
         mockChannelFollowRepository = FakeChannelFollowRepository()
-        val channelSearchUseCase = org.example.project.domain.usecase.ChannelSearchUseCase(mockDataSource, mockYouTubeDataSource)
+        val channelSearchUseCase = org.example.project.domain.usecase.ChannelSearchUseCase(mockVideoSearchRepository)
         viewModel = TimelineSyncViewModel(mockRepository, channelSearchUseCase, mockChannelFollowRepository)
     }
 

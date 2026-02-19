@@ -27,13 +27,6 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.minus
 import kotlinx.datetime.plus
-import org.example.project.data.datasource.TwitchSearchDataSource
-import org.example.project.data.datasource.YouTubeSearchDataSource
-import org.example.project.data.model.TwitchSearchResponse
-import org.example.project.data.model.TwitchUserResponse
-import org.example.project.data.model.YouTubeChannelSearchResponse
-import org.example.project.data.model.YouTubeSearchResponse
-import org.example.project.domain.model.SearchQuery
 import org.example.project.domain.model.SelectedStreamInfo
 import org.example.project.domain.model.SyncChannel
 import org.example.project.domain.model.SyncStatus
@@ -55,7 +48,7 @@ class SyncTimeCalculationViewModelTest {
 
     private val testDispatcher = StandardTestDispatcher()
     private lateinit var mockRepository: TestTimelineSyncRepository
-    private lateinit var mockDataSource: TestTwitchSearchDataSource
+    private lateinit var mockVideoSearchRepository: FakeVideoSearchRepository
     private lateinit var channelSearchUseCase: ChannelSearchUseCase
     private lateinit var mockChannelFollowRepository: FakeChannelFollowRepository
     private lateinit var viewModel: TimelineSyncViewModel
@@ -69,8 +62,8 @@ class SyncTimeCalculationViewModelTest {
     fun setup() {
         Dispatchers.setMain(testDispatcher)
         mockRepository = TestTimelineSyncRepository()
-        mockDataSource = TestTwitchSearchDataSource()
-        channelSearchUseCase = ChannelSearchUseCase(mockDataSource, TestYouTubeSearchDataSource())
+        mockVideoSearchRepository = FakeVideoSearchRepository()
+        channelSearchUseCase = ChannelSearchUseCase(mockVideoSearchRepository)
         mockChannelFollowRepository = FakeChannelFollowRepository()
         viewModel = TimelineSyncViewModel(mockRepository, channelSearchUseCase, mockChannelFollowRepository)
     }
@@ -716,37 +709,5 @@ class TestTimelineSyncRepository : TimelineSyncRepository {
         dateRange: ClosedRange<LocalDate>,
     ): Result<List<VideoDetails>> {
         return Result.success(emptyList())
-    }
-}
-
-/**
- * テスト用TwitchSearchDataSource実装
- */
-class TestTwitchSearchDataSource : TwitchSearchDataSource {
-    override suspend fun searchVideos(searchQuery: SearchQuery): Result<TwitchSearchResponse> {
-        return Result.success(TwitchSearchResponse(data = emptyList()))
-    }
-
-    override suspend fun searchChannels(
-        query: String,
-        maxResults: Int,
-    ): Result<TwitchUserResponse> {
-        return Result.success(TwitchUserResponse(data = emptyList()))
-    }
-}
-
-/**
- * テスト用YouTubeSearchDataSource実装
- */
-class TestYouTubeSearchDataSource : YouTubeSearchDataSource {
-    override suspend fun searchVideos(searchQuery: SearchQuery): Result<YouTubeSearchResponse> {
-        return Result.failure(NotImplementedError())
-    }
-
-    override suspend fun searchChannels(
-        query: String,
-        maxResults: Int,
-    ): Result<YouTubeChannelSearchResponse> {
-        return Result.success(YouTubeChannelSearchResponse(items = emptyList()))
     }
 }

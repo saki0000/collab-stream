@@ -1,5 +1,3 @@
-import com.codingfeline.buildkonfig.compiler.FieldSpec
-import java.util.Properties
 import org.gradle.declarative.dsl.schema.FqName.Empty.packageName
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
@@ -47,6 +45,7 @@ kotlin {
         commonTest.dependencies {
             implementation(libs.kotlin.test)
             implementation(libs.kotlinx.coroutines.test)
+            implementation(libs.ktor.client.mock)
         }
         androidMain.dependencies {
             implementation(libs.ktor.client.okhttp)
@@ -110,21 +109,12 @@ ktlint {
     }
 }
 
-// local.properties ファイルを読み込む
-val localProperties = Properties()
-val localPropertiesFile = project.rootProject.file("local.properties")
-if (localPropertiesFile.exists()) {
-    localProperties.load(localPropertiesFile.inputStream())
-}
-
+// BuildKonfig: APIキーをクライアントに含めない（ADR-005 Phase 2）
+// サーバーAPI経由でYouTube/Twitch APIを呼び出すため、クライアント側のAPIキー定義は不要
 buildkonfig {
     packageName = "org.exampl.project"
     defaultConfigs {
-        val apiKey = System.getenv("API_KEY") ?: localProperties.getProperty("API_KEY")
-        val twitchApiKey = System.getenv("TWITCH_API_KEY") ?: localProperties.getProperty("TWITCH_API_KEY")
-        val twitchClientId = System.getenv("TWITCH_CLIENT_ID") ?: localProperties.getProperty("TWITCH_CLIENT_ID")
-        buildConfigField(FieldSpec.Type.STRING, "API_KEY", "$apiKey")
-        buildConfigField(FieldSpec.Type.STRING, "TWITCH_API_KEY", "$twitchApiKey")
-        buildConfigField(FieldSpec.Type.STRING, "TWITCH_CLIENT_ID", "$twitchClientId")
+        // 将来的に必要な定数があればここに追加
+        // 現在はサーバーAPI経由のため、APIキーは不要
     }
 }

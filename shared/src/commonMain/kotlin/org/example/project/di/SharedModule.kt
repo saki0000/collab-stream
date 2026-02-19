@@ -1,9 +1,5 @@
 package org.example.project.di
 
-import org.example.project.data.datasource.TwitchSearchDataSource
-import org.example.project.data.datasource.TwitchSearchDataSourceImpl
-import org.example.project.data.datasource.YouTubeSearchDataSource
-import org.example.project.data.datasource.YouTubeSearchDataSourceImpl
 import org.example.project.data.repository.CommentRepositoryImpl
 import org.example.project.data.repository.TimelineSyncRepositoryImpl
 import org.example.project.data.repository.VideoSearchRepositoryImpl
@@ -19,6 +15,12 @@ import org.example.project.domain.usecase.VideoSyncUseCaseImpl
 import org.example.project.SERVER_PORT
 import org.koin.dsl.module
 
+/**
+ * Shared モジュールの DI 定義
+ *
+ * ADR-005 Phase 2: DataSource を除去し、サーバーAPI経由の実装に移行。
+ * すべての Repository が HttpClient を通じてサーバーAPIを呼び出す。
+ */
 val sharedModule = module {
 
     // HTTP Client
@@ -36,20 +38,11 @@ val sharedModule = module {
     }
 
     single<VideoSearchRepository> {
-        VideoSearchRepositoryImpl(get(), get())
+        VideoSearchRepositoryImpl(get())
     }
 
     single<CommentRepository> {
         CommentRepositoryImpl(get(), "http://localhost:$SERVER_PORT")
-    }
-
-    // Data source bindings
-    single<YouTubeSearchDataSource> {
-        YouTubeSearchDataSourceImpl(get())
-    }
-
-    single<TwitchSearchDataSource> {
-        TwitchSearchDataSourceImpl(get())
     }
 
     // Use case bindings
@@ -62,6 +55,6 @@ val sharedModule = module {
     }
 
     single<ChannelSearchUseCase> {
-        ChannelSearchUseCase(get(), get())
+        ChannelSearchUseCase(get())
     }
 }

@@ -3,67 +3,52 @@ package org.example.project.domain.usecase
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
-import org.example.project.data.datasource.TwitchSearchDataSource
-import org.example.project.data.datasource.YouTubeSearchDataSource
-import org.example.project.data.model.TwitchSearchResponse
-import org.example.project.data.model.TwitchUser
-import org.example.project.data.model.TwitchUserResponse
-import org.example.project.data.model.YouTubeChannelSearchId
-import org.example.project.data.model.YouTubeChannelSearchItem
-import org.example.project.data.model.YouTubeChannelSearchResponse
-import org.example.project.data.model.YouTubeChannelSnippet
-import org.example.project.data.model.YouTubeSearchResponse
-import org.example.project.data.model.YouTubeThumbnail
-import org.example.project.data.model.YouTubeThumbnails
+import org.example.project.domain.model.ChannelInfo
 import org.example.project.domain.model.SearchQuery
+import org.example.project.domain.model.SearchResponse
 import org.example.project.domain.model.VideoServiceType
+import org.example.project.domain.repository.VideoSearchRepository
 import org.example.project.runTest
 
 /**
  * マルチプラットフォームチャンネル検索のテスト
  * Specification: feature/timeline_sync/channel_add/SPECIFICATION.md
  * Story Issue: #46 (US-2), #69 (US-5)
+ *
+ * 注: ADR-005 Phase 2 移行後、サーバーAPI経由での実装に対応
  */
 class ChannelSearchUseCaseTest {
 
     // ========================================
-    // テスト用モック DataSource
+    // テスト用モック Repository
     // ========================================
 
-    private class FakeTwitchSearchDataSource(
-        private val channelsResult: Result<TwitchUserResponse> = Result.success(
-            TwitchUserResponse(data = emptyList()),
-        ),
-    ) : TwitchSearchDataSource {
+    private class FakeVideoSearchRepository(
+        private val channelsResult: Result<List<ChannelInfo>> = Result.success(emptyList()),
+    ) : VideoSearchRepository {
         var lastQuery: String? = null
+        var lastServiceType: VideoServiceType? = null
         var lastMaxResults: Int? = null
 
-        override suspend fun searchChannels(query: String, maxResults: Int): Result<TwitchUserResponse> {
+        override suspend fun searchChannels(
+            query: String,
+            serviceType: VideoServiceType,
+            maxResults: Int,
+        ): Result<List<ChannelInfo>> {
             lastQuery = query
+            lastServiceType = serviceType
             lastMaxResults = maxResults
             return channelsResult
         }
 
-        override suspend fun searchVideos(searchQuery: SearchQuery): Result<TwitchSearchResponse> {
+        override suspend fun searchVideos(searchQuery: SearchQuery): Result<SearchResponse> {
             return Result.failure(NotImplementedError())
         }
-    }
 
-    private class FakeYouTubeSearchDataSource(
-        private val channelsResult: Result<YouTubeChannelSearchResponse> = Result.success(
-            YouTubeChannelSearchResponse(items = emptyList()),
-        ),
-    ) : YouTubeSearchDataSource {
-        var lastQuery: String? = null
-        var lastMaxResults: Int? = null
-
-        override suspend fun searchChannels(query: String, maxResults: Int): Result<YouTubeChannelSearchResponse> {
-            lastQuery = query
-            lastMaxResults = maxResults
-            return channelsResult
-        }
-
-        override suspend fun searchVideos(searchQuery: SearchQuery): Result<YouTubeSearchResponse> {
+        override suspend fun searchVideosByService(
+            searchQuery: SearchQuery,
+            serviceType: VideoServiceType,
+        ): Result<SearchResponse> {
             return Result.failure(NotImplementedError())
         }
     }
@@ -75,24 +60,22 @@ class ChannelSearchUseCaseTest {
     @Test
     fun `Twitch検索_正常なクエリで検索結果が返されること`() = runTest {
         // Arrange
-        val twitchDataSource = FakeTwitchSearchDataSource(
+        val repository = FakeVideoSearchRepository(
             channelsResult = Result.success(
-                TwitchUserResponse(
-                    data = listOf(
-                        TwitchUser(
-                            id = "twitch_1",
-                            displayName = "TestStreamer",
-                            thumbnailUrl = "https://example.com/thumb.jpg",
-                            broadcasterLanguage = "ja",
-                            gameId = "game_1",
-                            gameName = "Minecraft",
-                        ),
+                listOf(
+                    ChannelInfo(
+                        id = "twitch_1",
+                        displayName = "TestStreamer",
+                        thumbnailUrl = "https://example.com/thumb.jpg",
+                        broadcasterLanguage = "ja",
+                        gameId = "game_1",
+                        gameName = "Minecraft",
+                        serviceType = VideoServiceType.TWITCH,
                     ),
                 ),
             ),
         )
-        val youTubeDataSource = FakeYouTubeSearchDataSource()
-        val useCase = ChannelSearchUseCase(twitchDataSource, youTubeDataSource)
+        val useCase = ChannelSearchUseCase(repository)
 
         // Act
         val result = useCase.searchChannels("test", VideoServiceType.TWITCH)
@@ -107,18 +90,18 @@ class ChannelSearchUseCaseTest {
     }
 
     @Test
-    fun `Twitch検索_Twitch DataSourceに正しいパラメータが渡されること`() = runTest {
+    fun `Twitch検索_Repositoryに正しいパラメータが渡されること`() = runTest {
         // Arrange
-        val twitchDataSource = FakeTwitchSearchDataSource()
-        val youTubeDataSource = FakeYouTubeSearchDataSource()
-        val useCase = ChannelSearchUseCase(twitchDataSource, youTubeDataSource)
+        val repository = FakeVideoSearchRepository()
+        val useCase = ChannelSearchUseCase(repository)
 
         // Act
-        useCase.searchChannels("  streamer name  ", VideoServiceType.TWITCH, maxResults = 3)
+        useCase.searchChannels("streamer name", VideoServiceType.TWITCH, maxResults = 3)
 
         // Assert
-        assertEquals("streamer name", twitchDataSource.lastQuery)
-        assertEquals(3, twitchDataSource.lastMaxResults)
+        assertEquals("streamer name", repository.lastQuery)
+        assertEquals(VideoServiceType.TWITCH, repository.lastServiceType)
+        assertEquals(3, repository.lastMaxResults)
     }
 
     // ========================================
@@ -128,28 +111,19 @@ class ChannelSearchUseCaseTest {
     @Test
     fun `YouTube検索_正常なクエリで検索結果が返されること`() = runTest {
         // Arrange
-        val twitchDataSource = FakeTwitchSearchDataSource()
-        val youTubeDataSource = FakeYouTubeSearchDataSource(
+        val repository = FakeVideoSearchRepository(
             channelsResult = Result.success(
-                YouTubeChannelSearchResponse(
-                    items = listOf(
-                        YouTubeChannelSearchItem(
-                            id = YouTubeChannelSearchId(
-                                kind = "youtube#channel",
-                                channelId = "UC_youtube_1",
-                            ),
-                            snippet = YouTubeChannelSnippet(
-                                title = "YouTubeChannel",
-                                thumbnails = YouTubeThumbnails(
-                                    default = YouTubeThumbnail(url = "https://example.com/yt_thumb.jpg"),
-                                ),
-                            ),
-                        ),
+                listOf(
+                    ChannelInfo(
+                        id = "UC_youtube_1",
+                        displayName = "YouTubeChannel",
+                        thumbnailUrl = "https://example.com/yt_thumb.jpg",
+                        serviceType = VideoServiceType.YOUTUBE,
                     ),
                 ),
             ),
         )
-        val useCase = ChannelSearchUseCase(twitchDataSource, youTubeDataSource)
+        val useCase = ChannelSearchUseCase(repository)
 
         // Act
         val result = useCase.searchChannels("test", VideoServiceType.YOUTUBE)
@@ -165,18 +139,18 @@ class ChannelSearchUseCaseTest {
     }
 
     @Test
-    fun `YouTube検索_YouTube DataSourceに正しいパラメータが渡されること`() = runTest {
+    fun `YouTube検索_Repositoryに正しいパラメータが渡されること`() = runTest {
         // Arrange
-        val twitchDataSource = FakeTwitchSearchDataSource()
-        val youTubeDataSource = FakeYouTubeSearchDataSource()
-        val useCase = ChannelSearchUseCase(twitchDataSource, youTubeDataSource)
+        val repository = FakeVideoSearchRepository()
+        val useCase = ChannelSearchUseCase(repository)
 
         // Act
-        useCase.searchChannels("  channel name  ", VideoServiceType.YOUTUBE, maxResults = 5)
+        useCase.searchChannels("channel name", VideoServiceType.YOUTUBE, maxResults = 5)
 
         // Assert
-        assertEquals("channel name", youTubeDataSource.lastQuery)
-        assertEquals(5, youTubeDataSource.lastMaxResults)
+        assertEquals("channel name", repository.lastQuery)
+        assertEquals(VideoServiceType.YOUTUBE, repository.lastServiceType)
+        assertEquals(5, repository.lastMaxResults)
     }
 
     // ========================================
@@ -186,10 +160,10 @@ class ChannelSearchUseCaseTest {
     @Test
     fun `空クエリ_Twitch検索でエラーが返されること`() = runTest {
         // Arrange
-        val useCase = ChannelSearchUseCase(
-            FakeTwitchSearchDataSource(),
-            FakeYouTubeSearchDataSource(),
+        val repository = FakeVideoSearchRepository(
+            channelsResult = Result.failure(IllegalArgumentException("Search query cannot be empty")),
         )
+        val useCase = ChannelSearchUseCase(repository)
 
         // Act
         val result = useCase.searchChannels("", VideoServiceType.TWITCH)
@@ -202,10 +176,10 @@ class ChannelSearchUseCaseTest {
     @Test
     fun `空白のみクエリ_YouTube検索でエラーが返されること`() = runTest {
         // Arrange
-        val useCase = ChannelSearchUseCase(
-            FakeTwitchSearchDataSource(),
-            FakeYouTubeSearchDataSource(),
+        val repository = FakeVideoSearchRepository(
+            channelsResult = Result.failure(IllegalArgumentException("Search query cannot be empty")),
         )
+        val useCase = ChannelSearchUseCase(repository)
 
         // Act
         val result = useCase.searchChannels("   ", VideoServiceType.YOUTUBE)
@@ -222,10 +196,10 @@ class ChannelSearchUseCaseTest {
     @Test
     fun `Twitch検索エラー_エラーResultが返されること`() = runTest {
         // Arrange
-        val twitchDataSource = FakeTwitchSearchDataSource(
+        val repository = FakeVideoSearchRepository(
             channelsResult = Result.failure(RuntimeException("Twitch API error")),
         )
-        val useCase = ChannelSearchUseCase(twitchDataSource, FakeYouTubeSearchDataSource())
+        val useCase = ChannelSearchUseCase(repository)
 
         // Act
         val result = useCase.searchChannels("test", VideoServiceType.TWITCH)
@@ -237,10 +211,10 @@ class ChannelSearchUseCaseTest {
     @Test
     fun `YouTube検索エラー_エラーResultが返されること`() = runTest {
         // Arrange
-        val youTubeDataSource = FakeYouTubeSearchDataSource(
+        val repository = FakeVideoSearchRepository(
             channelsResult = Result.failure(RuntimeException("YouTube API error")),
         )
-        val useCase = ChannelSearchUseCase(FakeTwitchSearchDataSource(), youTubeDataSource)
+        val useCase = ChannelSearchUseCase(repository)
 
         // Act
         val result = useCase.searchChannels("test", VideoServiceType.YOUTUBE)
@@ -256,16 +230,18 @@ class ChannelSearchUseCaseTest {
     @Test
     fun `searchTwitchChannels_後方互換性メソッドが動作すること`() = runTest {
         // Arrange
-        val twitchDataSource = FakeTwitchSearchDataSource(
+        val repository = FakeVideoSearchRepository(
             channelsResult = Result.success(
-                TwitchUserResponse(
-                    data = listOf(
-                        TwitchUser(id = "t1", displayName = "Streamer1"),
+                listOf(
+                    ChannelInfo(
+                        id = "t1",
+                        displayName = "Streamer1",
+                        serviceType = VideoServiceType.TWITCH,
                     ),
                 ),
             ),
         )
-        val useCase = ChannelSearchUseCase(twitchDataSource, FakeYouTubeSearchDataSource())
+        val useCase = ChannelSearchUseCase(repository)
 
         // Act
         val result = useCase.searchTwitchChannels("test")
