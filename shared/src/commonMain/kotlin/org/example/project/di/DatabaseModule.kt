@@ -6,9 +6,13 @@ import org.example.project.data.local.FollowedChannelDao
 import org.example.project.data.local.SyncHistoryDao
 import org.example.project.data.local.UserDeviceDao
 import org.example.project.data.repository.ChannelFollowRepositoryImpl
+import org.example.project.data.repository.FeatureGateImpl
 import org.example.project.data.repository.SyncHistoryRepositoryImpl
 import org.example.project.data.repository.UserRepositoryImpl
+import org.example.project.data.repository.createSubscriptionRepository
+import org.example.project.domain.model.FeatureGate
 import org.example.project.domain.repository.ChannelFollowRepository
+import org.example.project.domain.repository.SubscriptionRepository
 import org.example.project.domain.repository.SyncHistoryRepository
 import org.example.project.domain.repository.UserRepository
 import org.koin.dsl.module
@@ -52,5 +56,13 @@ val databaseModule = module {
 
     single<UserRepository> {
         UserRepositoryImpl(get())
+    }
+
+    single<SubscriptionRepository> {
+        createSubscriptionRepository(get())
+    }
+
+    single<FeatureGate> {
+        FeatureGateImpl(get())
     }
 }

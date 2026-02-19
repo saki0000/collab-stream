@@ -50,9 +50,16 @@ kotlin {
         }
         androidMain.dependencies {
             implementation(libs.ktor.client.okhttp)
+            // RevenueCat KMP SDK (Android/iOSのみ対応)
+            implementation(libs.purchases.kmp.core)
         }
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)
+            // RevenueCat KMP SDK (Android/iOSのみ対応)
+            implementation(libs.purchases.kmp.core)
+        }
+        jvmMain.dependencies {
+            implementation(libs.ktor.client.java)
         }
     }
 }
