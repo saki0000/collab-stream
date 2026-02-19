@@ -7,9 +7,11 @@ import com.revenuecat.purchases.kmp.ktx.awaitCustomerInfo
 import com.revenuecat.purchases.kmp.ktx.awaitOfferings
 import com.revenuecat.purchases.kmp.ktx.awaitPurchase
 import com.revenuecat.purchases.kmp.ktx.awaitRestore
-import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.example.project.config.getRevenueCatApiKey
@@ -32,10 +34,23 @@ internal class SubscriptionRepositoryImpl(
     private var isConfigured = false
 
     /**
+     * delegateからの更新を複数のコレクターに安全にファンアウトするためのSharedFlow。
+     *
+     * シングルトンである Purchases.sharedInstance.delegate を直接 callbackFlow で
+     * 設定・クリアすると、複数コレクター間で上書き・null化が発生するため、
+     * SDK初期化時に一度だけdelegateを設定し、このSharedFlowで中継する。
+     */
+    private val _customerInfoUpdates = MutableSharedFlow<SubscriptionStatus>(
+        extraBufferCapacity = 1,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST,
+    )
+
+    /**
      * RevenueCat SDKを初期化する。
      *
      * Double-Checked Locking with Mutexパターンにより、
      * 複数の同時呼び出しでも安全に初期化される。
+     * delegateもここで一度だけ設定し、以降は変更しない。
      */
     private suspend fun ensureConfigured() {
         if (isConfigured) return
@@ -48,6 +63,12 @@ internal class SubscriptionRepositoryImpl(
                 appUserId = deviceId
             }
             Purchases.configure(config)
+
+            Purchases.sharedInstance.delegate =
+                UpdatedCustomerInfoDelegate { customerInfo ->
+                    _customerInfoUpdates.tryEmit(customerInfo.toSubscriptionStatus())
+                }
+
             isConfigured = true
         }
     }
@@ -58,21 +79,15 @@ internal class SubscriptionRepositoryImpl(
         customerInfo.toSubscriptionStatus()
     }
 
-    override fun observeSubscriptionStatus(): Flow<SubscriptionStatus> = callbackFlow {
+    override fun observeSubscriptionStatus(): Flow<SubscriptionStatus> = flow {
         ensureConfigured()
-
-        val delegate = UpdatedCustomerInfoDelegate { customerInfo ->
-            trySend(customerInfo.toSubscriptionStatus())
-        }
-        Purchases.sharedInstance.delegate = delegate
 
         // 初回値を発行
         val initialCustomerInfo = Purchases.sharedInstance.awaitCustomerInfo()
-        trySend(initialCustomerInfo.toSubscriptionStatus())
+        emit(initialCustomerInfo.toSubscriptionStatus())
 
-        awaitClose {
-            Purchases.sharedInstance.delegate = null
-        }
+        // delegateからの更新をSharedFlow経由で受信
+        emitAll(_customerInfoUpdates)
     }
 
     override suspend fun purchaseProPlan(): Result<SubscriptionStatus> = runCatching {
