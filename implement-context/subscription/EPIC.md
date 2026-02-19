@@ -35,8 +35,8 @@ kanban
   spec[Spec]
   design[Design]
   dev[Dev]
-    us3[US-3: RevenueCat SDK統合]
   done[Done]
+    us3[US-3: RevenueCat SDK統合]
     us1[US-1: ドメインモデル & Feature Gate基盤]@{ priority: 'High' }
     us2[US-2: 匿名認証（デバイスID）]
 ```
