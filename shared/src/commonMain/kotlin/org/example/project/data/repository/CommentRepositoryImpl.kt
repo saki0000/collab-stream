@@ -4,7 +4,7 @@ import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
-import org.example.project.SERVER_PORT
+import io.ktor.http.appendPathSegments
 import org.example.project.domain.model.ApiResponse
 import org.example.project.domain.model.CommentTimestampResult
 import org.example.project.domain.model.TimestampExtractor
@@ -21,7 +21,7 @@ import org.example.project.domain.repository.CommentRepository
  */
 class CommentRepositoryImpl(
     private val httpClient: HttpClient,
-    private val serverBaseUrl: String = "http://localhost:$SERVER_PORT",
+    private val serverBaseUrl: String,
 ) : CommentRepository {
 
     override suspend fun getVideoComments(
@@ -31,7 +31,10 @@ class CommentRepositoryImpl(
         order: String,
     ): Result<CommentTimestampResult> {
         return try {
-            val response = httpClient.get("$serverBaseUrl/api/videos/$videoId/comments") {
+            val response = httpClient.get(serverBaseUrl) {
+                url {
+                    appendPathSegments("api", "videos", videoId, "comments")
+                }
                 parameter("maxResults", maxResults)
                 if (pageToken != null) {
                     parameter("pageToken", pageToken)
@@ -70,14 +73,14 @@ class CommentRepositoryImpl(
                         )
                     } else {
                         Result.failure(
-                            RuntimeException("API Error: ${apiResponse.message} (code: ${apiResponse.code})"),
+                            CommentApiException(code = apiResponse.code, message = apiResponse.message),
                         )
                     }
                 }
             }
         } catch (e: Exception) {
             Result.failure(
-                RuntimeException("Failed to fetch video comments for video ID '$videoId': ${e.message}", e),
+                CommentFetchException(videoId = videoId, cause = e),
             )
         }
     }
