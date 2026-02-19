@@ -2,6 +2,7 @@
 
 package org.example.project.core.di
 
+import org.example.project.feature.archive_home.ArchiveHomeViewModel
 import org.example.project.feature.home.HomeViewModel
 import org.example.project.feature.streamer_search.StreamerSearchViewModel
 import org.example.project.feature.timeline_sync.TimelineSyncViewModel
@@ -47,6 +48,14 @@ val appModule = module {
             timelineSyncRepository = get(),
             channelSearchUseCase = get(),
             channelFollowRepository = get(),
+        )
+    }
+
+    viewModel {
+        ArchiveHomeViewModel(
+            timelineSyncRepository = get(),
+            channelFollowRepository = get(),
+            channelSearchUseCase = get(),
         )
     }
 }

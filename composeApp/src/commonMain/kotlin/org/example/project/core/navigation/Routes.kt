@@ -61,6 +61,17 @@ data class MainPlayerRoute(
 data object TimelineSyncRoute
 
 /**
+ * Archive Home route - Main screen for viewing followed channels' archives
+ *
+ * Displays archives from followed channels for a selected date.
+ *
+ * Epic: Channel Follow & Archive Home (US-3)
+ * Story: US-3 (Archive Home Display)
+ */
+@Serializable
+data object ArchiveHomeRoute
+
+/**
  * Enum representing streamer search mode
  */
 enum class StreamerSearchMode {
