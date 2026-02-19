@@ -40,8 +40,8 @@ kanban
   spec[Spec]
   design[Design]
   dev[Dev]
-    us2[US-2: タイムスタンプ抽出ドメイン & データ層]
   done[Done]
+    us2[US-2: タイムスタンプ抽出ドメイン & データ層]
     us1[US-1: コメントAPIプロキシエンドポイント]@{ priority: 'High' }
 ```
 
