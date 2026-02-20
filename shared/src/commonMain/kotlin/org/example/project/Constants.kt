@@ -5,10 +5,9 @@ const val SERVER_PORT = 8080
 /**
  * サーバーのベースURL
  *
- * 開発環境用のローカルサーバーURL。
- * Android エミュレータからは 10.0.2.2 を使用する必要がある。
- * その他のプラットフォームは localhost を使用。
- *
- * TODO: 本番環境用のCloud Run URLに切り替え可能にする
+ * Cloud Run にデプロイされた本番サーバーのURL。
+ * ローカル開発時は以下に切り替える:
+ *   - Android エミュレータ: "http://10.0.2.2:$SERVER_PORT"
+ *   - iOS シミュレータ / JVM: "http://localhost:$SERVER_PORT"
  */
-expect val SERVER_BASE_URL: String
+const val SERVER_BASE_URL: String = "https://collabstream-server-mmaqsoxiwq-an.a.run.app"

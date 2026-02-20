@@ -12,7 +12,7 @@ import org.example.project.domain.usecase.ChannelSearchUseCase
 import org.example.project.domain.usecase.VideoSearchUseCase
 import org.example.project.domain.usecase.VideoSyncUseCase
 import org.example.project.domain.usecase.VideoSyncUseCaseImpl
-import org.example.project.SERVER_PORT
+import org.example.project.SERVER_BASE_URL
 import org.koin.dsl.module
 
 /**
@@ -42,7 +42,7 @@ val sharedModule = module {
     }
 
     single<CommentRepository> {
-        CommentRepositoryImpl(get(), "http://localhost:$SERVER_PORT")
+        CommentRepositoryImpl(get(), SERVER_BASE_URL)
     }
 
     // Use case bindings
