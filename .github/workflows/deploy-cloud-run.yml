@@ -142,8 +142,8 @@ jobs:
           #   --cpu=1: CPU 上限（ステートレス API プロキシとして十分）
           #   --min-instances=0: アイドル時はインスタンスを 0 にしてコスト削減
           #   --max-instances=3: トラフィックスパイク時の最大インスタンス数
-          #   --startup-probe-path=/health: 起動完了確認用ヘルスチェックエンドポイント
-          #   --liveness-probe-path=/health: 稼働確認用ヘルスチェックエンドポイント
+          #   ヘルスチェック: Cloud Run はデフォルトの TCP 起動プローブを使用する
+          #   HTTP プローブが必要な場合は Cloud Run コンソールから設定する
           flags: >-
             --allow-unauthenticated
             --port=8080
@@ -151,8 +151,6 @@ jobs:
             --cpu=1
             --min-instances=0
             --max-instances=3
-            --startup-probe-path=/health
-            --liveness-probe-path=/health
 
       # デプロイされたサービスの URL を出力する
       - name: デプロイ URL の出力
