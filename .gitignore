@@ -34,8 +34,6 @@ iosApp/fastlane/test_output
 iosApp/build/
 iosApp/vendor/
 
-# CocoaPods
-iosApp/Pods/
 
 # Roborazzi reference screenshots (tracked in Git for comparison)
 !composeApp/build

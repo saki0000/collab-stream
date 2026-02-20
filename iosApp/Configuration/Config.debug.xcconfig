@@ -1,5 +1,0 @@
-// CocoaPods生成のxcconfig（pod install後に存在）
-#include? "../../Pods/Target Support Files/Pods-iosApp/Pods-iosApp.debug.xcconfig"
-
-// 共通設定
-#include "Config.xcconfig"

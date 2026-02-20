@@ -19,14 +19,6 @@ platform :ios do
   # ビルドのみ（CI検証用）
   # ======================================
 
-  desc "CocoaPods依存をインストール"
-  private_lane :install_pods do
-    cocoapods(
-      podfile: ".",
-      try_repo_update_on_error: true
-    )
-  end
-
   desc "iOSアプリをビルドのみ（ビルド検証）"
   lane :build_only do
     build_app(
@@ -46,9 +38,6 @@ platform :ios do
   lane :beta do |options|
     # CI環境向けに一時キーチェーンを作成
     setup_ci if is_ci?
-
-    # CocoaPods依存をインストール（PurchasesHybridCommon等）
-    install_pods
 
     # App Store Connect API Key の設定（CI環境）
     if ENV["APP_STORE_CONNECT_API_KEY_ID"]
@@ -86,7 +75,7 @@ platform :ios do
 
     # アプリのビルド（Kotlin Frameworkは Xcode Build Phase で自動ビルド）
     build_app(
-      workspace: "iosApp.xcworkspace",
+      project: "iosApp.xcodeproj",
       scheme: "iosApp",
       export_method: "app-store",
       output_directory: "build",
