@@ -1,0 +1,8 @@
+platform :ios, '16.0'
+
+target 'iosApp' do
+  use_frameworks!
+
+  # RevenueCat KMP SDK のネイティブ依存（バージョンは purchases-kmp の '+' 以降に合わせる）
+  pod 'PurchasesHybridCommon', '17.33.1'
+end
