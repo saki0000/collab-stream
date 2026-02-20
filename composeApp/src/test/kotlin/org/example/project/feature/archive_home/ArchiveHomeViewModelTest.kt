@@ -313,8 +313,7 @@ class ArchiveHomeViewModelTest {
         // Assert
         val state = viewModel.uiState.value
         assertTrue(state.selectedArchiveIds.contains("video1"))
-        assertEquals(1, state.selectedCount)
-        assertTrue(state.hasSelection)
+        assertEquals(1, state.selectedArchiveIds.size)
     }
 
     @Test
@@ -332,8 +331,7 @@ class ArchiveHomeViewModelTest {
         // Assert
         val state = viewModel.uiState.value
         assertFalse(state.selectedArchiveIds.contains("video1"))
-        assertEquals(0, state.selectedCount)
-        assertFalse(state.hasSelection)
+        assertEquals(0, state.selectedArchiveIds.size)
     }
 
     @Test
@@ -345,7 +343,7 @@ class ArchiveHomeViewModelTest {
             viewModel.handleIntent(ArchiveHomeIntent.ToggleArchiveSelection("video$index"))
         }
         advanceUntilIdle()
-        assertEquals(10, viewModel.uiState.value.selectedCount)
+        assertEquals(10, viewModel.uiState.value.selectedArchiveIds.size)
 
         // Act: 11件目を選択しようとする
         viewModel.handleIntent(ArchiveHomeIntent.ToggleArchiveSelection("video99"))
@@ -353,7 +351,7 @@ class ArchiveHomeViewModelTest {
 
         // Assert: 10件のまま
         val state = viewModel.uiState.value
-        assertEquals(10, state.selectedCount)
+        assertEquals(10, state.selectedArchiveIds.size)
         assertFalse(state.selectedArchiveIds.contains("video99"))
     }
 
@@ -368,7 +366,7 @@ class ArchiveHomeViewModelTest {
         viewModel.handleIntent(ArchiveHomeIntent.ToggleArchiveSelection("video1"))
         viewModel.handleIntent(ArchiveHomeIntent.ToggleArchiveSelection("video2"))
         advanceUntilIdle()
-        assertEquals(2, viewModel.uiState.value.selectedCount)
+        assertEquals(2, viewModel.uiState.value.selectedArchiveIds.size)
 
         // Act
         val newDate = LocalDate.parse("2024-01-16")
@@ -377,8 +375,6 @@ class ArchiveHomeViewModelTest {
 
         // Assert
         val state = viewModel.uiState.value
-        assertEquals(0, state.selectedCount)
-        assertFalse(state.hasSelection)
         assertTrue(state.selectedArchiveIds.isEmpty())
     }
 

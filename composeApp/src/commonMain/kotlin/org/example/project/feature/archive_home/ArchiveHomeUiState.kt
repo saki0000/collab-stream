@@ -111,15 +111,16 @@ data class ArchiveHomeUiState(
 
     /**
      * 選択中のアーカイブ件数。
+     * archivesに現在含まれているアイテムのみをカウントする。
      */
     val selectedCount: Int
-        get() = selectedArchiveIds.size
+        get() = archives.count { it.videoId in selectedArchiveIds }
 
     /**
      * 1件以上選択中かどうか。
      */
     val hasSelection: Boolean
-        get() = selectedArchiveIds.isNotEmpty()
+        get() = selectedCount > 0
 }
 
 /**

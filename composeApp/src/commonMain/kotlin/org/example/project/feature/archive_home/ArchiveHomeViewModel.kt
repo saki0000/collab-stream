@@ -499,6 +499,9 @@ class ArchiveHomeViewModel(
                 )
             }
 
+        // フォロー解除等でアーカイブが消えた場合のガード
+        if (presetChannels.isEmpty()) return
+
         val presetChannelsJson = Json.encodeToString(presetChannels)
 
         viewModelScope.launch {
