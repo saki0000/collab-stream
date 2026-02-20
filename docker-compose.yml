@@ -1,0 +1,35 @@
+# ============================================================
+# CollabStream docker-compose.yml
+# ローカル開発環境でのサーバー起動設定
+#
+# 使用方法:
+#   1. server/.env ファイルを作成して環境変数を設定する（後述）
+#   2. docker-compose up --build でサーバーを起動する
+#   3. http://localhost:8080/health でヘルスチェックを確認する
+#
+# server/.env ファイルの内容（git にはコミットしないこと）:
+#   YOUTUBE_API_KEY=your_youtube_api_key
+#   TWITCH_CLIENT_ID=your_twitch_client_id
+#   TWITCH_CLIENT_SECRET=your_twitch_client_secret
+# ============================================================
+
+services:
+  server:
+    # プロジェクトルートの Dockerfile を使用してビルドする
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    # ホストの 8080 ポートをコンテナの 8080 ポートにマッピングする
+    ports:
+      - "8080:8080"
+
+    # APIキーは server/.env ファイルから読み込む
+    # このファイルは git にコミットせず、各開発者が手動で作成すること
+    # 本番環境では Cloud Run の Secret Manager から注入されるため不要
+    env_file:
+      - server/.env
+
+    # コンテナの再起動ポリシー
+    # ローカル開発では手動管理するため unless-stopped を設定する
+    restart: unless-stopped

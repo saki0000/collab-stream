@@ -31,10 +31,10 @@ config:
 ---
 kanban
   backlog[Backlog]
-    us5[US-5: Docker化 & Cloud Runデプロイ CI/CD]
   spec[Spec]
   design[Design]
   dev[Dev]
+    us5[US-5: Docker化 & Cloud Runデプロイ CI/CD]
   done[Done]
     us4[US-4: クライアント側Repository移行]
     us3[US-3: 検索APIエンドポイント]

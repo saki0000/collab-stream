@@ -1,0 +1,170 @@
+# ============================================================
+# CollabStream サーバー Cloud Run デプロイワークフロー
+#
+# トリガー条件:
+#   - main ブランチへの push（server, shared, インフラ関連ファイルの変更時）
+#   - 手動実行（workflow_dispatch）
+#
+# 必要な GitHub Secrets の設定方法:
+#   GitHub リポジトリ → Settings → Secrets and variables → Actions から設定する
+#
+#   GCP_WORKLOAD_IDENTITY_PROVIDER:
+#     Workload Identity プロバイダーのリソース名
+#     例: projects/123456789/locations/global/workloadIdentityPools/my-pool/providers/my-provider
+#     設定方法: GCP Console → IAM → Workload Identity 連携で取得する
+#
+#   GCP_SERVICE_ACCOUNT:
+#     デプロイに使用するサービスアカウントのメールアドレス
+#     例: github-actions@my-project.iam.gserviceaccount.com
+#     必要な IAM ロール:
+#       - roles/run.admin（Cloud Run の管理権限）
+#       - roles/artifactregistry.writer（Artifact Registry への書き込み権限）
+#       - roles/iam.serviceAccountUser（サービスアカウントの使用権限）
+#
+#   GCP_PROJECT_ID:
+#     GCP プロジェクト ID（例: my-collabstream-project）
+#
+# GCP Secret Manager の設定（APIキー管理）:
+#   以下の Secret を GCP Secret Manager に登録しておくこと:
+#     - YOUTUBE_API_KEY: YouTube Data API v3 のキー
+#     - TWITCH_CLIENT_ID: Twitch API のクライアント ID
+#     - TWITCH_CLIENT_SECRET: Twitch API のクライアントシークレット
+#   Cloud Run のサービスアカウントに roles/secretmanager.secretAccessor を付与すること
+# ============================================================
+
+name: Deploy Server to Cloud Run
+
+on:
+  push:
+    branches: [main]
+    # server または shared モジュール、インフラ関連ファイルの変更時のみ実行する
+    paths:
+      - 'server/**'
+      - 'shared/**'
+      - 'Dockerfile'
+      - 'docker-compose.yml'
+      - 'build.gradle.kts'
+      - 'settings.gradle.kts'
+      - 'gradle/**'
+  # 手動でのデプロイを可能にする（緊急時や強制デプロイ時に使用）
+  workflow_dispatch:
+
+# 同一ブランチへの複数 push 時に並列デプロイが発生しないよう制御する
+# cancel-in-progress: false により、実行中のデプロイを中断しない（デプロイの安全性を優先）
+concurrency:
+  group: deploy-cloud-run
+  cancel-in-progress: false
+
+env:
+  # Cloud Run のサービス名
+  SERVICE_NAME: collabstream-server
+  # デプロイ先リージョン（東京）
+  REGION: asia-northeast1
+
+jobs:
+  deploy:
+    name: Cloud Run へのデプロイ
+    runs-on: ubuntu-latest
+    # デプロイが長時間実行されることを防ぐためタイムアウトを設定する
+    timeout-minutes: 15
+
+    # Workload Identity 連携に必要な権限を付与する
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      # ソースコードをチェックアウトする
+      - name: ソースコードのチェックアウト
+        uses: actions/checkout@v4
+
+      # Workload Identity 連携による GCP 認証を行う
+      # サービスアカウントキーをリポジトリに保存せず、セキュアに認証する
+      - name: GCP 認証（Workload Identity 連携）
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      # gcloud CLI をセットアップする
+      - name: Cloud SDK のセットアップ
+        uses: google-github-actions/setup-gcloud@v2
+
+      # Artifact Registry への Docker 認証を設定する
+      # asia-northeast1 リージョンの Artifact Registry に push できるよう設定する
+      - name: Artifact Registry への Docker 認証設定
+        run: gcloud auth configure-docker asia-northeast1-docker.pkg.dev
+
+      # Docker イメージをビルドして Artifact Registry に push する
+      # コミット SHA をタグとして使用することで、各デプロイのイメージを追跡可能にする
+      - name: Docker イメージのビルドと push
+        run: |
+          # イメージタグを定義する（コミット SHA タグ）
+          IMAGE_TAG="asia-northeast1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/collabstream/server:${{ github.sha }}"
+          LATEST_TAG="asia-northeast1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/collabstream/server:latest"
+
+          echo "ビルド対象イメージ: ${IMAGE_TAG}"
+
+          # Docker イメージをビルドする
+          docker build \
+            --tag "${IMAGE_TAG}" \
+            --tag "${LATEST_TAG}" \
+            --file Dockerfile \
+            .
+
+          # Artifact Registry にイメージを push する（SHA タグ）
+          docker push "${IMAGE_TAG}"
+
+          # latest タグも push する（参照用）
+          docker push "${LATEST_TAG}"
+
+          # 後続のステップで使用するためイメージタグを環境変数に設定する
+          echo "IMAGE_TAG=${IMAGE_TAG}" >> $GITHUB_ENV
+
+      # Cloud Run にデプロイする
+      # APIキーは GCP Secret Manager から直接注入する（環境変数には保存しない）
+      - name: Cloud Run へのデプロイ
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: collabstream-server
+          region: asia-northeast1
+          image: ${{ env.IMAGE_TAG }}
+          # APIキーは GCP Secret Manager から注入する
+          # 形式: 環境変数名=Secret名:バージョン
+          secrets: |
+            YOUTUBE_API_KEY=YOUTUBE_API_KEY:latest
+            TWITCH_CLIENT_ID=TWITCH_CLIENT_ID:latest
+            TWITCH_CLIENT_SECRET=TWITCH_CLIENT_SECRET:latest
+          # Cloud Run の実行オプション:
+          #   --allow-unauthenticated: 認証なしでアクセス可能にする（公開 API のため）
+          #   --port=8080: コンテナがリッスンするポート
+          #   --memory=512Mi: メモリ上限（Ktor サーバーに十分な量）
+          #   --cpu=1: CPU 上限（ステートレス API プロキシとして十分）
+          #   --min-instances=0: アイドル時はインスタンスを 0 にしてコスト削減
+          #   --max-instances=3: トラフィックスパイク時の最大インスタンス数
+          #   --startup-probe-path=/health: 起動完了確認用ヘルスチェックエンドポイント
+          #   --liveness-probe-path=/health: 稼働確認用ヘルスチェックエンドポイント
+          flags: >-
+            --allow-unauthenticated
+            --port=8080
+            --memory=512Mi
+            --cpu=1
+            --min-instances=0
+            --max-instances=3
+            --startup-probe-path=/health
+            --liveness-probe-path=/health
+
+      # デプロイされたサービスの URL を出力する
+      - name: デプロイ URL の出力
+        run: |
+          SERVICE_URL=$(gcloud run services describe ${{ env.SERVICE_NAME }} \
+            --region ${{ env.REGION }} \
+            --format='value(status.url)')
+          echo "デプロイ完了: ${SERVICE_URL}"
+          echo "ヘルスチェック: ${SERVICE_URL}/health"
+          echo "SERVICE_URL=${SERVICE_URL}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## デプロイ結果" >> $GITHUB_STEP_SUMMARY
+          echo "- サービス URL: ${SERVICE_URL}" >> $GITHUB_STEP_SUMMARY
+          echo "- ヘルスチェック: ${SERVICE_URL}/health" >> $GITHUB_STEP_SUMMARY
+          echo "- コミット SHA: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY

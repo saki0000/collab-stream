@@ -23,7 +23,11 @@ import org.example.project.service.SearchServiceImpl
 import org.example.project.service.VideoServiceImpl
 
 fun main() {
-    embeddedServer(Netty, port = SERVER_PORT, host = "0.0.0.0", module = Application::module)
+    // Cloud Run 対応: PORT 環境変数が設定されている場合はその値を使用し、
+    // 未設定の場合はデフォルトの SERVER_PORT（8080）にフォールバックする
+    val port = System.getenv("PORT")?.toIntOrNull() ?: SERVER_PORT
+    println("サーバーをポート $port で起動します")
+    embeddedServer(Netty, port = port, host = "0.0.0.0", module = Application::module)
         .start(wait = true)
 }
 
