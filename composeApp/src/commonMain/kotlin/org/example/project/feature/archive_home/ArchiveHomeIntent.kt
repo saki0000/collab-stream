@@ -76,6 +76,22 @@ sealed interface ArchiveHomeIntent {
      * チャンネルをフォロー/アンフォローする。
      */
     data class ToggleFollow(val channel: ChannelInfo) : ArchiveHomeIntent
+
+    // ============================================
+    // アーカイブ選択（US-4）
+    // ============================================
+
+    /**
+     * アーカイブの選択をトグルする。
+     * 選択済みの場合は解除、未選択の場合は選択。最大10件制限あり。
+     */
+    data class ToggleArchiveSelection(val videoId: String) : ArchiveHomeIntent
+
+    /**
+     * タイムラインを開く。
+     * 選択中のアーカイブをプリセットとしてTimelineSyncに遷移する。
+     */
+    data object OpenTimeline : ArchiveHomeIntent
 }
 
 /**
@@ -93,4 +109,13 @@ sealed interface ArchiveHomeSideEffect {
      * フォロー/アンフォロー後のフィードバックSnackbarを表示する。
      */
     data class ShowFollowFeedback(val message: String) : ArchiveHomeSideEffect
+
+    /**
+     * タイムライン画面へ遷移する。
+     * 選択チャンネル情報とプリセット日付を含む。
+     */
+    data class NavigateToTimeline(
+        val presetChannelsJson: String,
+        val presetDate: String,
+    ) : ArchiveHomeSideEffect
 }

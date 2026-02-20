@@ -142,6 +142,21 @@ sealed interface TimelineSyncIntent {
      * フォロー済みの場合はアンフォロー、未フォローの場合はフォローを実行する。
      */
     data class ToggleFollow(val channel: ChannelInfo) : TimelineSyncIntent
+
+    // ============================================
+    // アーカイブHome プリセット遷移（US-4）
+    // ============================================
+
+    /**
+     * アーカイブHome画面からプリセット付きでタイムラインを読み込む。
+     *
+     * presetChannelsJson: PresetChannelリストのJSON文字列
+     * presetDate: プリセット日付
+     */
+    data class LoadWithPresets(
+        val presetChannelsJson: String,
+        val presetDate: LocalDate,
+    ) : TimelineSyncIntent
 }
 
 /**

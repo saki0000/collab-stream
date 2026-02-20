@@ -54,11 +54,31 @@ data class MainPlayerRoute(
 /**
  * Timeline sync route - Main screen for timeline synchronization
  *
- * This is the app's start destination, displaying synchronized timelines
- * for multiple channels.
+ * presetDate: ISO日付文字列（例: "2024-01-15"）。null の場合は今日を使用する。
+ * presetChannelsJson: JSON配列文字列（PresetChannelリスト）。null の場合はプリセットなし。
+ *
+ * US-4: ArchiveHome -> TimelineSync 遷移時にプリセット情報を渡す。
  */
 @Serializable
-data object TimelineSyncRoute
+data class TimelineSyncRoute(
+    val presetDate: String? = null,
+    val presetChannelsJson: String? = null,
+)
+
+/**
+ * アーカイブHome → TimelineSync 遷移時に渡すチャンネルプリセット情報。
+ *
+ * ArchiveItem → PresetChannel → SyncChannel の変換チェーンに使用する。
+ *
+ * US-4: Archive Selection
+ */
+@Serializable
+data class PresetChannel(
+    val channelId: String,
+    val channelName: String,
+    val channelIconUrl: String,
+    val serviceType: String,
+)
 
 /**
  * Archive Home route - Main screen for viewing followed channels' archives
