@@ -31,11 +31,11 @@ config:
 ---
 kanban
   backlog[Backlog]
-    us5[US-5: Docker化 & Cloud Runデプロイ CI/CD]
   spec[Spec]
   design[Design]
   dev[Dev]
   done[Done]
+    us5[US-5: Docker化 & Cloud Runデプロイ CI/CD]
     us4[US-4: クライアント側Repository移行]
     us3[US-3: 検索APIエンドポイント]
     us1[US-1: 共通基盤 & サーバー骨格構築]@{ priority: 'High' }
