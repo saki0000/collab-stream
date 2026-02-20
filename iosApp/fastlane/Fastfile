@@ -66,11 +66,14 @@ platform :ios do
     end
 
     # ビルド番号の設定（CI環境: github.run_numberを使用）
+    # xcconfig で CURRENT_PROJECT_VERSION を管理しているため、直接ファイルを更新
+    # (agvtool/increment_build_number は xcconfig を参照できない)
     if options[:build_number]
-      increment_build_number(
-        build_number: options[:build_number],
-        xcodeproj: "iosApp.xcodeproj"
-      )
+      xcconfig_path = File.join(Dir.pwd, "Configuration", "Config.xcconfig")
+      xcconfig_content = File.read(xcconfig_path)
+      xcconfig_content = xcconfig_content.gsub(/CURRENT_PROJECT_VERSION=.*/, "CURRENT_PROJECT_VERSION=#{options[:build_number]}")
+      File.write(xcconfig_path, xcconfig_content)
+      UI.message("ビルド番号を #{options[:build_number]} に設定しました")
     end
 
     # アプリのビルド（Kotlin Frameworkは Xcode Build Phase で自動ビルド）
