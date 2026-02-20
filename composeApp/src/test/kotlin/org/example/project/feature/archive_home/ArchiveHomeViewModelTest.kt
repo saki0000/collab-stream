@@ -13,6 +13,7 @@ import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -294,6 +295,170 @@ class ArchiveHomeViewModelTest {
         assertEquals(1, state.followedChannels.size)
         assertEquals("ch1", state.followedChannels[0].channelId)
         assertEquals("Test Channel", state.followedChannels[0].channelName)
+    }
+
+    // ========================================
+    // ToggleArchiveSelection - アーカイブ選択トグル
+    // ========================================
+
+    @Test
+    fun `ToggleArchiveSelection_未選択アーカイブをタップ_選択状態になること`() = runTest {
+        // Arrange
+        advanceUntilIdle()
+
+        // Act
+        viewModel.handleIntent(ArchiveHomeIntent.ToggleArchiveSelection("video1"))
+        advanceUntilIdle()
+
+        // Assert
+        val state = viewModel.uiState.value
+        assertTrue(state.selectedArchiveIds.contains("video1"))
+        assertEquals(1, state.selectedCount)
+        assertTrue(state.hasSelection)
+    }
+
+    @Test
+    fun `ToggleArchiveSelection_選択済みアーカイブをタップ_選択解除されること`() = runTest {
+        // Arrange
+        advanceUntilIdle()
+        viewModel.handleIntent(ArchiveHomeIntent.ToggleArchiveSelection("video1"))
+        advanceUntilIdle()
+        assertTrue(viewModel.uiState.value.selectedArchiveIds.contains("video1"))
+
+        // Act
+        viewModel.handleIntent(ArchiveHomeIntent.ToggleArchiveSelection("video1"))
+        advanceUntilIdle()
+
+        // Assert
+        val state = viewModel.uiState.value
+        assertFalse(state.selectedArchiveIds.contains("video1"))
+        assertEquals(0, state.selectedCount)
+        assertFalse(state.hasSelection)
+    }
+
+    @Test
+    fun `ToggleArchiveSelection_最大10件選択後に11件目をタップ_選択されないこと`() = runTest {
+        // Arrange
+        advanceUntilIdle()
+        // 10件選択
+        repeat(10) { index ->
+            viewModel.handleIntent(ArchiveHomeIntent.ToggleArchiveSelection("video$index"))
+        }
+        advanceUntilIdle()
+        assertEquals(10, viewModel.uiState.value.selectedCount)
+
+        // Act: 11件目を選択しようとする
+        viewModel.handleIntent(ArchiveHomeIntent.ToggleArchiveSelection("video99"))
+        advanceUntilIdle()
+
+        // Assert: 10件のまま
+        val state = viewModel.uiState.value
+        assertEquals(10, state.selectedCount)
+        assertFalse(state.selectedArchiveIds.contains("video99"))
+    }
+
+    // ========================================
+    // SelectDate - 日付変更時に選択クリア
+    // ========================================
+
+    @Test
+    fun `SelectDate_日付変更時_選択中アーカイブがクリアされること`() = runTest {
+        // Arrange
+        advanceUntilIdle()
+        viewModel.handleIntent(ArchiveHomeIntent.ToggleArchiveSelection("video1"))
+        viewModel.handleIntent(ArchiveHomeIntent.ToggleArchiveSelection("video2"))
+        advanceUntilIdle()
+        assertEquals(2, viewModel.uiState.value.selectedCount)
+
+        // Act
+        val newDate = LocalDate.parse("2024-01-16")
+        viewModel.handleIntent(ArchiveHomeIntent.SelectDate(newDate))
+        advanceUntilIdle()
+
+        // Assert
+        val state = viewModel.uiState.value
+        assertEquals(0, state.selectedCount)
+        assertFalse(state.hasSelection)
+        assertTrue(state.selectedArchiveIds.isEmpty())
+    }
+
+    // ========================================
+    // OpenTimeline - タイムライン遷移
+    // ========================================
+
+    @Test
+    fun `OpenTimeline_選択なし_SideEffectが発行されないこと`() = runTest {
+        // Arrange
+        advanceUntilIdle()
+        val sideEffects = mutableListOf<ArchiveHomeSideEffect>()
+        val job = launch {
+            viewModel.sideEffect.collect { sideEffects.add(it) }
+        }
+
+        // Act: 選択なしでOpenTimeline
+        viewModel.handleIntent(ArchiveHomeIntent.OpenTimeline)
+        advanceUntilIdle()
+
+        // Assert: NavigateToTimelineのSideEffectが発行されていないこと
+        val navigateSideEffects = sideEffects.filterIsInstance<ArchiveHomeSideEffect.NavigateToTimeline>()
+        assertTrue(navigateSideEffects.isEmpty())
+        job.cancel()
+    }
+
+    @Test
+    fun `OpenTimeline_アーカイブ選択後_NavigateToTimelineSideEffectが発行されること`() = runTest {
+        // Arrange: フォロー済みチャンネルとアーカイブを設定
+        fakeChannelFollowRepository.follow(
+            channelId = "ch1",
+            channelName = "Channel 1",
+            channelIconUrl = "https://example.com/icon1.jpg",
+            serviceType = VideoServiceType.TWITCH,
+        )
+        advanceUntilIdle()
+
+        val mockVideo = TwitchVideoDetailsImpl(
+            id = "video1",
+            snippet = VideoSnippet(
+                channelId = "ch1",
+                channelTitle = "Channel 1",
+                title = "Test Video",
+                description = "",
+            ),
+            streamInfo = TwitchStreamInfo(
+                streamId = "stream1",
+                createdAt = "2024-01-15T08:00:00Z",
+                publishedAt = "2024-01-15T08:00:00Z",
+                type = "archive",
+                duration = "1h0m0s",
+                viewable = "public",
+            ),
+        )
+        fakeTimelineSyncRepository.channelVideosToReturn = listOf(mockVideo)
+
+        viewModel.handleIntent(ArchiveHomeIntent.LoadScreen)
+        advanceUntilIdle()
+        assertEquals(1, viewModel.uiState.value.archives.size)
+
+        val sideEffects = mutableListOf<ArchiveHomeSideEffect>()
+        val job = launch {
+            viewModel.sideEffect.collect { sideEffects.add(it) }
+        }
+
+        // アーカイブ選択
+        viewModel.handleIntent(ArchiveHomeIntent.ToggleArchiveSelection("video1"))
+        advanceUntilIdle()
+
+        // Act
+        viewModel.handleIntent(ArchiveHomeIntent.OpenTimeline)
+        advanceUntilIdle()
+
+        // Assert
+        val navigateSideEffects = sideEffects.filterIsInstance<ArchiveHomeSideEffect.NavigateToTimeline>()
+        assertEquals(1, navigateSideEffects.size)
+        val navigateSideEffect = navigateSideEffects.first()
+        assertEquals("2024-01-15", navigateSideEffect.presetDate)
+        assertTrue(navigateSideEffect.presetChannelsJson.contains("ch1"))
+        job.cancel()
     }
 
     // ========================================

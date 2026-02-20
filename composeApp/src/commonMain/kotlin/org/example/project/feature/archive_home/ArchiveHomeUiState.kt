@@ -86,6 +86,16 @@ data class ArchiveHomeUiState(
      * 選択中のプラットフォームでフィルタ済み。
      */
     val followedChannelIds: Set<String> = emptySet(),
+
+    // ============================================
+    // アーカイブ選択（US-4）
+    // ============================================
+
+    /**
+     * 選択中のアーカイブVideoIDのセット。
+     * タップでトグル。最大10件。
+     */
+    val selectedArchiveIds: Set<String> = emptySet(),
 ) {
     /**
      * フォロー中チャンネルが0件かどうか。
@@ -98,6 +108,18 @@ data class ArchiveHomeUiState(
      */
     val hasNoArchives: Boolean
         get() = followedChannels.isNotEmpty() && archives.isEmpty() && !isLoading
+
+    /**
+     * 選択中のアーカイブ件数。
+     */
+    val selectedCount: Int
+        get() = selectedArchiveIds.size
+
+    /**
+     * 1件以上選択中かどうか。
+     */
+    val hasSelection: Boolean
+        get() = selectedArchiveIds.isNotEmpty()
 }
 
 /**

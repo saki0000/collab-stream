@@ -31,10 +31,10 @@ config:
 ---
 kanban
   backlog[Backlog]
-    us4[US-4: アーカイブ選択 & 同期画面遷移]
   spec[Spec]
   design[Design]
   dev[Dev]
+    us4[US-4: アーカイブ選択 & 同期画面遷移]
   done[Done]
     us3[US-3: アーカイブHome画面 - フィード表示]
     us2[US-2: フォロー/アンフォロー UI]

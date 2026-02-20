@@ -2,10 +2,14 @@
 
 package org.example.project.feature.archive_home.ui
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -17,6 +21,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -24,10 +29,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 import kotlinx.datetime.LocalDate
 import org.example.project.core.theme.AppTheme
 import org.example.project.core.theme.Spacing
+import org.example.project.domain.model.VideoServiceType
 import org.example.project.feature.archive_home.ArchiveHomeIntent
 import org.example.project.feature.archive_home.ArchiveHomeUiState
 import org.example.project.feature.archive_home.ArchiveItem
@@ -38,11 +44,12 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
  * アーカイブHome画面のScreen層（Stateless）。
  *
  * 画面全体のレイアウトを定義し、状態に応じて適切なContentを表示する。
+ * US-4: 1件以上選択時にボトムアクションバーを表示する。
  *
  * 4層構造: Container -> Screen -> Content -> Component
  *
- * Epic: Channel Follow & Archive Home (US-3)
- * Story: US-3 (Archive Home Display)
+ * Epic: Channel Follow & Archive Home (US-3, US-4)
+ * Story: US-3 (Archive Home Display), US-4 (Archive Selection)
  */
 @Composable
 fun ArchiveHomeScreen(
@@ -53,6 +60,19 @@ fun ArchiveHomeScreen(
 ) {
     Scaffold(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+        bottomBar = {
+            // US-4: 1件以上選択時にボトムアクションバーを表示
+            AnimatedVisibility(
+                visible = uiState.hasSelection,
+                enter = slideInVertically(initialOffsetY = { it }),
+                exit = slideOutVertically(targetOffsetY = { it }),
+            ) {
+                BottomActionBar(
+                    selectedCount = uiState.selectedCount,
+                    onOpenTimeline = { onIntent(ArchiveHomeIntent.OpenTimeline) },
+                )
+            }
+        },
         modifier = modifier,
     ) { paddingValues ->
         Box(
@@ -87,14 +107,16 @@ fun ArchiveHomeScreen(
                 }
 
                 else -> {
-                    // コンテンツ表示
+                    // コンテンツ表示（選択状態も渡す）
                     ArchiveHomeContent(
                         archives = uiState.archives,
                         selectedDate = uiState.selectedDate,
                         displayedWeekStart = uiState.displayedWeekStart,
+                        selectedArchiveIds = uiState.selectedArchiveIds,
                         onDateSelected = { onIntent(ArchiveHomeIntent.SelectDate(it)) },
                         onNavigateToPreviousWeek = { onIntent(ArchiveHomeIntent.NavigateToPreviousWeek) },
                         onNavigateToNextWeek = { onIntent(ArchiveHomeIntent.NavigateToNextWeek) },
+                        onToggleSelection = { onIntent(ArchiveHomeIntent.ToggleArchiveSelection(it)) },
                     )
                 }
             }
@@ -115,6 +137,38 @@ fun ArchiveHomeScreen(
                 onChannelRemove = {}, // US-3では削除不要（空実装）
                 onToggleFollow = { onIntent(ArchiveHomeIntent.ToggleFollow(it)) },
                 onDismiss = { onIntent(ArchiveHomeIntent.CloseChannelAddModal) },
+            )
+        }
+    }
+}
+
+/**
+ * アーカイブ選択時に表示するボトムアクションバー。
+ *
+ * 選択件数を表示し、タイムラインを開くボタンを提供する。
+ *
+ * US-4: Archive Selection
+ */
+@Composable
+private fun BottomActionBar(
+    selectedCount: Int,
+    onOpenTimeline: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Surface(
+        color = MaterialTheme.colorScheme.surface,
+        shadowElevation = Spacing.xs,
+        modifier = modifier.fillMaxWidth(),
+    ) {
+        Button(
+            onClick = onOpenTimeline,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = Spacing.md, vertical = Spacing.sm),
+        ) {
+            Text(
+                text = "タイムラインで開く ($selectedCount)",
+                style = MaterialTheme.typography.labelLarge,
             )
         }
     }
@@ -343,6 +397,57 @@ private fun ArchiveHomeScreenErrorPreview() {
             uiState = ArchiveHomeUiState(
                 isLoading = false,
                 errorMessage = "ネットワークエラーが発生しました",
+                selectedDate = today,
+                displayedWeekStart = today,
+            ),
+            onIntent = {},
+            snackbarHostState = remember { SnackbarHostState() },
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun ArchiveHomeScreenWithSelectionPreview() {
+    val today = LocalDate.parse("2024-01-15")
+    AppTheme {
+        ArchiveHomeScreen(
+            uiState = ArchiveHomeUiState(
+                isLoading = false,
+                followedChannels = listOf(
+                    org.example.project.domain.model.FollowedChannel(
+                        channelId = "ch1",
+                        channelName = "Channel 1",
+                        channelIconUrl = "",
+                        serviceType = org.example.project.domain.model.VideoServiceType.TWITCH,
+                        followedAt = Instant.parse("2024-01-01T00:00:00Z"),
+                    ),
+                ),
+                archives = listOf(
+                    ArchiveItem(
+                        videoId = "v1",
+                        title = "配信アーカイブ #1",
+                        thumbnailUrl = "",
+                        channelId = "ch1",
+                        channelName = "Channel 1",
+                        channelIconUrl = "",
+                        serviceType = VideoServiceType.TWITCH,
+                        publishedAt = Instant.parse("2024-01-15T10:00:00Z"),
+                        durationSeconds = 3600f,
+                    ),
+                    ArchiveItem(
+                        videoId = "v2",
+                        title = "配信アーカイブ #2",
+                        thumbnailUrl = "",
+                        channelId = "ch1",
+                        channelName = "Channel 1",
+                        channelIconUrl = "",
+                        serviceType = VideoServiceType.TWITCH,
+                        publishedAt = Instant.parse("2024-01-15T14:00:00Z"),
+                        durationSeconds = 7200f,
+                    ),
+                ),
+                selectedArchiveIds = setOf("v1"),
                 selectedDate = today,
                 displayedWeekStart = today,
             ),
