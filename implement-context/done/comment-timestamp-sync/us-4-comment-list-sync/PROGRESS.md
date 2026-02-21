@@ -27,7 +27,7 @@
 ### ComposeApp テスト
 
 - [x] `TimelineSyncViewModelCommentListTest.kt` - **新規** コメントリスト開閉、ソート切替、ページネーション、タイムスタンプタップ同期のテスト（20件すべてPASS）
-- [x] `./scripts/safe-gradlew.sh :composeApp:build` 成功
+- [x] `./gradlew :composeApp:build` 成功
 
 ---
 
@@ -39,7 +39,7 @@
 
 ### 最終確認
 
-- [x] `./scripts/safe-gradlew.sh test` 全テスト成功
+- [x] `./gradlew test` 全テスト成功
 - [x] SPECIFICATION.md の全ユーザーストーリーが実装済み
 
 ---

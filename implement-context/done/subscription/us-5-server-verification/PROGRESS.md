@@ -23,15 +23,15 @@
 
 ### Server テスト
 - [x] `SubscriptionRoutesTest.kt` - エンドポイントテスト（モックService）
-- [x] `./scripts/safe-gradlew.sh :server:build` 成功
-- [x] `./scripts/safe-gradlew.sh :server:test` 成功
+- [x] `./gradlew :server:build` 成功
+- [x] `./gradlew :server:test` 成功
 
 ---
 
 ## Integration
 
 ### 最終確認
-- [x] `./scripts/safe-gradlew.sh test` 全テスト成功
+- [x] `./gradlew test` 全テスト成功
 - [x] SPECIFICATION.md の全ユーザーストーリーが実装済み
 
 ---

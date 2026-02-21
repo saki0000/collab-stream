@@ -1,5 +1,5 @@
 ---
-allowed-tools: Bash(git worktree*), Bash(adb*), Bash(cd*), Bash(./scripts/safe-gradlew.sh*)
+allowed-tools: Bash(git worktree*), Bash(adb*), Bash(cd*), Bash(./gradlew*)
 description: worktreeを選択してAndroidエミュレータ/実機にビルド＆インストール
 ---
 
@@ -25,11 +25,11 @@ description: worktreeを選択してAndroidエミュレータ/実機にビルド
 3. **ビルド＆インストール実行**:
    - デバイスが1台のみの場合:
      ```bash
-     cd <選択したworktreeのパス> && ./scripts/safe-gradlew.sh :composeApp:installDebug
+     cd <選択したworktreeのパス> && ./gradlew :composeApp:installDebug
      ```
    - 複数台から特定デバイスを指定する場合:
      ```bash
-     cd <worktreeパス> && ./scripts/safe-gradlew.sh :composeApp:assembleDebug
+     cd <worktreeパス> && ./gradlew :composeApp:assembleDebug
      adb -s <DEVICE_ID> install -r composeApp/build/outputs/apk/debug/composeApp-debug.apk
      ```
 

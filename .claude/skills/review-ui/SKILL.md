@@ -59,7 +59,7 @@ mkdir -p screenshots/review
 ### 3.2 Roborazzi でスクリーンショット記録
 
 ```bash
-./scripts/safe-gradlew.sh --wait :composeApp:recordRoborazziDebug --quiet
+./gradlew :composeApp:recordRoborazziDebug --quiet
 ```
 
 ### 3.3 変更対象のスクリーンショットを抽出

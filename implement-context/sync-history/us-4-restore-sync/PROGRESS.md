@@ -27,15 +27,15 @@
 
 ### ComposeApp テスト
 - [x] `SyncHistoryListViewModelTest.kt` - 復元ロジックのテスト追加（成功パス、recordUsage呼出確認、存在しないID、日付フォーマット）
-- [x] `./scripts/safe-gradlew.sh :composeApp:compileDebugKotlinAndroid` 成功
-- [x] `./scripts/safe-gradlew.sh :composeApp:testDebugUnitTest` 成功
+- [x] `./gradlew :composeApp:compileDebugKotlinAndroid` 成功
+- [x] `./gradlew :composeApp:testDebugUnitTest` 成功
 
 ---
 
 ## Integration
 
 ### 最終確認
-- [x] `./scripts/safe-gradlew.sh :shared:test` 全テスト成功
+- [x] `./gradlew :shared:test` 全テスト成功
 - [x] SPECIFICATION.md の全ユーザーストーリーが実装済み
 
 ---
