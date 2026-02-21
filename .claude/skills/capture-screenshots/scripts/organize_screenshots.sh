@@ -22,7 +22,7 @@ echo ""
 
 # Step 1: Roborazziでスクリーンショットを記録
 echo -e "${YELLOW}Step 1: Recording screenshots with Roborazzi...${NC}"
-./gradlew :composeApp:recordRoborazziDebug --quiet || {
+./scripts/safe-gradlew.sh --wait :composeApp:recordRoborazziDebug --quiet || {
     echo "Error: Failed to record screenshots"
     exit 1
 }
