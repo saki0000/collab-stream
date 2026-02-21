@@ -14,6 +14,7 @@ import org.example.project.feature.archive_home.ui.ArchiveHomeContainer
 import org.example.project.feature.home.ui.HomeContainer
 import org.example.project.feature.streamer_search.ui.StreamerSearchContainer
 import org.example.project.feature.subscription.ui.SubscriptionContainer
+import org.example.project.feature.timeline_sync.sync_history.ui.SyncHistoryListContainer
 import org.example.project.feature.timeline_sync.ui.TimelineSyncContainer
 import org.example.project.feature.video_playback.ui.VideoContainer
 
@@ -56,6 +57,19 @@ fun AppNavGraph(
                             presetChannelsJson = presetChannelsJson,
                         ),
                     )
+                },
+                onNavigateToSyncHistory = {
+                    navController.navigate(SyncHistoryListRoute)
+                },
+                modifier = Modifier,
+            )
+        }
+
+        // Sync History List screen (EPIC-003 US-3)
+        composable<SyncHistoryListRoute> {
+            SyncHistoryListContainer(
+                onNavigateBack = {
+                    navController.popBackStack()
                 },
                 modifier = Modifier,
             )

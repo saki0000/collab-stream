@@ -19,6 +19,7 @@ import org.koin.compose.viewmodel.koinViewModel
  * ViewModelと接続し、SideEffectを処理する。
  * [onNavigateToSubscription] でサブスクリプション管理画面への遷移を行う。
  * US-4: NavigateToTimeline SideEffectを処理してTimelineSync画面へ遷移する。
+ * EPIC-003 US-3: [onNavigateToSyncHistory] で同期履歴一覧画面への遷移を行う。
  *
  * 4層構造: Container -> Screen -> Content -> Component
  *
@@ -31,6 +32,7 @@ fun ArchiveHomeContainer(
     onNavigateToSubscription: () -> Unit,
     modifier: Modifier = Modifier,
     onNavigateToTimeline: (presetDate: String, presetChannelsJson: String) -> Unit = { _, _ -> },
+    onNavigateToSyncHistory: () -> Unit = {},
     viewModel: ArchiveHomeViewModel = koinViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -72,6 +74,7 @@ fun ArchiveHomeContainer(
         uiState = uiState,
         onIntent = viewModel::handleIntent,
         onNavigateToSubscription = onNavigateToSubscription,
+        onNavigateToSyncHistory = onNavigateToSyncHistory,
         snackbarHostState = snackbarHostState,
         modifier = modifier,
     )

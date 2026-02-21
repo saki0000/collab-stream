@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
@@ -48,8 +49,9 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
  * アーカイブHome画面のScreen層（Stateless）。
  *
  * 画面全体のレイアウトを定義し、状態に応じて適切なContentを表示する。
- * TopAppBarに設定アイコンを配置し、タップでサブスクリプション管理画面へ遷移する。
+ * TopAppBarに設定アイコンと履歴アイコンを配置する。
  * US-4: 1件以上選択時にボトムアクションバーを表示する。
+ * EPIC-003 US-3: 履歴アイコンタップで同期履歴一覧画面へ遷移する。
  *
  * 4層構造: Container -> Screen -> Content -> Component
  *
@@ -62,6 +64,7 @@ fun ArchiveHomeScreen(
     uiState: ArchiveHomeUiState,
     onIntent: (ArchiveHomeIntent) -> Unit,
     onNavigateToSubscription: () -> Unit,
+    onNavigateToSyncHistory: () -> Unit = {},
     snackbarHostState: SnackbarHostState,
     modifier: Modifier = Modifier,
 ) {
@@ -70,6 +73,15 @@ fun ArchiveHomeScreen(
             TopAppBar(
                 title = { Text("アーカイブ") },
                 actions = {
+                    // 同期履歴一覧ボタン（EPIC-003 US-3）
+                    IconButton(
+                        onClick = onNavigateToSyncHistory,
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.History,
+                            contentDescription = "同期履歴一覧を開く",
+                        )
+                    }
                     IconButton(
                         onClick = onNavigateToSubscription,
                     ) {
