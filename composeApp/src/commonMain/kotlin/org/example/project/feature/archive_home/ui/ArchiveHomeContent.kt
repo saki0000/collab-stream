@@ -3,30 +3,25 @@
 package org.example.project.feature.archive_home.ui
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import kotlinx.datetime.DateTimeUnit
-import kotlinx.datetime.LocalDate
-import kotlinx.datetime.plus
 import org.example.project.core.theme.AppTheme
 import org.example.project.core.theme.Spacing
 import org.example.project.domain.model.VideoServiceType
 import org.example.project.feature.archive_home.ArchiveItem
 import org.example.project.feature.archive_home.ui.components.ArchiveCard
-import org.example.project.feature.timeline_sync.ui.components.WeekCalendar
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import kotlin.time.Instant
 
 /**
  * アーカイブHome画面のContent層（Stateless）。
  *
- * WeekCalendar + アーカイブカードリストを表示する。
+ * アーカイブカードリストを表示する。
+ * WeekCalendarはScreen層に移動済みのため、このContentはカードリストのみを担当する。
  * US-4: カードタップで選択トグル。選択状態はSelectedArchiveIdsで管理。
  *
  * 4層構造: Container -> Screen -> Content -> Component
@@ -37,43 +32,23 @@ import kotlin.time.Instant
 @Composable
 fun ArchiveHomeContent(
     archives: List<ArchiveItem>,
-    selectedDate: LocalDate,
-    displayedWeekStart: LocalDate,
-    onDateSelected: (LocalDate) -> Unit,
-    onNavigateToPreviousWeek: () -> Unit,
-    onNavigateToNextWeek: () -> Unit,
     modifier: Modifier = Modifier,
     selectedArchiveIds: Set<String> = emptySet(),
     onToggleSelection: (String) -> Unit = {},
 ) {
-    Column(
-        modifier = modifier.fillMaxSize(),
+    // アーカイブカードリスト
+    LazyColumn(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(horizontal = Spacing.md),
+        verticalArrangement = Arrangement.spacedBy(Spacing.sm),
     ) {
-        // 週カレンダー（WeekCalendar再利用）
-        val weekDays = (0..6).map { displayedWeekStart.plus(it, DateTimeUnit.DAY) }
-        WeekCalendar(
-            weekDays = weekDays,
-            selectedDate = selectedDate,
-            onDateSelected = onDateSelected,
-            onNavigateToPreviousWeek = onNavigateToPreviousWeek,
-            onNavigateToNextWeek = onNavigateToNextWeek,
-            modifier = Modifier.fillMaxWidth(),
-        )
-
-        // アーカイブカードリスト
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = Spacing.md),
-            verticalArrangement = Arrangement.spacedBy(Spacing.sm),
-        ) {
-            items(archives, key = { it.videoId }) { archive ->
-                ArchiveCard(
-                    archive = archive,
-                    isSelected = archive.videoId in selectedArchiveIds,
-                    onClick = { onToggleSelection(archive.videoId) },
-                )
-            }
+        items(archives, key = { it.videoId }) { archive ->
+            ArchiveCard(
+                archive = archive,
+                isSelected = archive.videoId in selectedArchiveIds,
+                onClick = { onToggleSelection(archive.videoId) },
+            )
         }
     }
 }
@@ -110,16 +85,9 @@ private val previewArchives = listOf(
 @Preview
 @Composable
 private fun ArchiveHomeContentPreview() {
-    val today = LocalDate.parse("2024-01-15")
-
     AppTheme {
         ArchiveHomeContent(
             archives = previewArchives,
-            selectedDate = today,
-            displayedWeekStart = today,
-            onDateSelected = {},
-            onNavigateToPreviousWeek = {},
-            onNavigateToNextWeek = {},
         )
     }
 }
@@ -127,17 +95,10 @@ private fun ArchiveHomeContentPreview() {
 @Preview
 @Composable
 private fun ArchiveHomeContentSelectedPreview() {
-    val today = LocalDate.parse("2024-01-15")
-
     AppTheme {
         ArchiveHomeContent(
             archives = previewArchives,
-            selectedDate = today,
-            displayedWeekStart = today,
             selectedArchiveIds = setOf("video1"),
-            onDateSelected = {},
-            onNavigateToPreviousWeek = {},
-            onNavigateToNextWeek = {},
             onToggleSelection = {},
         )
     }
@@ -146,16 +107,9 @@ private fun ArchiveHomeContentSelectedPreview() {
 @Preview
 @Composable
 private fun ArchiveHomeContentEmptyPreview() {
-    val today = LocalDate.parse("2024-01-15")
-
     AppTheme {
         ArchiveHomeContent(
             archives = emptyList(),
-            selectedDate = today,
-            displayedWeekStart = today,
-            onDateSelected = {},
-            onNavigateToPreviousWeek = {},
-            onNavigateToNextWeek = {},
         )
     }
 }
