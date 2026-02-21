@@ -43,17 +43,25 @@ fun AppNavGraph(
         startDestination = ArchiveHomeRoute,
         modifier = modifier,
     ) {
-        // Archive Home screen (main screen - US-3)
+        // Archive Home screen (main screen - US-3, US-4)
         composable<ArchiveHomeRoute> {
             ArchiveHomeContainer(
                 onNavigateToSubscription = {
                     navController.navigate(SubscriptionRoute)
                 },
+                onNavigateToTimeline = { presetDate, presetChannelsJson ->
+                    navController.navigate(
+                        TimelineSyncRoute(
+                            presetDate = presetDate,
+                            presetChannelsJson = presetChannelsJson,
+                        ),
+                    )
+                },
                 modifier = Modifier,
             )
         }
 
-        // Subscription management screen (US-4)
+        // Subscription management screen (Subscription US-4)
         composable<SubscriptionRoute> {
             SubscriptionContainer(
                 onNavigateBack = {
@@ -64,8 +72,12 @@ fun AppNavGraph(
         }
 
         // Timeline Sync screen (main screen)
-        composable<TimelineSyncRoute> {
+        // US-4: ArchiveHome からのプリセット付き遷移をサポート
+        composable<TimelineSyncRoute> { backStackEntry ->
+            val route = backStackEntry.toRoute<TimelineSyncRoute>()
             TimelineSyncContainer(
+                presetDate = route.presetDate,
+                presetChannelsJson = route.presetChannelsJson,
                 modifier = Modifier,
             )
         }

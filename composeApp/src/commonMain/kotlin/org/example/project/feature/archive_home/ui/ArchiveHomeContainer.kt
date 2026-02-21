@@ -18,17 +18,19 @@ import org.koin.compose.viewmodel.koinViewModel
  *
  * ViewModelと接続し、SideEffectを処理する。
  * [onNavigateToSubscription] でサブスクリプション管理画面への遷移を行う。
+ * US-4: NavigateToTimeline SideEffectを処理してTimelineSync画面へ遷移する。
  *
  * 4層構造: Container -> Screen -> Content -> Component
  *
- * Epic: Channel Follow & Archive Home (US-3)
- * Story: US-3 (Archive Home Display)
+ * Epic: Channel Follow & Archive Home (US-3, US-4)
+ * Story: US-3 (Archive Home Display), US-4 (Archive Selection)
  */
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 fun ArchiveHomeContainer(
     onNavigateToSubscription: () -> Unit,
     modifier: Modifier = Modifier,
+    onNavigateToTimeline: (presetDate: String, presetChannelsJson: String) -> Unit = { _, _ -> },
     viewModel: ArchiveHomeViewModel = koinViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -56,6 +58,11 @@ fun ArchiveHomeContainer(
                         message = sideEffect.message,
                         duration = SnackbarDuration.Short,
                     )
+                }
+
+                // US-4: タイムライン遷移
+                is ArchiveHomeSideEffect.NavigateToTimeline -> {
+                    onNavigateToTimeline(sideEffect.presetDate, sideEffect.presetChannelsJson)
                 }
             }
         }
