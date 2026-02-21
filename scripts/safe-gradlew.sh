@@ -1,6 +1,13 @@
 #!/bin/bash
 # safe-gradlew.sh - Gradleビルドの重複実行を防止するラッパースクリプト
 #
+# flock（カーネルレベルのファイルロック）により、worktree間でのGradle同時実行を防止する。
+# - アトミックなロック取得（レースコンディションなし）
+# - プロセス終了時にカーネルが自動解放（stale lock なし）
+# - CollabStreamプロジェクト専用スコープ（他プロジェクトの誤検出なし）
+#
+# 前提: brew install util-linux
+#
 # 使い方:
 #   ./scripts/safe-gradlew.sh [--wait] <gradlew引数...>
 #
@@ -13,7 +20,9 @@
 
 set -euo pipefail
 
+LOCKFILE="/tmp/collabstream_gradle.lock"
 WAIT_MODE=false
+
 if [[ "${1:-}" == "--wait" ]]; then
     WAIT_MODE=true
     shift
@@ -25,23 +34,15 @@ if [[ $# -eq 0 ]]; then
     exit 1
 fi
 
-# GradleWorkerMain プロセスの存在チェック（実際にビルド中かどうか）
-is_gradle_busy() {
-    pgrep -f "GradleWorkerMain" > /dev/null 2>&1
-}
-
-if is_gradle_busy; then
-    if [[ "$WAIT_MODE" == true ]]; then
-        echo "Gradle ビルドが実行中です。終了を待機しています..."
-        while is_gradle_busy; do
-            sleep 5
-        done
-        echo "Gradle が空きました。ビルドを開始します。"
-    else
-        echo "Gradle ビルドが実行中のためスキップします。"
-        echo "  スキップしたコマンド: ./gradlew $*"
-        exit 0
-    fi
+# flock コマンドを検出
+if command -v flock &>/dev/null; then
+    FLOCK_CMD="flock"
+elif [[ -x "$(brew --prefix util-linux 2>/dev/null)/bin/flock" ]]; then
+    FLOCK_CMD="$(brew --prefix util-linux)/bin/flock"
+else
+    echo "エラー: flock が見つかりません。以下を実行してください:"
+    echo "  brew install util-linux"
+    exit 1
 fi
 
 # プロジェクトルートを検出（gradlew がある場所まで遡る）
@@ -58,4 +59,24 @@ else
     exit 1
 fi
 
-exec "$GRADLEW" "$@"
+# ロックファイルを作成（存在しなければ）
+touch "$LOCKFILE"
+
+if [[ "$WAIT_MODE" == true ]]; then
+    # --wait: ロック取得まで待機してから実行
+    echo "ロック取得を試行中..."
+    exec "$FLOCK_CMD" "$LOCKFILE" "$GRADLEW" "$@"
+else
+    # デフォルト: ロック取得失敗ならスキップ
+    "$FLOCK_CMD" --nonblock "$LOCKFILE" "$GRADLEW" "$@" || {
+        EXIT_CODE=$?
+        if [[ $EXIT_CODE -eq 1 ]]; then
+            echo "Gradle ビルドが実行中のためスキップします。"
+            echo "  スキップしたコマンド: ./gradlew $*"
+            echo "  待機して実行するには: ./scripts/safe-gradlew.sh --wait $*"
+            exit 0
+        else
+            exit $EXIT_CODE
+        fi
+    }
+fi
