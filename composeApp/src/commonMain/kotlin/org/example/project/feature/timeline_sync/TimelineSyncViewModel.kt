@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.seconds
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 import kotlinx.coroutines.Job
@@ -101,6 +102,12 @@ class TimelineSyncViewModel(
             is TimelineSyncIntent.SelectMarker -> selectMarker(intent.channelId, intent.marker)
             TimelineSyncIntent.DismissMarkerPreview -> dismissMarkerPreview()
             is TimelineSyncIntent.RetryLoadComments -> retryLoadComments(intent.channelId)
+            // US-4: コメントリスト
+            is TimelineSyncIntent.OpenCommentList -> openCommentList(intent.channelId)
+            TimelineSyncIntent.CloseCommentList -> closeCommentList()
+            is TimelineSyncIntent.ChangeCommentSortOrder -> changeCommentSortOrder(intent.sortOrder)
+            TimelineSyncIntent.LoadMoreComments -> loadMoreComments()
+            is TimelineSyncIntent.TapCommentTimestamp -> tapCommentTimestamp(intent.channelId, intent.timestampSeconds)
             // 履歴保存 (US-2: 同期チャンネル履歴保存)
             TimelineSyncIntent.SaveHistory -> saveHistory()
             TimelineSyncIntent.ConfirmOverwriteHistory -> confirmOverwriteHistory()
@@ -978,6 +985,7 @@ class TimelineSyncViewModel(
                                 videoId = videoId,
                                 status = CommentLoadStatus.LOADED,
                                 markers = result.timestampMarkers,
+                                nextPageToken = result.nextPageToken,
                             ),
                         )
                     }
@@ -1042,6 +1050,105 @@ class TimelineSyncViewModel(
         if (currentState.status != CommentLoadStatus.ERROR) return
 
         loadCommentsForChannel(channelId, currentState.videoId)
+    }
+
+    // ============================================
+    // US-4: コメントリスト
+    // ============================================
+
+    /**
+     * コメントリスト BottomSheet を開く。
+     * LOADED 状態かつタイムスタンプ付きコメントが存在する場合のみ有効。
+     *
+     * @param channelId コメントリストを表示するチャンネルID
+     */
+    private fun openCommentList(channelId: String) {
+        _uiState.value = _uiState.value.copy(
+            isCommentListVisible = true,
+            commentListChannelId = channelId,
+        )
+    }
+
+    /**
+     * コメントリスト BottomSheet を閉じる。
+     */
+    private fun closeCommentList() {
+        _uiState.value = _uiState.value.copy(
+            isCommentListVisible = false,
+            commentListChannelId = null,
+        )
+    }
+
+    /**
+     * コメントリストのソート順を変更する。
+     * クライアントサイドでソートを適用する（APIからの再取得はしない）。
+     *
+     * @param sortOrder 新しいソート順
+     */
+    private fun changeCommentSortOrder(sortOrder: CommentSortOrder) {
+        _uiState.value = _uiState.value.copy(commentSortOrder = sortOrder)
+    }
+
+    /**
+     * コメントリストの次ページを読み込む（ページネーション）。
+     * 現在表示中のチャンネルの nextPageToken が存在する場合のみ実行。
+     * 読み込んだ markers を既存リストに追記する。
+     */
+    private fun loadMoreComments() {
+        val channelId = _uiState.value.commentListChannelId ?: return
+        val currentState = _uiState.value.channelComments[channelId] ?: return
+
+        // 追加読み込み中または nextPageToken がない場合は何もしない
+        if (_uiState.value.isLoadingMoreComments) return
+        val nextPageToken = currentState.nextPageToken ?: return
+
+        _uiState.value = _uiState.value.copy(isLoadingMoreComments = true)
+
+        viewModelScope.launch {
+            val order = when (_uiState.value.commentSortOrder) {
+                CommentSortOrder.LIKES -> "relevance"
+                CommentSortOrder.TIME -> "time"
+            }
+            commentRepository.getVideoComments(
+                videoId = currentState.videoId,
+                pageToken = nextPageToken,
+                order = order,
+            ).fold(
+                onSuccess = { result ->
+                    val updatedMarkers = currentState.markers + result.timestampMarkers
+                    updateChannelCommentState(
+                        channelId,
+                        currentState.copy(
+                            markers = updatedMarkers,
+                            nextPageToken = result.nextPageToken,
+                        ),
+                    )
+                    _uiState.value = _uiState.value.copy(isLoadingMoreComments = false)
+                },
+                onFailure = { _ ->
+                    _uiState.value = _uiState.value.copy(isLoadingMoreComments = false)
+                    _sideEffect.emit(TimelineSyncSideEffect.ShowError("追加コメントの読み込みに失敗しました"))
+                },
+            )
+        }
+    }
+
+    /**
+     * コメントリスト内のタイムスタンプをタップして同期時刻を更新する。
+     *
+     * absoluteTime = channel.selectedStream.startTime + timestampSeconds
+     * 既存の updateSyncTime / calculateChannelsSyncInfo を再利用する。
+     *
+     * @param channelId 対象チャンネルID
+     * @param timestampSeconds タップしたタイムスタンプの秒数（動画先頭からの経過秒）
+     */
+    private fun tapCommentTimestamp(channelId: String, timestampSeconds: Long) {
+        val channel = _uiState.value.channels.find { it.channelId == channelId } ?: return
+        val startTime = channel.selectedStream?.startTime ?: return
+
+        // 絶対時刻 = 動画開始時刻 + タイムスタンプ秒数
+        val absoluteTime = startTime + timestampSeconds.seconds
+        updateSyncTime(absoluteTime)
     }
 
     companion object {
