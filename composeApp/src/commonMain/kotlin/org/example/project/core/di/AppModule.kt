@@ -5,6 +5,7 @@ package org.example.project.core.di
 import org.example.project.feature.archive_home.ArchiveHomeViewModel
 import org.example.project.feature.home.HomeViewModel
 import org.example.project.feature.streamer_search.StreamerSearchViewModel
+import org.example.project.feature.subscription.SubscriptionViewModel
 import org.example.project.feature.timeline_sync.TimelineSyncViewModel
 import org.example.project.feature.video_playback.VideoViewModel
 import org.example.project.feature.video_playback.player.PlayerStateManager
@@ -56,6 +57,12 @@ val appModule = module {
             timelineSyncRepository = get(),
             channelFollowRepository = get(),
             channelSearchUseCase = get(),
+        )
+    }
+
+    viewModel {
+        SubscriptionViewModel(
+            subscriptionRepository = get(),
         )
     }
 }

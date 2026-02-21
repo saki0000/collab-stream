@@ -13,6 +13,7 @@ import org.example.project.domain.model.VideoServiceType
 import org.example.project.feature.archive_home.ui.ArchiveHomeContainer
 import org.example.project.feature.home.ui.HomeContainer
 import org.example.project.feature.streamer_search.ui.StreamerSearchContainer
+import org.example.project.feature.subscription.ui.SubscriptionContainer
 import org.example.project.feature.timeline_sync.ui.TimelineSyncContainer
 import org.example.project.feature.video_playback.ui.VideoContainer
 
@@ -45,6 +46,9 @@ fun AppNavGraph(
         // Archive Home screen (main screen - US-3, US-4)
         composable<ArchiveHomeRoute> {
             ArchiveHomeContainer(
+                onNavigateToSubscription = {
+                    navController.navigate(SubscriptionRoute)
+                },
                 onNavigateToTimeline = { presetDate, presetChannelsJson ->
                     navController.navigate(
                         TimelineSyncRoute(
@@ -52,6 +56,16 @@ fun AppNavGraph(
                             presetChannelsJson = presetChannelsJson,
                         ),
                     )
+                },
+                modifier = Modifier,
+            )
+        }
+
+        // Subscription management screen (Subscription US-4)
+        composable<SubscriptionRoute> {
+            SubscriptionContainer(
+                onNavigateBack = {
+                    navController.popBackStack()
                 },
                 modifier = Modifier,
             )
