@@ -103,6 +103,17 @@ data object ArchiveHomeRoute
 data object SubscriptionRoute
 
 /**
+ * Sync History List route - Sync history list screen
+ *
+ * Displays saved sync history entries and allows sorting, deletion, and renaming.
+ *
+ * Epic: 同期チャンネル履歴保存 (EPIC-003)
+ * Story: US-3 (履歴一覧表示)
+ */
+@Serializable
+data object SyncHistoryListRoute
+
+/**
  * Enum representing streamer search mode
  */
 enum class StreamerSearchMode {

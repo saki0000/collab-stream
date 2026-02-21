@@ -7,6 +7,7 @@ import org.example.project.feature.home.HomeViewModel
 import org.example.project.feature.streamer_search.StreamerSearchViewModel
 import org.example.project.feature.subscription.SubscriptionViewModel
 import org.example.project.feature.timeline_sync.TimelineSyncViewModel
+import org.example.project.feature.timeline_sync.sync_history.SyncHistoryListViewModel
 import org.example.project.feature.video_playback.VideoViewModel
 import org.example.project.feature.video_playback.player.PlayerStateManager
 import org.koin.core.module.dsl.viewModel
@@ -65,6 +66,13 @@ val appModule = module {
     viewModel {
         SubscriptionViewModel(
             subscriptionRepository = get(),
+        )
+    }
+
+    // EPIC-003 US-3: 同期履歴一覧
+    viewModel {
+        SyncHistoryListViewModel(
+            syncHistoryRepository = get(),
         )
     }
 }
