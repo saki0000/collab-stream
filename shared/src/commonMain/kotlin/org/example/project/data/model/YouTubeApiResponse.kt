@@ -37,7 +37,7 @@ data class YouTubeVideoItem(
     val snippet: YouTubeSnippetDto?,
 
     @SerialName("liveStreamingDetails")
-    val liveStreamingDetails: YouTubeLiveStreamingDetailsDto?,
+    val liveStreamingDetails: YouTubeLiveStreamingDetailsDto? = null,
 )
 
 /**
