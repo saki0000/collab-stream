@@ -9,6 +9,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
+import kotlinx.datetime.LocalDate
 import org.example.project.feature.timeline_sync.TimelineSyncIntent
 import org.example.project.feature.timeline_sync.TimelineSyncSideEffect
 import org.example.project.feature.timeline_sync.TimelineSyncViewModel
@@ -20,12 +21,17 @@ import org.koin.compose.viewmodel.koinViewModel
  * This is the only stateful composable in the hierarchy following the 4-tier pattern:
  * Container -> Screen -> Content -> Component
  *
+ * US-4: presetDate と presetChannelsJson が渡された場合は LoadWithPresets を発行し、
+ *       プリセット付きでタイムラインを読み込む。
+ *
  * Epic: Timeline Sync (EPIC-002)
  * Story: US-1 (Timeline Display), US-2 (Channel Add/Remove), US-4 (External App Navigation)
  */
 @Composable
 fun TimelineSyncContainer(
     modifier: Modifier = Modifier,
+    presetDate: String? = null,
+    presetChannelsJson: String? = null,
     onNavigateToHome: () -> Unit = {},
     onNavigateToChannels: () -> Unit = {},
     onNavigateToSettings: () -> Unit = {},
@@ -35,9 +41,23 @@ fun TimelineSyncContainer(
     val snackbarHostState = remember { SnackbarHostState() }
     val uriHandler = LocalUriHandler.current
 
-    // Load screen data on first composition
+    // US-4: プリセットがある場合はLoadWithPresetsを、ない場合はLoadScreenを発行する
     LaunchedEffect(Unit) {
-        viewModel.handleIntent(TimelineSyncIntent.LoadScreen)
+        if (presetChannelsJson != null && presetDate != null) {
+            val parsedDate = runCatching { LocalDate.parse(presetDate) }.getOrNull()
+            if (parsedDate != null) {
+                viewModel.handleIntent(
+                    TimelineSyncIntent.LoadWithPresets(
+                        presetChannelsJson = presetChannelsJson,
+                        presetDate = parsedDate,
+                    ),
+                )
+            } else {
+                viewModel.handleIntent(TimelineSyncIntent.LoadScreen)
+            }
+        } else {
+            viewModel.handleIntent(TimelineSyncIntent.LoadScreen)
+        }
     }
 
     // Handle side effects

@@ -21,6 +21,9 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+import org.example.project.core.navigation.PresetChannel
 import org.example.project.domain.model.ChannelInfo
 import org.example.project.domain.model.FollowedChannel
 import org.example.project.domain.model.VideoDetails
@@ -80,6 +83,9 @@ class ArchiveHomeViewModel(
             is ArchiveHomeIntent.SelectPlatform -> selectPlatform(intent.platform)
             is ArchiveHomeIntent.UpdateChannelSearchQuery -> updateChannelSearchQuery(intent.query)
             is ArchiveHomeIntent.ToggleFollow -> toggleFollow(intent.channel)
+            // アーカイブ選択（US-4）
+            is ArchiveHomeIntent.ToggleArchiveSelection -> toggleArchiveSelection(intent.videoId)
+            ArchiveHomeIntent.OpenTimeline -> openTimeline()
         }
     }
 
@@ -99,10 +105,13 @@ class ArchiveHomeViewModel(
 
     /**
      * 日付を選択する。
+     * 日付変更時は選択中のアーカイブをクリアする。
      */
     private fun selectDate(date: LocalDate) {
         _uiState.value = _uiState.value.copy(
             selectedDate = date,
+            // 日付変更時に選択状態をクリア
+            selectedArchiveIds = emptySet(),
         )
 
         viewModelScope.launch {
@@ -440,8 +449,76 @@ class ArchiveHomeViewModel(
         }
     }
 
+    // ============================================
+    // アーカイブ選択（US-4）
+    // ============================================
+
+    /**
+     * アーカイブの選択をトグルする。
+     * 選択済みの場合は解除、未選択かつ上限未満の場合は選択。
+     * 最大10件制限。
+     */
+    private fun toggleArchiveSelection(videoId: String) {
+        val currentSelected = _uiState.value.selectedArchiveIds
+
+        val newSelected = if (videoId in currentSelected) {
+            // 選択解除
+            currentSelected - videoId
+        } else if (currentSelected.size < MAX_SELECTION) {
+            // 選択追加（上限未満の場合）
+            currentSelected + videoId
+        } else {
+            // 上限到達のため変更しない
+            currentSelected
+        }
+
+        _uiState.value = _uiState.value.copy(selectedArchiveIds = newSelected)
+    }
+
+    /**
+     * 選択中のアーカイブをプリセットとしてタイムライン画面に遷移する。
+     * 選択アーカイブから重複なしのチャンネルリストを作成してJSONエンコードし、SideEffectを発行する。
+     */
+    private fun openTimeline() {
+        val selectedIds = _uiState.value.selectedArchiveIds
+        if (selectedIds.isEmpty()) return
+
+        val archives = _uiState.value.archives
+        val presetDate = _uiState.value.selectedDate.toString()
+
+        // 選択アーカイブをPresetChannelリストに変換（チャンネルIDで重複除去）
+        val presetChannels = archives
+            .filter { it.videoId in selectedIds }
+            .distinctBy { it.channelId }
+            .map { archive ->
+                PresetChannel(
+                    channelId = archive.channelId,
+                    channelName = archive.channelName,
+                    channelIconUrl = archive.channelIconUrl,
+                    serviceType = archive.serviceType.name,
+                )
+            }
+
+        // フォロー解除等でアーカイブが消えた場合のガード
+        if (presetChannels.isEmpty()) return
+
+        val presetChannelsJson = Json.encodeToString(presetChannels)
+
+        viewModelScope.launch {
+            _sideEffect.emit(
+                ArchiveHomeSideEffect.NavigateToTimeline(
+                    presetChannelsJson = presetChannelsJson,
+                    presetDate = presetDate,
+                ),
+            )
+        }
+    }
+
     companion object {
         // チャンネル検索デバウンス時間
         private const val SEARCH_DEBOUNCE_MS = 500L
+
+        // アーカイブ選択最大件数（SyncChannelの最大数と同じ）
+        private const val MAX_SELECTION = 10
     }
 }

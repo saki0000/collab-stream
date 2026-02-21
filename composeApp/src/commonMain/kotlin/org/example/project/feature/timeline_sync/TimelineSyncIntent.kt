@@ -164,6 +164,21 @@ sealed interface TimelineSyncIntent {
      * ダイアログを閉じて保存をキャンセルする。
      */
     data object CancelOverwriteHistory : TimelineSyncIntent
+
+    // ============================================
+    // アーカイブHome プリセット遷移（US-4）
+    // ============================================
+
+    /**
+     * アーカイブHome画面からプリセット付きでタイムラインを読み込む。
+     *
+     * presetChannelsJson: PresetChannelリストのJSON文字列
+     * presetDate: プリセット日付
+     */
+    data class LoadWithPresets(
+        val presetChannelsJson: String,
+        val presetDate: LocalDate,
+    ) : TimelineSyncIntent
 }
 
 /**
