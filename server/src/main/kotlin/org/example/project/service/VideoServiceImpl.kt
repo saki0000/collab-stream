@@ -12,6 +12,7 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.plus
+import org.example.project.auth.TwitchAuthProvider
 import org.example.project.config.ApiKeyConfig
 import org.example.project.data.mapper.TwitchVideoMapper
 import org.example.project.data.mapper.YouTubeVideoMapper
@@ -31,7 +32,8 @@ import kotlin.time.Duration.Companion.days
  * Ktor HttpClient を使用して外部APIを呼び出し、動画情報を取得する。
  */
 class VideoServiceImpl(
-    private val httpClient: HttpClient
+    private val httpClient: HttpClient,
+    private val twitchAuth: TwitchAuthProvider,
 ) : VideoService {
 
     // ========================================
@@ -136,14 +138,14 @@ class VideoServiceImpl(
     override suspend fun getTwitchVideoDetails(videoId: String): TwitchVideoDetails {
         val clientId = ApiKeyConfig.twitchClientId
             ?: throw ServiceUnavailableException("Twitch Client ID is not configured")
-        val clientSecret = ApiKeyConfig.twitchClientSecret
-            ?: throw ServiceUnavailableException("Twitch Client Secret is not configured")
 
         try {
+            val accessToken = twitchAuth.getAccessToken()
+
             val response: HttpResponse = httpClient.get("https://api.twitch.tv/helix/videos") {
                 parameter("id", videoId)
                 header("Client-ID", clientId)
-                header("Authorization", "Bearer $clientSecret")
+                header("Authorization", "Bearer $accessToken")
             }
 
             if (!response.status.isSuccess()) {
@@ -177,16 +179,16 @@ class VideoServiceImpl(
     ): List<TwitchVideoDetails> {
         val clientId = ApiKeyConfig.twitchClientId
             ?: throw ServiceUnavailableException("Twitch Client ID is not configured")
-        val clientSecret = ApiKeyConfig.twitchClientSecret
-            ?: throw ServiceUnavailableException("Twitch Client Secret is not configured")
 
         try {
+            val accessToken = twitchAuth.getAccessToken()
+
             val response: HttpResponse = httpClient.get("https://api.twitch.tv/helix/videos") {
                 parameter("user_id", channelId)
                 parameter("type", "archive")
                 parameter("first", "100")
                 header("Client-ID", clientId)
-                header("Authorization", "Bearer $clientSecret")
+                header("Authorization", "Bearer $accessToken")
             }
 
             if (!response.status.isSuccess()) {
