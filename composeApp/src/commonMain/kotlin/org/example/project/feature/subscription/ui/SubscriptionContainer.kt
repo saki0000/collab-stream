@@ -1,4 +1,4 @@
-package org.example.project.feature.archive_home.ui
+package org.example.project.feature.subscription.ui
 
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
@@ -8,42 +8,41 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import org.example.project.feature.archive_home.ArchiveHomeIntent
-import org.example.project.feature.archive_home.ArchiveHomeSideEffect
-import org.example.project.feature.archive_home.ArchiveHomeViewModel
+import org.example.project.feature.subscription.SubscriptionIntent
+import org.example.project.feature.subscription.SubscriptionSideEffect
+import org.example.project.feature.subscription.SubscriptionViewModel
 import org.koin.compose.viewmodel.koinViewModel
 
 /**
- * アーカイブHome画面のContainer層（Stateful）。
+ * サブスクリプション管理画面のContainer層（Stateful）。
  *
  * ViewModelと接続し、SideEffectを処理する。
- * [onNavigateToSubscription] でサブスクリプション管理画面への遷移を行う。
+ * Navigation コールバックを受け取り、SideEffect に応じて遷移を実行する。
  *
  * 4層構造: Container -> Screen -> Content -> Component
  *
- * Epic: Channel Follow & Archive Home (US-3)
- * Story: US-3 (Archive Home Display)
+ * Feature: サブスクリプション管理 (US-4)
+ * Specification: feature/subscription/SPECIFICATION.md
  */
-@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
-fun ArchiveHomeContainer(
-    onNavigateToSubscription: () -> Unit,
+fun SubscriptionContainer(
+    onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: ArchiveHomeViewModel = koinViewModel(),
+    viewModel: SubscriptionViewModel = koinViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
 
-    // 画面初回表示時にデータを読み込む
+    // 画面初回表示時にサブスクリプション状態を読み込む
     LaunchedEffect(Unit) {
-        viewModel.handleIntent(ArchiveHomeIntent.LoadScreen)
+        viewModel.handleIntent(SubscriptionIntent.LoadSubscription)
     }
 
     // SideEffect を処理
     LaunchedEffect(Unit) {
         viewModel.sideEffect.collect { sideEffect ->
             when (sideEffect) {
-                is ArchiveHomeSideEffect.ShowError -> {
+                is SubscriptionSideEffect.ShowError -> {
                     snackbarHostState.showSnackbar(
                         message = sideEffect.message,
                         actionLabel = "閉じる",
@@ -51,20 +50,23 @@ fun ArchiveHomeContainer(
                     )
                 }
 
-                is ArchiveHomeSideEffect.ShowFollowFeedback -> {
+                is SubscriptionSideEffect.ShowSuccess -> {
                     snackbarHostState.showSnackbar(
                         message = sideEffect.message,
                         duration = SnackbarDuration.Short,
                     )
                 }
+
+                SubscriptionSideEffect.NavigateBack -> {
+                    onNavigateBack()
+                }
             }
         }
     }
 
-    ArchiveHomeScreen(
+    SubscriptionScreen(
         uiState = uiState,
         onIntent = viewModel::handleIntent,
-        onNavigateToSubscription = onNavigateToSubscription,
         snackbarHostState = snackbarHostState,
         modifier = modifier,
     )

@@ -10,14 +10,18 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -38,20 +42,38 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
  * アーカイブHome画面のScreen層（Stateless）。
  *
  * 画面全体のレイアウトを定義し、状態に応じて適切なContentを表示する。
+ * TopAppBarに設定アイコンを配置し、タップでサブスクリプション管理画面へ遷移する。
  *
  * 4層構造: Container -> Screen -> Content -> Component
  *
  * Epic: Channel Follow & Archive Home (US-3)
  * Story: US-3 (Archive Home Display)
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ArchiveHomeScreen(
     uiState: ArchiveHomeUiState,
     onIntent: (ArchiveHomeIntent) -> Unit,
+    onNavigateToSubscription: () -> Unit,
     snackbarHostState: SnackbarHostState,
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("アーカイブ") },
+                actions = {
+                    IconButton(
+                        onClick = onNavigateToSubscription,
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = "サブスクリプション設定を開く",
+                        )
+                    }
+                },
+            )
+        },
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         modifier = modifier,
     ) { paddingValues ->
@@ -245,6 +267,7 @@ private fun ArchiveHomeScreenLoadingPreview() {
                 displayedWeekStart = today,
             ),
             onIntent = {},
+            onNavigateToSubscription = {},
             snackbarHostState = remember { SnackbarHostState() },
         )
     }
@@ -263,6 +286,7 @@ private fun ArchiveHomeScreenEmptyFollowPreview() {
                 displayedWeekStart = today,
             ),
             onIntent = {},
+            onNavigateToSubscription = {},
             snackbarHostState = remember { SnackbarHostState() },
         )
     }
@@ -290,6 +314,7 @@ private fun ArchiveHomeScreenEmptyArchivePreview() {
                 displayedWeekStart = today,
             ),
             onIntent = {},
+            onNavigateToSubscription = {},
             snackbarHostState = remember { SnackbarHostState() },
         )
     }
@@ -329,6 +354,7 @@ private fun ArchiveHomeScreenContentPreview() {
                 displayedWeekStart = today,
             ),
             onIntent = {},
+            onNavigateToSubscription = {},
             snackbarHostState = remember { SnackbarHostState() },
         )
     }
@@ -347,6 +373,7 @@ private fun ArchiveHomeScreenErrorPreview() {
                 displayedWeekStart = today,
             ),
             onIntent = {},
+            onNavigateToSubscription = {},
             snackbarHostState = remember { SnackbarHostState() },
         )
     }

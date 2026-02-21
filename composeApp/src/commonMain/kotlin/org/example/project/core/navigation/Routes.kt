@@ -72,6 +72,17 @@ data object TimelineSyncRoute
 data object ArchiveHomeRoute
 
 /**
+ * Subscription route - Subscription management screen
+ *
+ * Displays current subscription status (Free/Pro) and allows the user
+ * to upgrade to Pro or restore past purchases.
+ *
+ * Feature: サブスクリプション管理 (US-4)
+ */
+@Serializable
+data object SubscriptionRoute
+
+/**
  * Enum representing streamer search mode
  */
 enum class StreamerSearchMode {
