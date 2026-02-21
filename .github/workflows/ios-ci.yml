@@ -1,12 +1,15 @@
 name: iOS CI
 
 on:
-  workflow_dispatch:
-    inputs:
-      ref:
-        description: 'ビルド対象ブランチ'
-        required: false
-        default: 'main'
+  pull_request:
+    paths:
+      - 'iosApp/**'
+      - 'composeApp/**'
+      - 'shared/**'
+      - 'gradle/**'
+      - 'build.gradle.kts'
+      - 'settings.gradle.kts'
+      - 'gradle.properties'
 
 concurrency:
   group: ios-ci-${{ github.ref }}
