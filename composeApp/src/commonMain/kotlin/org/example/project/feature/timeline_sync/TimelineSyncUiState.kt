@@ -13,6 +13,7 @@ import kotlinx.datetime.plus
 import kotlinx.datetime.todayIn
 import org.example.project.domain.model.ChannelInfo
 import org.example.project.domain.model.SyncChannel
+import org.example.project.domain.model.TimestampMarker
 import org.example.project.domain.model.VideoServiceType
 
 /**
@@ -117,6 +118,22 @@ data class TimelineSyncUiState(
      * 選択中のプラットフォームでフィルタ済み。
      */
     val followedChannelIds: Set<String> = emptySet(),
+
+    // ============================================
+    // Story 3: コメントタイムスタンプマーカー (US-3)
+    // ============================================
+
+    /**
+     * チャンネルIDをキーとするコメント状態マップ。
+     * YouTube チャンネルのみ対象（Twitch は空状態を保持）。
+     */
+    val channelComments: Map<String, ChannelCommentState> = emptyMap(),
+
+    /**
+     * 現在選択中のマーカープレビュー情報。
+     * マーカータップ時に設定され、プレビュー閉じる時に null になる。
+     */
+    val selectedMarkerPreview: TimestampMarkerPreview? = null,
 ) {
     /**
      * Whether the channel list is empty (and not loading).
@@ -169,6 +186,59 @@ data class TimelineSyncUiState(
         const val MAX_CHANNELS = 10
     }
 }
+
+// ============================================
+// Story 3: コメントタイムスタンプマーカー 関連データクラス (US-3)
+// ============================================
+
+/**
+ * コメント読み込み状態を表す列挙型。
+ */
+enum class CommentLoadStatus {
+    /** コメント未取得（初期状態） */
+    NOT_LOADED,
+
+    /** コメント読み込み中 */
+    LOADING,
+
+    /** コメント読み込み完了（タイムスタンプなしも含む） */
+    LOADED,
+
+    /** ネットワークエラー等で読み込み失敗 */
+    ERROR,
+
+    /** コメントが無効化されている（YouTube 403 commentsDisabled） */
+    DISABLED,
+}
+
+/**
+ * チャンネルごとのコメント状態を保持するデータクラス。
+ */
+data class ChannelCommentState(
+    /** 対象動画ID */
+    val videoId: String,
+
+    /** 読み込み状態 */
+    val status: CommentLoadStatus,
+
+    /** 抽出されたタイムスタンプマーカーリスト */
+    val markers: List<TimestampMarker> = emptyList(),
+
+    /** エラーメッセージ（status が ERROR または DISABLED の場合のみ） */
+    val errorMessage: String? = null,
+)
+
+/**
+ * マーカープレビュー表示用データクラス。
+ * タップされたマーカーの情報とチャンネルIDを保持する。
+ */
+data class TimestampMarkerPreview(
+    /** マーカーが属するチャンネルID */
+    val channelId: String,
+
+    /** タップされたマーカー情報 */
+    val marker: TimestampMarker,
+)
 
 /**
  * Extension function to get the start of the week (Monday) for a given date.

@@ -26,9 +26,11 @@ import org.example.project.domain.model.FollowedChannel
 import org.example.project.domain.model.SelectedStreamInfo
 import org.example.project.domain.model.SyncChannel
 import org.example.project.domain.model.SyncStatus
+import org.example.project.domain.model.TimestampMarker
 import org.example.project.domain.model.VideoServiceType
 import org.example.project.domain.model.toDeepLinkInfo
 import org.example.project.domain.repository.ChannelFollowRepository
+import org.example.project.domain.repository.CommentRepository
 import org.example.project.domain.repository.TimelineSyncRepository
 import org.example.project.domain.usecase.ChannelSearchUseCase
 
@@ -44,6 +46,7 @@ class TimelineSyncViewModel(
     private val timelineSyncRepository: TimelineSyncRepository,
     private val channelSearchUseCase: ChannelSearchUseCase,
     private val channelFollowRepository: ChannelFollowRepository,
+    private val commentRepository: CommentRepository,
     private val clock: kotlin.time.Clock = kotlin.time.Clock.System,
 ) : ViewModel() {
 
@@ -89,6 +92,10 @@ class TimelineSyncViewModel(
             is TimelineSyncIntent.OpenExternalApp -> openExternalApp(intent.channelId)
             // Channel Follow (US-2)
             is TimelineSyncIntent.ToggleFollow -> toggleFollow(intent.channel)
+            // Story 3: コメントタイムスタンプマーカー (US-3)
+            is TimelineSyncIntent.SelectMarker -> selectMarker(intent.channelId, intent.marker)
+            TimelineSyncIntent.DismissMarkerPreview -> dismissMarkerPreview()
+            is TimelineSyncIntent.RetryLoadComments -> retryLoadComments(intent.channelId)
         }
     }
 
@@ -132,6 +139,9 @@ class TimelineSyncViewModel(
                 syncTime = initialSyncTime,
                 errorMessage = null,
             )
+
+            // US-3: 初期読み込み後、YouTube チャンネルのコメントを自動取得
+            loadCommentsForYouTubeChannels(channelsWithSyncInfo)
         } catch (e: Exception) {
             _uiState.value = _uiState.value.copy(
                 isLoading = false,
@@ -456,6 +466,9 @@ class TimelineSyncViewModel(
             channelSuggestions = updatedSuggestions,
             channelAddError = null,
         )
+
+        // US-3: YouTube チャンネルで selectedStream がある場合はコメントを自動取得
+        // ただし addChannel 時点では selectedStream は null なので、loadComments はストリーム選択時に呼ぶ
     }
 
     /**
@@ -725,6 +738,129 @@ class TimelineSyncViewModel(
         )
 
         return listOf(youtubeChannel, twitchChannel, emptyChannel)
+    }
+
+    // ============================================
+    // Story 3: コメントタイムスタンプマーカー (US-3)
+    // ============================================
+
+    /**
+     * YouTube チャンネルの selectedStream が設定されているチャンネルを対象に
+     * コメントを一括取得する。
+     *
+     * @param channels コメントを取得するチャンネルリスト
+     */
+    private fun loadCommentsForYouTubeChannels(channels: List<SyncChannel>) {
+        channels
+            .filter { it.serviceType == VideoServiceType.YOUTUBE && it.selectedStream != null }
+            .forEach { channel ->
+                val videoId = channel.selectedStream?.id ?: return@forEach
+                loadCommentsForChannel(channel.channelId, videoId)
+            }
+    }
+
+    /**
+     * 特定チャンネルのコメントを取得する。
+     * LOADING 状態に遷移後、結果に応じて LOADED / ERROR / DISABLED に更新する。
+     *
+     * @param channelId 対象チャンネルID
+     * @param videoId 対象動画ID
+     */
+    private fun loadCommentsForChannel(channelId: String, videoId: String) {
+        // LOADING 状態に更新
+        updateChannelCommentState(
+            channelId,
+            ChannelCommentState(
+                videoId = videoId,
+                status = CommentLoadStatus.LOADING,
+            ),
+        )
+
+        viewModelScope.launch {
+            commentRepository.getVideoComments(videoId = videoId).fold(
+                onSuccess = { result ->
+                    if (result.commentsDisabled) {
+                        // コメント無効化（YouTube 403 commentsDisabled）
+                        updateChannelCommentState(
+                            channelId,
+                            ChannelCommentState(
+                                videoId = videoId,
+                                status = CommentLoadStatus.DISABLED,
+                                errorMessage = "この動画ではコメントが無効です",
+                            ),
+                        )
+                    } else {
+                        // 正常取得（タイムスタンプなしも LOADED 扱い）
+                        updateChannelCommentState(
+                            channelId,
+                            ChannelCommentState(
+                                videoId = videoId,
+                                status = CommentLoadStatus.LOADED,
+                                markers = result.timestampMarkers,
+                            ),
+                        )
+                    }
+                },
+                onFailure = { error ->
+                    updateChannelCommentState(
+                        channelId,
+                        ChannelCommentState(
+                            videoId = videoId,
+                            status = CommentLoadStatus.ERROR,
+                            errorMessage = "コメントの読み込みに失敗しました",
+                        ),
+                    )
+                },
+            )
+        }
+    }
+
+    /**
+     * チャンネルのコメント状態を更新するヘルパー関数。
+     *
+     * @param channelId 更新対象のチャンネルID
+     * @param state 新しいコメント状態
+     */
+    private fun updateChannelCommentState(channelId: String, state: ChannelCommentState) {
+        _uiState.value = _uiState.value.copy(
+            channelComments = _uiState.value.channelComments + (channelId to state),
+        )
+    }
+
+    /**
+     * タイムラインバー上のマーカーをタップして、コメントプレビューを表示する。
+     * 複数マーカーが集約されている場合は最もいいね数の多いコメントを選択する。
+     *
+     * @param channelId マーカーが属するチャンネルID
+     * @param marker タップされたマーカー
+     */
+    private fun selectMarker(channelId: String, marker: TimestampMarker) {
+        _uiState.value = _uiState.value.copy(
+            selectedMarkerPreview = TimestampMarkerPreview(
+                channelId = channelId,
+                marker = marker,
+            ),
+        )
+    }
+
+    /**
+     * マーカープレビューを閉じる。
+     */
+    private fun dismissMarkerPreview() {
+        _uiState.value = _uiState.value.copy(selectedMarkerPreview = null)
+    }
+
+    /**
+     * 指定チャンネルのコメント読み込みを再試行する。
+     * ERROR 状態のチャンネルのみ有効。
+     *
+     * @param channelId 再試行対象のチャンネルID
+     */
+    private fun retryLoadComments(channelId: String) {
+        val currentState = _uiState.value.channelComments[channelId] ?: return
+        if (currentState.status != CommentLoadStatus.ERROR) return
+
+        loadCommentsForChannel(channelId, currentState.videoId)
     }
 
     companion object {

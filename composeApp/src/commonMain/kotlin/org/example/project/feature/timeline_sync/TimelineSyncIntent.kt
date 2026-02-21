@@ -6,6 +6,7 @@ import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 import kotlinx.datetime.LocalDate
 import org.example.project.domain.model.ChannelInfo
+import org.example.project.domain.model.TimestampMarker
 import org.example.project.domain.model.VideoServiceType
 
 /**
@@ -142,6 +143,33 @@ sealed interface TimelineSyncIntent {
      * フォロー済みの場合はアンフォロー、未フォローの場合はフォローを実行する。
      */
     data class ToggleFollow(val channel: ChannelInfo) : TimelineSyncIntent
+
+    // ============================================
+    // Story 3: コメントタイムスタンプマーカー (US-3)
+    // ============================================
+
+    /**
+     * タイムラインバー上のマーカーをタップしてプレビューを表示する。
+     *
+     * @param channelId マーカーが属するチャンネルID
+     * @param marker タップされたタイムスタンプマーカー
+     */
+    data class SelectMarker(
+        val channelId: String,
+        val marker: TimestampMarker,
+    ) : TimelineSyncIntent
+
+    /**
+     * マーカープレビューを閉じる。
+     */
+    data object DismissMarkerPreview : TimelineSyncIntent
+
+    /**
+     * コメント読み込みを再試行する。
+     *
+     * @param channelId 再試行対象のチャンネルID
+     */
+    data class RetryLoadComments(val channelId: String) : TimelineSyncIntent
 }
 
 /**

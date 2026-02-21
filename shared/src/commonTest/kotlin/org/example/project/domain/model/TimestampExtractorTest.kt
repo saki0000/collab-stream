@@ -225,6 +225,22 @@ class TimestampExtractorTest {
         assertEquals(600L, result[0].timestampSeconds)
     }
 
+    @Test
+    fun `動画の長さチェック_duration指定なしの場合は全タイムスタンプを返すこと`() {
+        // Arrange
+        val text = "1:00 と 10:00 と 99:59 と 1:00:00"
+
+        // Act
+        val result = TimestampExtractor.extractTimestamps(text, videoDurationSeconds = null)
+
+        // Assert
+        assertEquals(4, result.size)
+        assertEquals(60L, result[0].timestampSeconds)    // 1:00
+        assertEquals(600L, result[1].timestampSeconds)   // 10:00
+        assertEquals(5999L, result[2].timestampSeconds)  // 99:59
+        assertEquals(3600L, result[3].timestampSeconds)  // 1:00:00
+    }
+
     // ========================================
     // toSeconds メソッド
     // ========================================
