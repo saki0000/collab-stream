@@ -54,7 +54,7 @@ class VideoSyncRepositoryImpl(
                 parameter("service", serviceType.name.lowercase())
             }
 
-            ApiResponseHandler.handleResponse(response)
+            ApiResponseHandler.handleVideoDetailsResponse(response, serviceType)
         } catch (e: Exception) {
             Result.failure(
                 RuntimeException("Failed to fetch video details for video ID '$videoId': ${e.message}", e),

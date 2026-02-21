@@ -34,7 +34,7 @@ class TimelineSyncRepositoryImpl(
                 parameter("service", serviceType.name.lowercase())
             }
 
-            ApiResponseHandler.handleResponse(response)
+            ApiResponseHandler.handleVideoDetailsResponse(response, serviceType)
         } catch (e: Exception) {
             Result.failure(
                 RuntimeException("Failed to fetch video details for video ID '$videoId': ${e.message}", e),
@@ -58,7 +58,7 @@ class TimelineSyncRepositoryImpl(
                 parameter("endDate", dateRange.endInclusive.toString())
             }
 
-            ApiResponseHandler.handleResponse(response)
+            ApiResponseHandler.handleVideoDetailsListResponse(response, serviceType)
         } catch (e: Exception) {
             Result.failure(
                 RuntimeException("Failed to fetch channel videos for channel '$channelId': ${e.message}", e),
