@@ -49,6 +49,7 @@ class ChannelAddViewModelTest {
     private lateinit var channelSearchUseCase: ChannelSearchUseCase
     private lateinit var mockChannelFollowRepository: FakeChannelFollowRepository
     private lateinit var fakeCommentRepository: FakeCommentRepository
+    private lateinit var mockSyncHistoryRepository: FakeSyncHistoryRepository
     private lateinit var viewModel: TimelineSyncViewModel
 
     @BeforeTest
@@ -59,11 +60,13 @@ class ChannelAddViewModelTest {
         channelSearchUseCase = ChannelSearchUseCase(mockVideoSearchRepository)
         mockChannelFollowRepository = FakeChannelFollowRepository()
         fakeCommentRepository = FakeCommentRepository()
+        mockSyncHistoryRepository = FakeSyncHistoryRepository()
         viewModel = TimelineSyncViewModel(
             mockRepository,
             channelSearchUseCase,
             mockChannelFollowRepository,
             fakeCommentRepository,
+            mockSyncHistoryRepository,
         )
     }
 

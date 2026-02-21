@@ -113,6 +113,21 @@ fun TimelineSyncContainer(
                         duration = SnackbarDuration.Short,
                     )
                 }
+
+                // 履歴保存 (US-2: 同期チャンネル履歴保存)
+                is TimelineSyncSideEffect.ShowSaveHistorySuccess -> {
+                    snackbarHostState.showSnackbar(
+                        message = sideEffect.message,
+                        duration = SnackbarDuration.Short,
+                    )
+                }
+
+                is TimelineSyncSideEffect.ShowSaveHistoryError -> {
+                    snackbarHostState.showSnackbar(
+                        message = sideEffect.message,
+                        duration = SnackbarDuration.Short,
+                    )
+                }
             }
         }
     }

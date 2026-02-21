@@ -3,12 +3,14 @@
 package org.example.project.service
 
 import io.ktor.client.*
+import io.ktor.util.logging.*
 import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import org.example.project.auth.TwitchAuthProvider
 import org.example.project.config.ApiKeyConfig
 import org.example.project.data.mapper.TwitchChannelMapper.toChannelInfoList
 import org.example.project.data.mapper.TwitchSearchMapper
@@ -31,8 +33,11 @@ import org.example.project.plugins.ServiceUnavailableException
  *
  * Ktor HttpClient を使用して外部APIを呼び出し、検索結果を取得する。
  */
+private val logger = KtorSimpleLogger("org.example.project.service.SearchServiceImpl")
+
 class SearchServiceImpl(
-    private val httpClient: HttpClient
+    private val httpClient: HttpClient,
+    private val twitchAuth: TwitchAuthProvider,
 ) : SearchService {
 
     // ========================================
@@ -110,16 +115,16 @@ class SearchServiceImpl(
     ): SearchResponse {
         val clientId = ApiKeyConfig.twitchClientId
             ?: throw ServiceUnavailableException("Twitch Client ID is not configured")
-        val clientSecret = ApiKeyConfig.twitchClientSecret
-            ?: throw ServiceUnavailableException("Twitch Client Secret is not configured")
 
         try {
+            val accessToken = twitchAuth.getAccessToken()
+
             // Step 1: チャンネル検索
             val channelResponse: HttpResponse = httpClient.get("https://api.twitch.tv/helix/search/channels") {
                 parameter("query", query)
                 parameter("first", "1")
                 header("Client-ID", clientId)
-                header("Authorization", "Bearer $clientSecret")
+                header("Authorization", "Bearer $accessToken")
             }
 
             if (!channelResponse.status.isSuccess()) {
@@ -151,7 +156,7 @@ class SearchServiceImpl(
                     parameter("after", cursor)
                 }
                 header("Client-ID", clientId)
-                header("Authorization", "Bearer $clientSecret")
+                header("Authorization", "Bearer $accessToken")
             }
 
             if (!videoResponse.status.isSuccess()) {
@@ -189,7 +194,8 @@ class SearchServiceImpl(
             try {
                 searchYouTubeVideos(query, maxResults, pageToken, eventType, order)
             } catch (e: Exception) {
-                null // エラーは無視
+                logger.error("YouTube動画検索でエラー: ${e.message}", e)
+                null
             }
         }
 
@@ -197,7 +203,8 @@ class SearchServiceImpl(
             try {
                 searchTwitchVideos(query, maxResults, cursor)
             } catch (e: Exception) {
-                null // エラーは無視
+                logger.error("Twitch動画検索でエラー: ${e.message}", e)
+                null
             }
         }
 
@@ -297,10 +304,10 @@ class SearchServiceImpl(
     ): ChannelSearchResponse {
         val clientId = ApiKeyConfig.twitchClientId
             ?: throw ServiceUnavailableException("Twitch Client ID is not configured")
-        val clientSecret = ApiKeyConfig.twitchClientSecret
-            ?: throw ServiceUnavailableException("Twitch Client Secret is not configured")
 
         try {
+            val accessToken = twitchAuth.getAccessToken()
+
             val response: HttpResponse = httpClient.get("https://api.twitch.tv/helix/search/channels") {
                 parameter("query", query)
                 parameter("first", maxResults.coerceAtMost(100))
@@ -308,7 +315,7 @@ class SearchServiceImpl(
                     parameter("after", cursor)
                 }
                 header("Client-ID", clientId)
-                header("Authorization", "Bearer $clientSecret")
+                header("Authorization", "Bearer $accessToken")
             }
 
             if (!response.status.isSuccess()) {
@@ -350,7 +357,8 @@ class SearchServiceImpl(
             try {
                 searchYouTubeChannels(query, maxResults, pageToken)
             } catch (e: Exception) {
-                null // エラーは無視
+                logger.error("YouTubeチャンネル検索でエラー: ${e.message}", e)
+                null
             }
         }
 
@@ -358,7 +366,8 @@ class SearchServiceImpl(
             try {
                 searchTwitchChannels(query, maxResults, cursor)
             } catch (e: Exception) {
-                null // エラーは無視
+                logger.error("Twitchチャンネル検索でエラー: ${e.message}", e)
+                null
             }
         }
 

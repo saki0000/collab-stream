@@ -40,6 +40,7 @@ class ExternalAppNavigationViewModelTest {
     private lateinit var mockRepository: FakeTimelineSyncRepository
     private lateinit var mockVideoSearchRepository: FakeVideoSearchRepository
     private lateinit var mockChannelFollowRepository: FakeChannelFollowRepository
+    private lateinit var mockSyncHistoryRepository: FakeSyncHistoryRepository
     private lateinit var viewModel: TimelineSyncViewModel
 
     private val baseTime = Instant.parse("2024-01-01T10:00:00Z")
@@ -50,12 +51,14 @@ class ExternalAppNavigationViewModelTest {
         mockRepository = FakeTimelineSyncRepository()
         mockVideoSearchRepository = FakeVideoSearchRepository()
         mockChannelFollowRepository = FakeChannelFollowRepository()
+        mockSyncHistoryRepository = FakeSyncHistoryRepository()
         val channelSearchUseCase = org.example.project.domain.usecase.ChannelSearchUseCase(mockVideoSearchRepository)
         viewModel = TimelineSyncViewModel(
             mockRepository,
             channelSearchUseCase,
             mockChannelFollowRepository,
             FakeCommentRepository(),
+            mockSyncHistoryRepository,
         )
     }
 

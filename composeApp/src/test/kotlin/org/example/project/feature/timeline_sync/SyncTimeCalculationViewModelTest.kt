@@ -51,6 +51,7 @@ class SyncTimeCalculationViewModelTest {
     private lateinit var mockVideoSearchRepository: FakeVideoSearchRepository
     private lateinit var channelSearchUseCase: ChannelSearchUseCase
     private lateinit var mockChannelFollowRepository: FakeChannelFollowRepository
+    private lateinit var mockSyncHistoryRepository: FakeSyncHistoryRepository
     private lateinit var viewModel: TimelineSyncViewModel
 
     // テスト用の固定時刻
@@ -65,11 +66,13 @@ class SyncTimeCalculationViewModelTest {
         mockVideoSearchRepository = FakeVideoSearchRepository()
         channelSearchUseCase = ChannelSearchUseCase(mockVideoSearchRepository)
         mockChannelFollowRepository = FakeChannelFollowRepository()
+        mockSyncHistoryRepository = FakeSyncHistoryRepository()
         viewModel = TimelineSyncViewModel(
             mockRepository,
             channelSearchUseCase,
             mockChannelFollowRepository,
             FakeCommentRepository(),
+            mockSyncHistoryRepository,
         )
     }
 
