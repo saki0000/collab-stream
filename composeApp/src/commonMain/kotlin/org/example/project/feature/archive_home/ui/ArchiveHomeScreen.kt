@@ -35,7 +35,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import kotlin.time.Instant
+import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.plus
 import org.example.project.core.theme.AppTheme
 import org.example.project.core.theme.Spacing
 import org.example.project.domain.model.VideoServiceType
@@ -43,6 +45,7 @@ import org.example.project.feature.archive_home.ArchiveHomeIntent
 import org.example.project.feature.archive_home.ArchiveHomeUiState
 import org.example.project.feature.archive_home.ArchiveItem
 import org.example.project.feature.timeline_sync.channel_add.ChannelAddBottomSheet
+import org.example.project.feature.timeline_sync.ui.components.WeekCalendar
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 /**
@@ -52,6 +55,8 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
  * TopAppBarに設定アイコンと履歴アイコンを配置する。
  * US-4: 1件以上選択時にボトムアクションバーを表示する。
  * EPIC-003 US-3: 履歴アイコンタップで同期履歴一覧画面へ遷移する。
+ *
+ * WeekCalendarはwhenブロックの外に配置し、ローディング中・エラー時・空状態でも常時表示する。
  *
  * 4層構造: Container -> Screen -> Content -> Component
  *
@@ -109,69 +114,84 @@ fun ArchiveHomeScreen(
         },
         modifier = modifier,
     ) { paddingValues ->
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues),
         ) {
-            when {
-                uiState.isLoading -> {
-                    // ローディング状態
-                    LoadingState()
-                }
-
-                uiState.hasNoFollowedChannels -> {
-                    // フォロー0件の空状態
-                    EmptyFollowState(
-                        onSearchChannelClick = { onIntent(ArchiveHomeIntent.OpenChannelAddModal) },
-                    )
-                }
-
-                uiState.errorMessage != null -> {
-                    // エラー状態
-                    ErrorState(
-                        message = uiState.errorMessage,
-                        onRetry = { onIntent(ArchiveHomeIntent.Retry) },
-                    )
-                }
-
-                uiState.hasNoArchives -> {
-                    // アーカイブ0件の空状態
-                    EmptyArchiveState(selectedDate = uiState.selectedDate)
-                }
-
-                else -> {
-                    // コンテンツ表示（選択状態も渡す）
-                    ArchiveHomeContent(
-                        archives = uiState.archives,
-                        selectedDate = uiState.selectedDate,
-                        displayedWeekStart = uiState.displayedWeekStart,
-                        selectedArchiveIds = uiState.selectedArchiveIds,
-                        onDateSelected = { onIntent(ArchiveHomeIntent.SelectDate(it)) },
-                        onNavigateToPreviousWeek = { onIntent(ArchiveHomeIntent.NavigateToPreviousWeek) },
-                        onNavigateToNextWeek = { onIntent(ArchiveHomeIntent.NavigateToNextWeek) },
-                        onToggleSelection = { onIntent(ArchiveHomeIntent.ToggleArchiveSelection(it)) },
-                    )
-                }
+            // WeekCalendarを常時表示（ローディング中・エラー・空状態でも非表示にしない）
+            val weekDays = remember(uiState.displayedWeekStart) {
+                (0..6).map { uiState.displayedWeekStart.plus(it, DateTimeUnit.DAY) }
             }
-
-            // チャンネル追加モーダル（ChannelAddBottomSheet再利用）
-            ChannelAddBottomSheet(
-                isVisible = uiState.isChannelAddModalVisible,
-                searchQuery = uiState.channelSearchQuery,
-                channelSuggestions = uiState.channelSuggestions,
-                addedChannels = emptyList(), // US-3では追加済みチャンネルは表示しない
-                isSearching = uiState.isSearchingChannels,
-                errorMessage = null,
-                selectedPlatform = uiState.selectedPlatform,
-                followedChannelIds = uiState.followedChannelIds,
-                onPlatformSelect = { onIntent(ArchiveHomeIntent.SelectPlatform(it)) },
-                onSearchQueryChange = { onIntent(ArchiveHomeIntent.UpdateChannelSearchQuery(it)) },
-                onChannelSelect = {}, // US-3ではタイムラインへの追加は不要（空実装）
-                onChannelRemove = {}, // US-3では削除不要（空実装）
-                onToggleFollow = { onIntent(ArchiveHomeIntent.ToggleFollow(it)) },
-                onDismiss = { onIntent(ArchiveHomeIntent.CloseChannelAddModal) },
+            WeekCalendar(
+                weekDays = weekDays,
+                selectedDate = uiState.selectedDate,
+                onDateSelected = { onIntent(ArchiveHomeIntent.SelectDate(it)) },
+                onNavigateToPreviousWeek = { onIntent(ArchiveHomeIntent.NavigateToPreviousWeek) },
+                onNavigateToNextWeek = { onIntent(ArchiveHomeIntent.NavigateToNextWeek) },
+                modifier = Modifier.fillMaxWidth(),
             )
+
+            // 状態に応じてコンテンツを切り替え（WeekCalendar以外の残りスペースを使用）
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+            ) {
+                when {
+                    uiState.isLoading -> {
+                        // ローディング状態
+                        LoadingState()
+                    }
+
+                    uiState.hasNoFollowedChannels -> {
+                        // フォロー0件の空状態
+                        EmptyFollowState(
+                            onSearchChannelClick = { onIntent(ArchiveHomeIntent.OpenChannelAddModal) },
+                        )
+                    }
+
+                    uiState.errorMessage != null -> {
+                        // エラー状態
+                        ErrorState(
+                            message = uiState.errorMessage,
+                            onRetry = { onIntent(ArchiveHomeIntent.Retry) },
+                        )
+                    }
+
+                    uiState.hasNoArchives -> {
+                        // アーカイブ0件の空状態
+                        EmptyArchiveState(selectedDate = uiState.selectedDate)
+                    }
+
+                    else -> {
+                        // コンテンツ表示（選択状態も渡す）
+                        ArchiveHomeContent(
+                            archives = uiState.archives,
+                            selectedArchiveIds = uiState.selectedArchiveIds,
+                            onToggleSelection = { onIntent(ArchiveHomeIntent.ToggleArchiveSelection(it)) },
+                        )
+                    }
+                }
+
+                // チャンネル追加モーダル（ChannelAddBottomSheet再利用）
+                ChannelAddBottomSheet(
+                    isVisible = uiState.isChannelAddModalVisible,
+                    searchQuery = uiState.channelSearchQuery,
+                    channelSuggestions = uiState.channelSuggestions,
+                    addedChannels = emptyList(), // US-3では追加済みチャンネルは表示しない
+                    isSearching = uiState.isSearchingChannels,
+                    errorMessage = null,
+                    selectedPlatform = uiState.selectedPlatform,
+                    followedChannelIds = uiState.followedChannelIds,
+                    onPlatformSelect = { onIntent(ArchiveHomeIntent.SelectPlatform(it)) },
+                    onSearchQueryChange = { onIntent(ArchiveHomeIntent.UpdateChannelSearchQuery(it)) },
+                    onChannelSelect = {}, // US-3ではタイムラインへの追加は不要（空実装）
+                    onChannelRemove = {}, // US-3では削除不要（空実装）
+                    onToggleFollow = { onIntent(ArchiveHomeIntent.ToggleFollow(it)) },
+                    onDismiss = { onIntent(ArchiveHomeIntent.CloseChannelAddModal) },
+                )
+            }
         }
     }
 }
