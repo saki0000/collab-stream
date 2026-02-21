@@ -25,6 +25,12 @@ class SubscriptionViewModel(
     private val subscriptionRepository: SubscriptionRepository,
 ) : ViewModel() {
 
+    companion object {
+        private const val ERROR_LOAD = "サブスクリプション情報の取得に失敗しました"
+        private const val ERROR_PURCHASE = "購入処理に失敗しました"
+        private const val ERROR_RESTORE = "購入の復元に失敗しました"
+    }
+
     private val _uiState = MutableStateFlow(SubscriptionUiState())
     val uiState: StateFlow<SubscriptionUiState> = _uiState.asStateFlow()
 
@@ -71,7 +77,7 @@ class SubscriptionViewModel(
                 onFailure = { throwable ->
                     _uiState.value = _uiState.value.copy(
                         screenState = ScreenState.Error(
-                            message = throwable.message ?: "サブスクリプション情報の取得に失敗しました",
+                            message = throwable.message ?: ERROR_LOAD,
                         ),
                     )
                 },
@@ -115,14 +121,12 @@ class SubscriptionViewModel(
                     )
                 },
                 onFailure = { throwable ->
+                    // 元の画面（FreePlan）に留まり、Snackbarでエラーを通知する
                     _uiState.value = _uiState.value.copy(
-                        screenState = ScreenState.Error(
-                            message = throwable.message ?: "購入処理に失敗しました",
-                        ),
                         isPurchasing = false,
                     )
                     _sideEffect.emit(
-                        SubscriptionSideEffect.ShowError(throwable.message ?: "購入処理に失敗しました"),
+                        SubscriptionSideEffect.ShowError(throwable.message ?: ERROR_PURCHASE),
                     )
                 },
             )
@@ -166,14 +170,12 @@ class SubscriptionViewModel(
                     )
                 },
                 onFailure = { throwable ->
+                    // 元の画面（FreePlan）に留まり、Snackbarでエラーを通知する
                     _uiState.value = _uiState.value.copy(
-                        screenState = ScreenState.Error(
-                            message = throwable.message ?: "購入の復元に失敗しました",
-                        ),
                         isRestoring = false,
                     )
                     _sideEffect.emit(
-                        SubscriptionSideEffect.ShowError(throwable.message ?: "購入の復元に失敗しました"),
+                        SubscriptionSideEffect.ShowError(throwable.message ?: ERROR_RESTORE),
                     )
                 },
             )

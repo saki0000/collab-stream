@@ -233,7 +233,7 @@ class SubscriptionViewModelTest {
     }
 
     @Test
-    fun `PurchaseProPlanIntent_購入失敗時にError状態になること`() = runTest {
+    fun `PurchaseProPlanIntent_購入失敗時にFreePlan状態に留まること`() = runTest {
         // Arrange
         val errorMessage = "購入処理に失敗しました"
         val repository = FakeSubscriptionRepository(
@@ -251,8 +251,8 @@ class SubscriptionViewModelTest {
         viewModel.handleIntent(SubscriptionIntent.PurchaseProPlan)
         advanceUntilIdle()
 
-        // Assert
-        assertIs<ScreenState.Error>(viewModel.uiState.value.screenState)
+        // Assert - Error画面に遷移せず、FreePlanに留まる
+        assertIs<ScreenState.FreePlan>(viewModel.uiState.value.screenState)
         assertFalse(viewModel.uiState.value.isPurchasing)
     }
 
@@ -347,7 +347,7 @@ class SubscriptionViewModelTest {
     }
 
     @Test
-    fun `RestorePurchasesIntent_復元失敗時にError状態になること`() = runTest {
+    fun `RestorePurchasesIntent_復元失敗時にFreePlan状態に留まること`() = runTest {
         // Arrange
         val errorMessage = "復元に失敗しました"
         val repository = FakeSubscriptionRepository(
@@ -365,8 +365,8 @@ class SubscriptionViewModelTest {
         viewModel.handleIntent(SubscriptionIntent.RestorePurchases)
         advanceUntilIdle()
 
-        // Assert
-        assertIs<ScreenState.Error>(viewModel.uiState.value.screenState)
+        // Assert - Error画面に遷移せず、FreePlanに留まる
+        assertIs<ScreenState.FreePlan>(viewModel.uiState.value.screenState)
         assertFalse(viewModel.uiState.value.isRestoring)
     }
 
