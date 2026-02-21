@@ -18,7 +18,6 @@ COPY build.gradle.kts .
 COPY gradle.properties .
 COPY gradle/ gradle/
 COPY gradlew .
-COPY gradlew.bat .
 
 # server モジュールは shared モジュールに依存するため、両方のビルドスクリプトをコピーする
 COPY server/build.gradle.kts server/
