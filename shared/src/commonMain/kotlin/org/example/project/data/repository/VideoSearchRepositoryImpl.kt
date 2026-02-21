@@ -14,6 +14,7 @@ import kotlinx.coroutines.coroutineScope
 import org.example.project.SERVER_BASE_URL
 import org.example.project.data.util.ApiResponseHandler
 import org.example.project.domain.model.ChannelInfo
+import org.example.project.domain.model.ChannelSearchResponse
 import org.example.project.domain.model.SearchOrder
 import org.example.project.domain.model.SearchQuery
 import org.example.project.domain.model.SearchResponse
@@ -121,7 +122,8 @@ class VideoSearchRepositoryImpl(
                 parameter("maxResults", maxResults.coerceIn(1, 20))
             }
 
-            ApiResponseHandler.handleResponse(response)
+            ApiResponseHandler.handleResponse<ChannelSearchResponse>(response)
+                .map { it.results }
         } catch (e: Exception) {
             Result.failure(
                 RuntimeException("Failed to search channels for service $serviceType: ${e.message}", e),
