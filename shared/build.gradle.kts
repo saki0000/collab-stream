@@ -10,7 +10,7 @@ plugins {
     alias(libs.plugins.konfig)
     alias(libs.plugins.ksp)
     alias(libs.plugins.room)
-    kotlin("plugin.serialization") version "2.2.20"
+    alias(libs.plugins.serialization)
 }
 
 kotlin {

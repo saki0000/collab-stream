@@ -15,7 +15,7 @@ coilNetworkKtor3 = "3.3.0"
 composeMultiplatform = "1.8.2"
 core = "12.1.2"
 junit = "4.13.2"
-kotlin = "2.2.20"
+kotlin = "2.2.21"
 kotlinxDatetime = "0.7.1"
 ktor = "3.3.0"
 logback = "1.5.18"
@@ -33,7 +33,7 @@ kotlinxCoroutines = "1.8.1"
 # Room KMP (Database)
 room = "2.8.4"
 sqlite = "2.6.2"
-ksp = "2.2.20-2.0.4"
+ksp = "2.2.21-2.0.5"
 # RevenueCat KMP SDK
 revenuecat = "2.5.1+17.33.1"
 
