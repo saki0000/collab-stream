@@ -117,6 +117,29 @@ data class TimelineSyncUiState(
      * 選択中のプラットフォームでフィルタ済み。
      */
     val followedChannelIds: Set<String> = emptySet(),
+
+    // ============================================
+    // 履歴保存 (US-2: 同期チャンネル履歴保存)
+    // ============================================
+
+    /**
+     * 履歴保存処理中かどうか。
+     * trueの場合、保存ボタンを非活性にする。
+     */
+    val isSavingHistory: Boolean = false,
+
+    /**
+     * 重複確認ダイアログの表示状態。
+     * 同じチャンネル組み合わせが既に保存されている場合にtrueになる。
+     */
+    val showDuplicateDialog: Boolean = false,
+
+    /**
+     * 重複している履歴のID。
+     * 上書き時に既存履歴を特定するために使用する。
+     * showDuplicateDialogがtrueの場合にのみ有効。
+     */
+    val duplicateHistoryId: String? = null,
 ) {
     /**
      * Whether the channel list is empty (and not loading).
@@ -162,11 +185,25 @@ data class TimelineSyncUiState(
     val canAddChannel: Boolean
         get() = channels.size < MAX_CHANNELS
 
+    /**
+     * 履歴保存ボタンの有効/無効。
+     * チャンネルが2つ以上かつ保存中でない場合に有効。
+     * Epic: 同期チャンネル履歴保存 (US-2)
+     */
+    val canSaveHistory: Boolean
+        get() = channels.size >= MIN_CHANNELS_FOR_SAVE && !isSavingHistory
+
     companion object {
         /**
          * Maximum number of channels allowed in timeline.
          */
         const val MAX_CHANNELS = 10
+
+        /**
+         * 履歴保存に必要な最小チャンネル数。
+         * Epic: 同期チャンネル履歴保存 (US-2)
+         */
+        const val MIN_CHANNELS_FOR_SAVE = 2
     }
 }
 

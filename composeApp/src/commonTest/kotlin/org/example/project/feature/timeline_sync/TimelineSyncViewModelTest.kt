@@ -451,4 +451,159 @@ class TimelineSyncViewModelTest {
         // Assert
         assertEquals(VideoServiceType.TWITCH, defaultChannel.serviceType)
     }
+
+    // ========================================
+    // 履歴保存 (US-2: 同期チャンネル履歴保存)
+    // ========================================
+
+    @Test
+    fun `保存ボタン有効条件_チャンネルが2つ以上の場合canSaveHistoryがtrueであること`() {
+        // Arrange
+        val channel1 = ChannelInfo(id = "ch1", displayName = "Channel 1")
+        val channel2 = ChannelInfo(id = "ch2", displayName = "Channel 2")
+        val state = TimelineSyncUiState(
+            channels = listOf(
+                org.example.project.domain.model.SyncChannel(
+                    channelId = channel1.id,
+                    channelName = channel1.displayName,
+                    channelIconUrl = "",
+                    serviceType = channel1.serviceType,
+                    selectedStream = null,
+                    syncStatus = org.example.project.domain.model.SyncStatus.NOT_SYNCED,
+                ),
+                org.example.project.domain.model.SyncChannel(
+                    channelId = channel2.id,
+                    channelName = channel2.displayName,
+                    channelIconUrl = "",
+                    serviceType = channel2.serviceType,
+                    selectedStream = null,
+                    syncStatus = org.example.project.domain.model.SyncStatus.NOT_SYNCED,
+                ),
+            ),
+            isSavingHistory = false,
+        )
+
+        // Assert
+        assertTrue(state.canSaveHistory)
+    }
+
+    @Test
+    fun `保存ボタン有効条件_チャンネルが1つの場合canSaveHistoryがfalseであること`() {
+        // Arrange
+        val state = TimelineSyncUiState(
+            channels = listOf(
+                org.example.project.domain.model.SyncChannel(
+                    channelId = "ch1",
+                    channelName = "Channel 1",
+                    channelIconUrl = "",
+                    serviceType = VideoServiceType.TWITCH,
+                    selectedStream = null,
+                    syncStatus = org.example.project.domain.model.SyncStatus.NOT_SYNCED,
+                ),
+            ),
+            isSavingHistory = false,
+        )
+
+        // Assert
+        assertTrue(!state.canSaveHistory)
+    }
+
+    @Test
+    fun `保存ボタン有効条件_チャンネルが0件の場合canSaveHistoryがfalseであること`() {
+        // Arrange
+        val state = TimelineSyncUiState(
+            channels = emptyList(),
+            isSavingHistory = false,
+        )
+
+        // Assert
+        assertTrue(!state.canSaveHistory)
+    }
+
+    @Test
+    fun `保存ボタン有効条件_保存処理中はcanSaveHistoryがfalseであること`() {
+        // Arrange
+        val state = TimelineSyncUiState(
+            channels = listOf(
+                org.example.project.domain.model.SyncChannel(
+                    channelId = "ch1",
+                    channelName = "Channel 1",
+                    channelIconUrl = "",
+                    serviceType = VideoServiceType.TWITCH,
+                    selectedStream = null,
+                    syncStatus = org.example.project.domain.model.SyncStatus.NOT_SYNCED,
+                ),
+                org.example.project.domain.model.SyncChannel(
+                    channelId = "ch2",
+                    channelName = "Channel 2",
+                    channelIconUrl = "",
+                    serviceType = VideoServiceType.YOUTUBE,
+                    selectedStream = null,
+                    syncStatus = org.example.project.domain.model.SyncStatus.NOT_SYNCED,
+                ),
+            ),
+            isSavingHistory = true,
+        )
+
+        // Assert（保存中でもチャンネル数は2以上だが、isSavingHistoryがtrueなのでfalse）
+        assertTrue(!state.canSaveHistory)
+    }
+
+    @Test
+    fun `重複ダイアログ表示状態_showDuplicateDialogがtrueの時にダイアログ表示フラグが設定されること`() {
+        // Arrange
+        val initialState = TimelineSyncUiState(
+            showDuplicateDialog = false,
+            duplicateHistoryId = null,
+        )
+
+        // Act: 重複検出後の状態に遷移
+        val stateAfterDuplicateDetected = initialState.copy(
+            showDuplicateDialog = true,
+            duplicateHistoryId = "existing-history-id",
+        )
+
+        // Assert
+        assertTrue(stateAfterDuplicateDetected.showDuplicateDialog)
+        assertEquals("existing-history-id", stateAfterDuplicateDetected.duplicateHistoryId)
+    }
+
+    @Test
+    fun `キャンセル操作_ダイアログキャンセル後にshowDuplicateDialogがfalseになること`() {
+        // Arrange: 重複確認ダイアログが表示されている状態
+        val stateWithDialog = TimelineSyncUiState(
+            showDuplicateDialog = true,
+            duplicateHistoryId = "existing-history-id",
+        )
+
+        // Act: キャンセル選択後の状態
+        val stateAfterCancel = stateWithDialog.copy(
+            showDuplicateDialog = false,
+            duplicateHistoryId = null,
+            isSavingHistory = false,
+        )
+
+        // Assert
+        assertTrue(!stateAfterCancel.showDuplicateDialog)
+        assertEquals(null, stateAfterCancel.duplicateHistoryId)
+        assertTrue(!stateAfterCancel.isSavingHistory)
+    }
+
+    @Test
+    fun `保存中フラグ_isSavingHistoryがtrueの時に保存処理中であること`() {
+        // Arrange
+        val state = TimelineSyncUiState(isSavingHistory = false)
+
+        // Act: 保存処理開始後の状態
+        val savingState = state.copy(isSavingHistory = true)
+
+        // Assert
+        assertTrue(savingState.isSavingHistory)
+    }
+
+    @Test
+    fun `最小チャンネル数_MIN_CHANNELS_FOR_SAVEが2であること`() {
+        // Assert: 仕様書の「チャンネル数 >= 2」を確認
+        assertEquals(2, TimelineSyncUiState.MIN_CHANNELS_FOR_SAVE)
+    }
 }

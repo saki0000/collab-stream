@@ -144,6 +144,28 @@ sealed interface TimelineSyncIntent {
     data class ToggleFollow(val channel: ChannelInfo) : TimelineSyncIntent
 
     // ============================================
+    // 履歴保存 (US-2: 同期チャンネル履歴保存)
+    // ============================================
+
+    /**
+     * 保存ボタンがタップされた時に発行する。
+     * 重複チェックを行い、重複がなければ保存、あれば確認ダイアログを表示する。
+     */
+    data object SaveHistory : TimelineSyncIntent
+
+    /**
+     * 重複確認ダイアログで「上書き」を選択した時に発行する。
+     * 既存の履歴を現在のチャンネル構成で上書き保存する。
+     */
+    data object ConfirmOverwriteHistory : TimelineSyncIntent
+
+    /**
+     * 重複確認ダイアログで「キャンセル」を選択した時に発行する。
+     * ダイアログを閉じて保存をキャンセルする。
+     */
+    data object CancelOverwriteHistory : TimelineSyncIntent
+
+    // ============================================
     // アーカイブHome プリセット遷移（US-4）
     // ============================================
 
@@ -202,4 +224,20 @@ sealed interface TimelineSyncSideEffect {
      * フォロー/アンフォロー後のフィードバックSnackbarを表示する。
      */
     data class ShowFollowFeedback(val message: String) : TimelineSyncSideEffect
+
+    // ============================================
+    // 履歴保存 (US-2: 同期チャンネル履歴保存)
+    // ============================================
+
+    /**
+     * 履歴保存成功時のフィードバックSnackbarを表示する。
+     * メッセージ: 「履歴を保存しました」
+     */
+    data class ShowSaveHistorySuccess(val message: String) : TimelineSyncSideEffect
+
+    /**
+     * 履歴保存失敗時のエラーSnackbarを表示する。
+     * メッセージ: 「保存に失敗しました」
+     */
+    data class ShowSaveHistoryError(val message: String) : TimelineSyncSideEffect
 }

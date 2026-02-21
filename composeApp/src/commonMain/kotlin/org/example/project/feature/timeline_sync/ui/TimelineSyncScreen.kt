@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -14,6 +15,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -60,6 +62,9 @@ fun TimelineSyncScreen(
         topBar = {
             TimelineSyncHeader(
                 activeChannelCount = uiState.activeChannelCount,
+                canSaveHistory = uiState.canSaveHistory,
+                isSavingHistory = uiState.isSavingHistory,
+                onSaveHistoryClick = { onIntent(TimelineSyncIntent.SaveHistory) },
             )
         },
     ) { paddingValues ->
@@ -132,6 +137,48 @@ fun TimelineSyncScreen(
             )
         }
     }
+
+    // 重複確認ダイアログ
+    if (uiState.showDuplicateDialog) {
+        DuplicateHistoryDialog(
+            onConfirm = { onIntent(TimelineSyncIntent.ConfirmOverwriteHistory) },
+            onDismiss = { onIntent(TimelineSyncIntent.CancelOverwriteHistory) },
+        )
+    }
+}
+
+/**
+ * 重複チャンネル組み合わせが既に保存されている場合に表示する確認ダイアログ。
+ *
+ * 「上書き」または「キャンセル」を選択できる。
+ * Epic: 同期チャンネル履歴保存 (US-2: 履歴保存機能)
+ */
+@Composable
+private fun DuplicateHistoryDialog(
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    AlertDialog(
+        modifier = modifier,
+        onDismissRequest = onDismiss,
+        title = {
+            Text(text = "既に保存済みです")
+        },
+        text = {
+            Text(text = "この組み合わせは既に保存されています。上書きしますか？")
+        },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text(text = "上書き")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(text = "キャンセル")
+            }
+        },
+    )
 }
 
 /**
@@ -215,12 +262,12 @@ private fun TimelineSyncScreenPreview() {
 }
 
 /**
- * Preview with loading state.
+ * ローディング状態のプレビュー。
  */
 @Preview
 @Composable
 private fun TimelineSyncScreenLoadingPreview() {
-    MaterialTheme {
+    AppTheme {
         Surface {
             TimelineSyncScreen(
                 uiState = TimelineSyncUiState(
@@ -234,12 +281,12 @@ private fun TimelineSyncScreenLoadingPreview() {
 }
 
 /**
- * Preview with empty state.
+ * 空状態のプレビュー。
  */
 @Preview
 @Composable
 private fun TimelineSyncScreenEmptyPreview() {
-    MaterialTheme {
+    AppTheme {
         Surface {
             TimelineSyncScreen(
                 uiState = TimelineSyncUiState(
@@ -254,7 +301,7 @@ private fun TimelineSyncScreenEmptyPreview() {
 }
 
 /**
- * Preview with error state.
+ * エラー状態のプレビュー。
  */
 @Preview
 @Composable
@@ -268,6 +315,22 @@ private fun TimelineSyncScreenErrorPreview() {
                 ),
                 onIntent = {},
                 snackbarHostState = remember { SnackbarHostState() },
+            )
+        }
+    }
+}
+
+/**
+ * 重複確認ダイアログのプレビュー。
+ */
+@Preview
+@Composable
+private fun DuplicateHistoryDialogPreview() {
+    AppTheme {
+        Surface {
+            DuplicateHistoryDialog(
+                onConfirm = {},
+                onDismiss = {},
             )
         }
     }

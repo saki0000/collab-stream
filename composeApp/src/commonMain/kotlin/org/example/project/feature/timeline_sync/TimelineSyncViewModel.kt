@@ -27,10 +27,12 @@ import org.example.project.domain.model.ChannelInfo
 import org.example.project.domain.model.FollowedChannel
 import org.example.project.domain.model.SelectedStreamInfo
 import org.example.project.domain.model.SyncChannel
+import org.example.project.domain.model.SyncHistory
 import org.example.project.domain.model.SyncStatus
 import org.example.project.domain.model.VideoServiceType
 import org.example.project.domain.model.toDeepLinkInfo
 import org.example.project.domain.repository.ChannelFollowRepository
+import org.example.project.domain.repository.SyncHistoryRepository
 import org.example.project.domain.repository.TimelineSyncRepository
 import org.example.project.domain.usecase.ChannelSearchUseCase
 
@@ -46,6 +48,7 @@ class TimelineSyncViewModel(
     private val timelineSyncRepository: TimelineSyncRepository,
     private val channelSearchUseCase: ChannelSearchUseCase,
     private val channelFollowRepository: ChannelFollowRepository,
+    private val syncHistoryRepository: SyncHistoryRepository,
     private val clock: kotlin.time.Clock = kotlin.time.Clock.System,
 ) : ViewModel() {
 
@@ -91,6 +94,10 @@ class TimelineSyncViewModel(
             is TimelineSyncIntent.OpenExternalApp -> openExternalApp(intent.channelId)
             // Channel Follow (US-2)
             is TimelineSyncIntent.ToggleFollow -> toggleFollow(intent.channel)
+            // 履歴保存 (US-2: 同期チャンネル履歴保存)
+            TimelineSyncIntent.SaveHistory -> saveHistory()
+            TimelineSyncIntent.ConfirmOverwriteHistory -> confirmOverwriteHistory()
+            TimelineSyncIntent.CancelOverwriteHistory -> cancelOverwriteHistory()
             // アーカイブHome プリセット遷移（US-4）
             is TimelineSyncIntent.LoadWithPresets -> loadWithPresets(
                 presetChannelsJson = intent.presetChannelsJson,
@@ -724,6 +731,119 @@ class TimelineSyncViewModel(
                 )
             }
         }
+    }
+
+    // ============================================
+    // 履歴保存 (US-2: 同期チャンネル履歴保存)
+    // ============================================
+
+    /**
+     * 保存ボタンタップ時の処理。
+     * 重複チェックを実施し、重複がなければ保存、重複があれば確認ダイアログを表示する。
+     */
+    private fun saveHistory() {
+        val channels = _uiState.value.channels
+
+        // チャンネル数が2未満の場合は保存しない（ボタンが非活性のため通常到達しないが防御的チェック）
+        if (channels.size < TimelineSyncUiState.MIN_CHANNELS_FOR_SAVE) return
+
+        _uiState.value = _uiState.value.copy(isSavingHistory = true)
+
+        viewModelScope.launch {
+            // 重複チェック: 既存の全履歴を取得し channelId セットを比較する
+            syncHistoryRepository.getAllHistories().fold(
+                onSuccess = { existingHistories ->
+                    val currentChannelIds = channels.map { it.channelId }.toSet()
+                    val duplicate = existingHistories.find { history ->
+                        val historyChannelIds = history.channels.map { it.channelId }.toSet()
+                        historyChannelIds == currentChannelIds
+                    }
+
+                    if (duplicate != null) {
+                        // 重複あり → 確認ダイアログを表示
+                        _uiState.value = _uiState.value.copy(
+                            isSavingHistory = false,
+                            showDuplicateDialog = true,
+                            duplicateHistoryId = duplicate.id,
+                        )
+                    } else {
+                        // 重複なし → 保存実行
+                        performSaveHistory(channels = channels, existingHistoryId = null)
+                    }
+                },
+                onFailure = { error ->
+                    // 履歴取得に失敗しても保存は継続する
+                    performSaveHistory(channels = channels, existingHistoryId = null)
+                },
+            )
+        }
+    }
+
+    /**
+     * 重複確認ダイアログで「上書き」を選択した時の処理。
+     * 重複している既存履歴を削除してから新規保存する。
+     */
+    private fun confirmOverwriteHistory() {
+        val duplicateHistoryId = _uiState.value.duplicateHistoryId ?: return
+        val channels = _uiState.value.channels
+
+        _uiState.value = _uiState.value.copy(
+            showDuplicateDialog = false,
+            duplicateHistoryId = null,
+            isSavingHistory = true,
+        )
+
+        viewModelScope.launch {
+            // 既存履歴を削除してから新規保存
+            syncHistoryRepository.deleteHistory(duplicateHistoryId).fold(
+                onSuccess = {
+                    performSaveHistory(channels = channels, existingHistoryId = null)
+                },
+                onFailure = { error ->
+                    // 削除失敗時もそのまま上書き保存を試みる
+                    performSaveHistory(channels = channels, existingHistoryId = null)
+                },
+            )
+        }
+    }
+
+    /**
+     * 重複確認ダイアログで「キャンセル」を選択した時の処理。
+     * ダイアログを閉じて保存をキャンセルする。
+     */
+    private fun cancelOverwriteHistory() {
+        _uiState.value = _uiState.value.copy(
+            showDuplicateDialog = false,
+            duplicateHistoryId = null,
+            isSavingHistory = false,
+        )
+    }
+
+    /**
+     * 実際の保存処理を実行する。
+     * 保存成功時は成功フィードバックを発行し、失敗時はエラーフィードバックを発行する。
+     *
+     * @param channels 保存するチャンネルリスト
+     * @param existingHistoryId 上書き対象の履歴ID（nullの場合は新規保存）
+     */
+    private suspend fun performSaveHistory(
+        channels: List<SyncChannel>,
+        existingHistoryId: String?,
+    ) {
+        syncHistoryRepository.saveHistory(channels = channels, name = null).fold(
+            onSuccess = { savedHistory ->
+                _uiState.value = _uiState.value.copy(isSavingHistory = false)
+                _sideEffect.emit(
+                    TimelineSyncSideEffect.ShowSaveHistorySuccess("履歴を保存しました"),
+                )
+            },
+            onFailure = { error ->
+                _uiState.value = _uiState.value.copy(isSavingHistory = false)
+                _sideEffect.emit(
+                    TimelineSyncSideEffect.ShowSaveHistoryError("保存に失敗しました"),
+                )
+            },
+        )
     }
 
     /**
