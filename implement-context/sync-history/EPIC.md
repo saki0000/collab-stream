@@ -36,8 +36,8 @@ kanban
   spec[Spec]
   design[Design]
   dev[Dev]
-    us3[US-3: 履歴一覧表示UI]
   done[Done]
+    us3[US-3: 履歴一覧表示UI]
     us2[US-2: 履歴保存機能]@{ priority: 'High' }
     us1[US-1: ローカル永続化基盤]
 ```
