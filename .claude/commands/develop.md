@@ -333,6 +333,18 @@ PR作成時の情報源:
 
 ### → Kanban更新: カードを `Done` へ移動
 
+### 5.4 Epic完了チェック & アーカイブ
+
+Epicに属するUSの場合、Kanban更新後に以下を確認します:
+
+1. EPIC.md の Kanban を読み込み、**全USが `Done` カラムにあるか**確認
+2. 全USが Done の場合:
+   - `implement-context/done/` ディレクトリを作成（存在しない場合）
+   - Epic ディレクトリを移動: `implement-context/{epic_name}/` → `implement-context/done/{epic_name}/`
+3. 未完了のUSがある場合: スキップ（移動しない）
+
+**対象**: Epic配下のUSのみ。小規模機能パス（Epicなし）は対象外。
+
 ---
 
 ## 準拠するADR
