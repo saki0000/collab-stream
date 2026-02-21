@@ -4,13 +4,12 @@ package org.example.project.domain.model
 
 import kotlin.time.Instant
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.builtins.InstantComponentSerializer
 
 /**
  * Live streaming details from YouTube Data API v3.
  * Contains timing information necessary for video synchronization.
  */
-@Serializable(with = InstantComponentSerializer::class)
+@Serializable
 data class LiveStreamingDetails(
     /**
      * Time when the live stream actually started broadcasting.

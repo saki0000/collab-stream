@@ -127,17 +127,17 @@ fun ArchiveHomeScreen(
                     )
                 }
 
-                uiState.hasNoArchives -> {
-                    // アーカイブ0件の空状態
-                    EmptyArchiveState(selectedDate = uiState.selectedDate)
-                }
-
                 uiState.errorMessage != null -> {
                     // エラー状態
                     ErrorState(
                         message = uiState.errorMessage,
                         onRetry = { onIntent(ArchiveHomeIntent.Retry) },
                     )
+                }
+
+                uiState.hasNoArchives -> {
+                    // アーカイブ0件の空状態
+                    EmptyArchiveState(selectedDate = uiState.selectedDate)
                 }
 
                 else -> {
