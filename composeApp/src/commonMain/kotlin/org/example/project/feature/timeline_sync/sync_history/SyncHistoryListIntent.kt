@@ -88,4 +88,15 @@ sealed interface SyncHistoryListIntent {
      * 空文字の場合は自動生成名に戻す（name = null）。
      */
     data object ConfirmRename : SyncHistoryListIntent
+
+    // ============================================
+    // 復元機能
+    // ============================================
+
+    /**
+     * 履歴から TimelineSync 画面にチャンネルを復元する。
+     * カードタップ時に呼ばれる（3点メニュー以外の領域）。
+     * @param historyId 復元対象の履歴ID
+     */
+    data class RestoreHistory(val historyId: String) : SyncHistoryListIntent
 }

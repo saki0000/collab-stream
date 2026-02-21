@@ -32,11 +32,11 @@ config:
 ---
 kanban
   backlog[Backlog]
-    us4[US-4: 履歴からの再同期機能]
   spec[Spec]
   design[Design]
   dev[Dev]
   done[Done]
+    us4[US-4: 履歴からの再同期機能]
     us3[US-3: 履歴一覧表示UI]
     us2[US-2: 履歴保存機能]@{ priority: 'High' }
     us1[US-1: ローカル永続化基盤]

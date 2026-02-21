@@ -13,6 +13,12 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+import org.example.project.core.navigation.PresetChannel
+import org.example.project.domain.model.SavedChannelInfo
 import org.example.project.domain.model.displayName
 import org.example.project.domain.repository.HistorySortOrder
 import org.example.project.domain.repository.SyncHistoryRepository
@@ -31,6 +37,8 @@ import org.example.project.domain.repository.SyncHistoryRepository
 @OptIn(ExperimentalTime::class)
 class SyncHistoryListViewModel(
     private val syncHistoryRepository: SyncHistoryRepository,
+    private val clock: kotlin.time.Clock = kotlin.time.Clock.System,
+    private val timeZone: TimeZone = TimeZone.currentSystemDefault(),
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SyncHistoryListUiState())
@@ -61,6 +69,7 @@ class SyncHistoryListViewModel(
             SyncHistoryListIntent.DismissRenameDialog -> dismissRenameDialog()
             is SyncHistoryListIntent.UpdateRenameInput -> updateRenameInput(intent.input)
             SyncHistoryListIntent.ConfirmRename -> confirmRename()
+            is SyncHistoryListIntent.RestoreHistory -> restoreHistory(intent.historyId)
         }
     }
 
@@ -221,4 +230,64 @@ class SyncHistoryListViewModel(
             )
         }
     }
+
+    // ============================================
+    // 復元機能
+    // ============================================
+
+    /**
+     * 履歴から TimelineSync 画面にチャンネルを復元する。
+     *
+     * 処理フロー:
+     * 1. 履歴をIDで取得
+     * 2. recordUsage で使用状況を更新（失敗してもナビゲーションはブロックしない）
+     * 3. SavedChannelInfo → PresetChannel に変換してJSONエンコード
+     * 4. 今日の日付をpresetDateとして設定
+     * 5. NavigateToTimeline SideEffect を発行
+     *
+     * @param historyId 復元対象の履歴ID
+     */
+    private fun restoreHistory(historyId: String) {
+        viewModelScope.launch {
+            // 履歴取得
+            val history = syncHistoryRepository.getHistoryById(historyId).getOrNull()
+            if (history == null) {
+                _sideEffect.emit(SyncHistoryListSideEffect.ShowRestoreError)
+                return@launch
+            }
+
+            // 使用状況を更新（失敗してもナビゲーションをブロックしない）
+            syncHistoryRepository.recordUsage(historyId)
+
+            // 今日の日付を取得
+            val today = clock.now()
+                .toLocalDateTime(timeZone)
+                .date
+            val presetDate = today.toString()
+
+            // SavedChannelInfo → PresetChannel 変換
+            val presetChannels = history.channels.map { it.toPresetChannel() }
+            val presetChannelsJson = Json.encodeToString(presetChannels)
+
+            // TimelineSync画面へのナビゲーションSideEffectを発行
+            _sideEffect.emit(
+                SyncHistoryListSideEffect.NavigateToTimeline(
+                    presetChannelsJson = presetChannelsJson,
+                    presetDate = presetDate,
+                ),
+            )
+        }
+    }
 }
+
+/**
+ * SavedChannelInfo を PresetChannel に変換する拡張関数。
+ *
+ * ArchiveHome → TimelineSync で確立された変換パターンを再利用する。
+ */
+private fun SavedChannelInfo.toPresetChannel(): PresetChannel = PresetChannel(
+    channelId = channelId,
+    channelName = channelName,
+    channelIconUrl = channelIconUrl,
+    serviceType = serviceType.name,
+)

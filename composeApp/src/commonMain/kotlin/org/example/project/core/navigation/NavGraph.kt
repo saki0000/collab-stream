@@ -65,11 +65,19 @@ fun AppNavGraph(
             )
         }
 
-        // Sync History List screen (EPIC-003 US-3)
+        // Sync History List screen (EPIC-003 US-3, US-4)
         composable<SyncHistoryListRoute> {
             SyncHistoryListContainer(
                 onNavigateBack = {
                     navController.popBackStack()
+                },
+                onNavigateToTimeline = { presetChannelsJson, presetDate ->
+                    navController.navigate(
+                        TimelineSyncRoute(
+                            presetDate = presetDate,
+                            presetChannelsJson = presetChannelsJson,
+                        ),
+                    )
                 },
                 modifier = Modifier,
             )
