@@ -1,5 +1,5 @@
 ---
-allowed-tools: Read, Write, Edit, MultiEdit, Glob, Grep, Bash(git:*), Bash(./gradlew:*), Bash(./scripts/safe-gradlew.sh:*), Bash(mkdir:*), TodoWrite, Task, mcp__serena__*, AskUserQuestion
+allowed-tools: Read, Write, Edit, MultiEdit, Glob, Grep, Bash(git:*), Bash(./scripts/safe-gradlew.sh:*), Bash(mkdir:*), TodoWrite, Task, mcp__serena__*, AskUserQuestion
 description: 仕様定義から実装・PR作成までの統合開発コマンド
 ---
 

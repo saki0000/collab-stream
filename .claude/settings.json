@@ -1,7 +1,7 @@
 {
   "permissions": {
     "allow": [
-      "Bash(./gradlew:*)",
+      "Bash(./scripts/safe-gradlew.sh:*)",
       "Read(~/.zshrc)",
       "Bash(mkdir:*)",
       "Bash(touch:*)",
@@ -33,6 +33,7 @@
       "Bash(chmod:*)"
     ],
     "deny": [
+      "Bash(./gradlew:*)",
       "Bash(sudo:*)",
       "Bash(git reset:*)",
       "Bash(git rebase:*)",

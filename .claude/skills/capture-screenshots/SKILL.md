@@ -69,6 +69,6 @@ screenshots/
 
 ## 関連コマンド
 
-- `./gradlew :composeApp:recordRoborazziDebug` - スクリーンショット記録
-- `./gradlew :composeApp:verifyRoborazziDebug` - スクリーンショット検証
-- `./gradlew :composeApp:compareRoborazziDebug` - 差分比較
+- `./scripts/safe-gradlew.sh :composeApp:recordRoborazziDebug` - スクリーンショット記録
+- `./scripts/safe-gradlew.sh :composeApp:verifyRoborazziDebug` - スクリーンショット検証
+- `./scripts/safe-gradlew.sh :composeApp:compareRoborazziDebug` - 差分比較
