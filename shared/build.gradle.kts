@@ -1,3 +1,4 @@
+import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING
 import org.gradle.declarative.dsl.schema.FqName.Empty.packageName
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
@@ -107,12 +108,15 @@ ktlint {
     }
 }
 
-// BuildKonfig: APIキーをクライアントに含めない（ADR-005 Phase 2）
-// サーバーAPI経由でYouTube/Twitch APIを呼び出すため、クライアント側のAPIキー定義は不要
+// BuildKonfig: ビルド時に環境変数からAPIキーを注入（ADR-005）
+// CI環境ではGitHub Secrets経由、ローカルではプレースホルダーにフォールバック
 buildkonfig {
-    packageName = "org.exampl.project"
+    packageName = "org.example.project"
     defaultConfigs {
-        // 将来的に必要な定数があればここに追加
-        // 現在はサーバーAPI経由のため、APIキーは不要
+        buildConfigField(
+            STRING,
+            "REVENUECAT_API_KEY",
+            System.getenv("REVENUECAT_PUBLIC_API_KEY") ?: "placeholder_api_key",
+        )
     }
 }

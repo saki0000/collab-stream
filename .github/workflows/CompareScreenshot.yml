@@ -54,6 +54,8 @@ jobs:
           branch: ${{ github.event.pull_request.base.ref || 'main' }}
 
       - name: Compare screenshots
+        env:
+          REVENUECAT_PUBLIC_API_KEY: ${{ secrets.REVENUECAT_PUBLIC_API_KEY }}
         run: ./gradlew compareRoborazziDebug
 
       - name: Upload screenshot diff

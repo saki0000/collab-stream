@@ -1,15 +1,16 @@
 package org.example.project.config
 
+import org.example.project.BuildKonfig
+
 /**
  * iOS用RevenueCat APIキー提供。
  *
- * 開発時はプレースホルダー値を返す。
- * 本番環境では環境変数やBuildKonfigから取得する。
+ * BuildKonfig経由でビルド時に注入された値を返す。
+ * CI環境ではGitHub Secretsから、ローカル環境ではプレースホルダー値が使用される。
  *
  * Epic: サブスクリプション基盤
  * Story Issue: US-3（RevenueCat SDK統合）
  */
 actual fun getRevenueCatApiKey(): String {
-    // TODO: 本番環境では環境変数やBuildKonfigから取得
-    return "ios_placeholder_api_key"
+    return BuildKonfig.REVENUECAT_API_KEY
 }

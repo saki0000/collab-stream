@@ -45,7 +45,11 @@ jobs:
       run: chmod +x gradlew
 
     - name: Run tests
+      env:
+        REVENUECAT_PUBLIC_API_KEY: ${{ secrets.REVENUECAT_PUBLIC_API_KEY }}
       run: ./gradlew test --continue
 
     - name: Generate coverage reports
+      env:
+        REVENUECAT_PUBLIC_API_KEY: ${{ secrets.REVENUECAT_PUBLIC_API_KEY }}
       run: ./gradlew koverXmlReport koverHtmlReport
