@@ -14,6 +14,9 @@ import org.example.project.domain.model.VideoComment
  */
 class ClusterMarkersTest {
 
+    /** テスト用のデフォルト動画duration（2時間 = 7200秒） */
+    private val defaultDuration = 7200L
+
     // ========================================
     // エッジケース
     // ========================================
@@ -24,7 +27,21 @@ class ClusterMarkersTest {
         val markers = emptyList<TimestampMarker>()
 
         // Act
-        val result = clusterMarkers(markers)
+        val result = clusterMarkers(markers, videoDurationSeconds = defaultDuration)
+
+        // Assert
+        assertTrue(result.isEmpty())
+    }
+
+    @Test
+    fun `videoDurationSecondsが0以下の場合_空リストを返すこと`() {
+        // Arrange
+        val markers = listOf(
+            createMarker(timestampSeconds = 600L, likeCount = 100),
+        )
+
+        // Act
+        val result = clusterMarkers(markers, videoDurationSeconds = 0L)
 
         // Assert
         assertTrue(result.isEmpty())
@@ -38,7 +55,7 @@ class ClusterMarkersTest {
         )
 
         // Act
-        val result = clusterMarkers(markers)
+        val result = clusterMarkers(markers, videoDurationSeconds = defaultDuration)
 
         // Assert
         assertEquals(1, result.size)
@@ -46,19 +63,19 @@ class ClusterMarkersTest {
     }
 
     @Test
-    fun `マーカー1つの場合_centerFractionが0_0であること`() {
+    fun `マーカー1つの場合_centerFractionがduration基準で正しいこと`() {
         // Arrange
-        // 1つのマーカーのみの場合、全体の時間範囲はそのマーカー自身なので fraction = 0.0
+        // 600秒 / 7200秒 = 0.0833...
         val markers = listOf(
             createMarker(timestampSeconds = 600L, likeCount = 100),
         )
 
         // Act
-        val result = clusterMarkers(markers)
+        val result = clusterMarkers(markers, videoDurationSeconds = defaultDuration)
 
         // Assert
-        // 1マーカーのみの場合、range = 1f (ゼロ除算回避) → (600 - 600) / 1 = 0.0
-        assertEquals(0.0f, result.first().centerFraction)
+        val expectedFraction = 600f / 7200f
+        assertEquals(expectedFraction, result.first().centerFraction, absoluteTolerance = 0.001f)
     }
 
     // ========================================
@@ -68,17 +85,17 @@ class ClusterMarkersTest {
     @Test
     fun `離れたマーカーは_別クラスターになること`() {
         // Arrange
-        // 全体範囲: 0〜3600秒 (range = 3600)
+        // duration: 7200秒
         // マーカー1: 0秒 → fraction = 0.0
-        // マーカー2: 3600秒 → fraction = 1.0
-        // 差分 = 1.0 > しきい値 0.03 → 別クラスター
+        // マーカー2: 3600秒 → fraction = 0.5
+        // 差分 = 0.5 > しきい値 0.03 → 別クラスター
         val markers = listOf(
             createMarker(timestampSeconds = 0L, likeCount = 100),
             createMarker(timestampSeconds = 3600L, likeCount = 200),
         )
 
         // Act
-        val result = clusterMarkers(markers, clusterThreshold = 0.03f)
+        val result = clusterMarkers(markers, videoDurationSeconds = defaultDuration, clusterThreshold = 0.03f)
 
         // Assert
         assertEquals(2, result.size)
@@ -87,10 +104,11 @@ class ClusterMarkersTest {
     @Test
     fun `3つの離れたマーカーは_3つの別クラスターになること`() {
         // Arrange
-        // 全体範囲: 0〜6000秒 (range = 6000)
-        // マーカー1: 0秒   → fraction = 0.0
-        // マーカー2: 3000秒 → fraction = 0.5 （差分 0.5 > 0.03）
-        // マーカー3: 6000秒 → fraction = 1.0 （差分 0.5 > 0.03）
+        // duration: 7200秒
+        // マーカー1: 0秒    → fraction = 0.0
+        // マーカー2: 3000秒 → fraction ≈ 0.417
+        // マーカー3: 6000秒 → fraction ≈ 0.833
+        // 全て差分 > 0.03 → 3クラスター
         val markers = listOf(
             createMarker(timestampSeconds = 0L, likeCount = 100),
             createMarker(timestampSeconds = 3000L, likeCount = 200),
@@ -98,7 +116,7 @@ class ClusterMarkersTest {
         )
 
         // Act
-        val result = clusterMarkers(markers, clusterThreshold = 0.03f)
+        val result = clusterMarkers(markers, videoDurationSeconds = defaultDuration, clusterThreshold = 0.03f)
 
         // Assert
         assertEquals(3, result.size)
@@ -111,22 +129,21 @@ class ClusterMarkersTest {
     @Test
     fun `近接マーカーは_同じクラスターに集約されること`() {
         // Arrange
-        // 全体範囲: 0〜1840秒 (range = 1840)
-        // マーカー1: 0秒    → fraction = 0.0
-        // マーカー2: 1800秒 → fraction = 1800/1840 ≈ 0.978
-        // マーカー3: 1840秒 → fraction = 1.0
-        // diff(0.978, 1.0) = 0.022 < しきい値 0.03 → 同じクラスター
+        // duration: 7200秒
+        // マーカー1: 0秒    → fraction = 0.0 → 別クラスター
+        // マーカー2: 3600秒 → fraction = 0.5
+        // マーカー3: 3700秒 → fraction ≈ 0.514
+        // diff(0.5, 0.514) = 0.014 < しきい値 0.03 → 同クラスター
         val markers = listOf(
-            createMarker(timestampSeconds = 0L, likeCount = 50),     // クラスターA
-            createMarker(timestampSeconds = 1800L, likeCount = 100), // クラスターB
-            createMarker(timestampSeconds = 1840L, likeCount = 200), // クラスターB（近接）
+            createMarker(timestampSeconds = 0L, likeCount = 50),
+            createMarker(timestampSeconds = 3600L, likeCount = 100),
+            createMarker(timestampSeconds = 3700L, likeCount = 200),
         )
 
         // Act
-        val result = clusterMarkers(markers, clusterThreshold = 0.03f)
+        val result = clusterMarkers(markers, videoDurationSeconds = defaultDuration, clusterThreshold = 0.03f)
 
         // Assert
-        // 0秒は離れているため別クラスター、1800/1840秒は集約で合計2クラスター
         assertEquals(2, result.size)
         val largerCluster = result.maxByOrNull { it.markers.size }!!
         assertEquals(2, largerCluster.markers.size)
@@ -135,9 +152,12 @@ class ClusterMarkersTest {
     @Test
     fun `しきい値ぎりぎり以内のマーカーは_同じクラスターに集約されること`() {
         // Arrange
-        // 全体範囲: 0〜10000秒 (range = 10000)
-        // fractions: 0.0, 0.5, 0.529, 1.0
-        // diff(0.5, 0.529) = 0.029 < しきい値 0.03 → 同じクラスター
+        // duration: 10000秒
+        // マーカー1: 0秒    → fraction = 0.0
+        // マーカー2: 5000秒 → fraction = 0.5
+        // マーカー3: 5290秒 → fraction = 0.529
+        // マーカー4: 10000秒 → fraction = 1.0
+        // diff(0.5, 0.529) = 0.029 < しきい値 0.03 → 同クラスター
         val markers = listOf(
             createMarker(timestampSeconds = 0L, likeCount = 10),
             createMarker(timestampSeconds = 5000L, likeCount = 100),
@@ -146,7 +166,7 @@ class ClusterMarkersTest {
         )
 
         // Act
-        val result = clusterMarkers(markers, clusterThreshold = 0.03f)
+        val result = clusterMarkers(markers, videoDurationSeconds = 10000L, clusterThreshold = 0.03f)
 
         // Assert
         // 3クラスター: {0}, {5000+5290}, {10000}
@@ -158,7 +178,7 @@ class ClusterMarkersTest {
     @Test
     fun `しきい値を超えたマーカーは_別クラスターになること`() {
         // Arrange
-        // 全体範囲: 0〜10000秒 (range = 10000)
+        // duration: 10000秒
         // fractions: 0.0, 0.5, 0.5301, 1.0
         // diff(0.5, 0.5301) = 0.0301 > しきい値 0.03 → 別クラスター
         val markers = listOf(
@@ -169,7 +189,7 @@ class ClusterMarkersTest {
         )
 
         // Act
-        val result = clusterMarkers(markers, clusterThreshold = 0.03f)
+        val result = clusterMarkers(markers, videoDurationSeconds = 10000L, clusterThreshold = 0.03f)
 
         // Assert
         // 4クラスター: 全て離れている
@@ -183,12 +203,12 @@ class ClusterMarkersTest {
     @Test
     fun `代表マーカーは_いいね数最大のコメントが選択されること`() {
         // Arrange
-        // 全体範囲: 0〜1840秒 (range = 1840)
-        // マーカー2: 1800秒 → fraction ≈ 0.978
-        // マーカー3: 1840秒 → fraction = 1.0
-        // diff = 0.022 < 0.03 → 同クラスター、代表はいいね500のマーカー
-        val markerLow = createMarker(timestampSeconds = 1800L, likeCount = 100)
-        val markerHigh = createMarker(timestampSeconds = 1840L, likeCount = 500)
+        // duration: 7200秒
+        // マーカー2: 3600秒 → fraction = 0.5
+        // マーカー3: 3700秒 → fraction ≈ 0.514
+        // diff = 0.014 < 0.03 → 同クラスター
+        val markerLow = createMarker(timestampSeconds = 3600L, likeCount = 100)
+        val markerHigh = createMarker(timestampSeconds = 3700L, likeCount = 500)
         val markers = listOf(
             createMarker(timestampSeconds = 0L, likeCount = 50), // 別クラスター
             markerLow,
@@ -196,7 +216,7 @@ class ClusterMarkersTest {
         )
 
         // Act
-        val result = clusterMarkers(markers, clusterThreshold = 0.03f)
+        val result = clusterMarkers(markers, videoDurationSeconds = defaultDuration, clusterThreshold = 0.03f)
 
         // Assert
         val cluster = result.first { it.markers.size == 2 }
@@ -211,7 +231,7 @@ class ClusterMarkersTest {
         val markers = listOf(marker)
 
         // Act
-        val result = clusterMarkers(markers)
+        val result = clusterMarkers(markers, videoDurationSeconds = defaultDuration)
 
         // Assert
         assertEquals(marker, result.first().representativeMarker)
@@ -224,8 +244,9 @@ class ClusterMarkersTest {
     @Test
     fun `centerFractionは_クラスター内マーカーの中央位置であること`() {
         // Arrange
-        // 全体範囲: 0〜10000秒 (range = 10000)
-        // fractions: 0.0, 0.5, 0.52, 1.0
+        // duration: 10000秒
+        // マーカー2: 5000秒 → fraction = 0.5
+        // マーカー3: 5200秒 → fraction = 0.52
         // diff(0.5, 0.52) = 0.02 < 0.03 → 同クラスター
         // centerFraction = (0.5 + 0.52) / 2 = 0.51
         val markers = listOf(
@@ -236,10 +257,9 @@ class ClusterMarkersTest {
         )
 
         // Act
-        val result = clusterMarkers(markers, clusterThreshold = 0.03f)
+        val result = clusterMarkers(markers, videoDurationSeconds = 10000L, clusterThreshold = 0.03f)
 
         // Assert
-        // 3クラスター: {0}, {5000+5200}, {10000}
         assertEquals(3, result.size)
         val middleCluster = result.first { it.markers.size == 2 }
         val expectedCenter = (0.5f + 0.52f) / 2f
@@ -249,22 +269,22 @@ class ClusterMarkersTest {
     @Test
     fun `離れたマーカーのcenterFractionは_それぞれの正確な位置であること`() {
         // Arrange
-        // 全体範囲: 0〜3600秒 (range = 3600)
-        // マーカー1: 0秒   → fraction = 0.0
-        // マーカー2: 3600秒 → fraction = 1.0
+        // duration: 7200秒
+        // マーカー1: 0秒    → fraction = 0.0
+        // マーカー2: 3600秒 → fraction = 0.5
         val markers = listOf(
             createMarker(timestampSeconds = 0L, likeCount = 100),
             createMarker(timestampSeconds = 3600L, likeCount = 200),
         )
 
         // Act
-        val result = clusterMarkers(markers, clusterThreshold = 0.03f)
+        val result = clusterMarkers(markers, videoDurationSeconds = defaultDuration, clusterThreshold = 0.03f)
 
         // Assert
         assertEquals(2, result.size)
         val sortedResult = result.sortedBy { it.centerFraction }
         assertEquals(0.0f, sortedResult[0].centerFraction, absoluteTolerance = 0.001f)
-        assertEquals(1.0f, sortedResult[1].centerFraction, absoluteTolerance = 0.001f)
+        assertEquals(0.5f, sortedResult[1].centerFraction, absoluteTolerance = 0.001f)
     }
 
     // ========================================
@@ -274,17 +294,15 @@ class ClusterMarkersTest {
     @Test
     fun `同じ位置のマーカーは_1クラスターに集約されること`() {
         // Arrange
-        // 全体範囲: 0〜3600秒 (range = 3600)
-        // マーカー1: 1800秒 → fraction = 0.5
-        // マーカー2: 1800秒 → fraction = 0.5 （差分 = 0.0 < 0.03）
-        // → 同じクラスターに集約される
+        // duration: 7200秒
+        // マーカー1,2: 1800秒 → fraction = 0.25（差分 = 0 < 0.03）→ 同クラスター
         val markers = listOf(
             createMarker(timestampSeconds = 1800L, likeCount = 100),
             createMarker(timestampSeconds = 1800L, likeCount = 300),
         )
 
         // Act
-        val result = clusterMarkers(markers, clusterThreshold = 0.03f)
+        val result = clusterMarkers(markers, videoDurationSeconds = defaultDuration, clusterThreshold = 0.03f)
 
         // Assert
         assertEquals(1, result.size)
@@ -300,7 +318,7 @@ class ClusterMarkersTest {
         val markers = listOf(markerA, markerB, markerC)
 
         // Act
-        val result = clusterMarkers(markers, clusterThreshold = 0.03f)
+        val result = clusterMarkers(markers, videoDurationSeconds = defaultDuration, clusterThreshold = 0.03f)
 
         // Assert
         assertEquals(1, result.size)
@@ -316,8 +334,8 @@ class ClusterMarkersTest {
     fun `マーカーがソートされていない場合でも_timestampSeconds順でクラスタリングされること`() {
         // Arrange
         // 入力は逆順（3600秒 → 1800秒 → 0秒）
-        // 全体範囲: 0〜3600秒
-        // ソート後: 0秒(fraction=0.0), 1800秒(fraction=0.5), 3600秒(fraction=1.0)
+        // duration: 7200秒
+        // ソート後: 0秒(fraction=0.0), 1800秒(fraction=0.25), 3600秒(fraction=0.5)
         // 全て離れているため3クラスター
         val markers = listOf(
             createMarker(timestampSeconds = 3600L, likeCount = 100),
@@ -326,14 +344,14 @@ class ClusterMarkersTest {
         )
 
         // Act
-        val result = clusterMarkers(markers, clusterThreshold = 0.03f)
+        val result = clusterMarkers(markers, videoDurationSeconds = defaultDuration, clusterThreshold = 0.03f)
 
         // Assert
         assertEquals(3, result.size)
         val sortedResult = result.sortedBy { it.centerFraction }
         assertEquals(0.0f, sortedResult[0].centerFraction, absoluteTolerance = 0.001f)
-        assertEquals(0.5f, sortedResult[1].centerFraction, absoluteTolerance = 0.001f)
-        assertEquals(1.0f, sortedResult[2].centerFraction, absoluteTolerance = 0.001f)
+        assertEquals(0.25f, sortedResult[1].centerFraction, absoluteTolerance = 0.001f)
+        assertEquals(0.5f, sortedResult[2].centerFraction, absoluteTolerance = 0.001f)
     }
 
     // ========================================

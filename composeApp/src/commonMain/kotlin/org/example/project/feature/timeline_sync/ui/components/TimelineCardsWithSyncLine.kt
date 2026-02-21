@@ -376,11 +376,11 @@ private fun TimelineCardWithScrollableBar(
 
                         // US-3: タイムスタンプマーカードットをバー上に重ねて表示
                         // マーカーはバー全体（contentWidthDp）にわたって描画される
-                        if (markers.isNotEmpty() && !barInfo.isUpcoming) {
+                        val videoDurationSeconds = channel.selectedStream?.duration?.inWholeSeconds
+                        if (markers.isNotEmpty() && !barInfo.isUpcoming && videoDurationSeconds != null && videoDurationSeconds > 0) {
                             TimestampMarkerDots(
                                 markers = markers,
-                                barStartFraction = barInfo.startFraction,
-                                barEndFraction = barInfo.endFraction,
+                                videoDurationSeconds = videoDurationSeconds,
                                 onMarkerClick = onMarkerClick,
                                 modifier = Modifier
                                     .padding(start = barOffsetDp)

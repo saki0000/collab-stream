@@ -27,11 +27,12 @@ import kotlin.time.Instant
  * アーカイブHome画面のContent層（Stateless）。
  *
  * WeekCalendar + アーカイブカードリストを表示する。
+ * US-4: カードタップで選択トグル。選択状態はSelectedArchiveIdsで管理。
  *
  * 4層構造: Container -> Screen -> Content -> Component
  *
- * Epic: Channel Follow & Archive Home (US-3)
- * Story: US-3 (Archive Home Display)
+ * Epic: Channel Follow & Archive Home (US-3, US-4)
+ * Story: US-3 (Archive Home Display), US-4 (Archive Selection)
  */
 @Composable
 fun ArchiveHomeContent(
@@ -42,6 +43,8 @@ fun ArchiveHomeContent(
     onNavigateToPreviousWeek: () -> Unit,
     onNavigateToNextWeek: () -> Unit,
     modifier: Modifier = Modifier,
+    selectedArchiveIds: Set<String> = emptySet(),
+    onToggleSelection: (String) -> Unit = {},
 ) {
     Column(
         modifier = modifier.fillMaxSize(),
@@ -67,9 +70,8 @@ fun ArchiveHomeContent(
             items(archives, key = { it.videoId }) { archive ->
                 ArchiveCard(
                     archive = archive,
-                    onClick = {
-                        // US-4: カードタップ時の選択トグル（今回は空実装）
-                    },
+                    isSelected = archive.videoId in selectedArchiveIds,
+                    onClick = { onToggleSelection(archive.videoId) },
                 )
             }
         }
@@ -80,43 +82,63 @@ fun ArchiveHomeContent(
 // Previews
 // ============================================
 
+private val previewArchives = listOf(
+    ArchiveItem(
+        videoId = "video1",
+        title = "配信タイトル1",
+        thumbnailUrl = "https://example.com/thumb1.jpg",
+        channelId = "ch1",
+        channelName = "チャンネル1",
+        channelIconUrl = "https://example.com/icon1.jpg",
+        serviceType = VideoServiceType.TWITCH,
+        publishedAt = Instant.parse("2024-01-15T10:00:00Z"),
+        durationSeconds = 7200f,
+    ),
+    ArchiveItem(
+        videoId = "video2",
+        title = "配信タイトル2",
+        thumbnailUrl = "https://example.com/thumb2.jpg",
+        channelId = "ch2",
+        channelName = "チャンネル2",
+        channelIconUrl = "https://example.com/icon2.jpg",
+        serviceType = VideoServiceType.YOUTUBE,
+        publishedAt = Instant.parse("2024-01-15T14:00:00Z"),
+        durationSeconds = 5400f,
+    ),
+)
+
 @Preview
 @Composable
 private fun ArchiveHomeContentPreview() {
     val today = LocalDate.parse("2024-01-15")
-    val mockArchives = listOf(
-        ArchiveItem(
-            videoId = "video1",
-            title = "配信タイトル1",
-            thumbnailUrl = "https://example.com/thumb1.jpg",
-            channelId = "ch1",
-            channelName = "チャンネル1",
-            channelIconUrl = "https://example.com/icon1.jpg",
-            serviceType = VideoServiceType.TWITCH,
-            publishedAt = Instant.parse("2024-01-15T10:00:00Z"),
-            durationSeconds = 7200f,
-        ),
-        ArchiveItem(
-            videoId = "video2",
-            title = "配信タイトル2",
-            thumbnailUrl = "https://example.com/thumb2.jpg",
-            channelId = "ch2",
-            channelName = "チャンネル2",
-            channelIconUrl = "https://example.com/icon2.jpg",
-            serviceType = VideoServiceType.YOUTUBE,
-            publishedAt = Instant.parse("2024-01-15T14:00:00Z"),
-            durationSeconds = 5400f,
-        ),
-    )
 
     AppTheme {
         ArchiveHomeContent(
-            archives = mockArchives,
+            archives = previewArchives,
             selectedDate = today,
             displayedWeekStart = today,
             onDateSelected = {},
             onNavigateToPreviousWeek = {},
             onNavigateToNextWeek = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun ArchiveHomeContentSelectedPreview() {
+    val today = LocalDate.parse("2024-01-15")
+
+    AppTheme {
+        ArchiveHomeContent(
+            archives = previewArchives,
+            selectedDate = today,
+            displayedWeekStart = today,
+            selectedArchiveIds = setOf("video1"),
+            onDateSelected = {},
+            onNavigateToPreviousWeek = {},
+            onNavigateToNextWeek = {},
+            onToggleSelection = {},
         )
     }
 }

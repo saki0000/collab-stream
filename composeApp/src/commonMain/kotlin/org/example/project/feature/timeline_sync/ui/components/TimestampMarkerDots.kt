@@ -39,25 +39,24 @@ private const val CLUSTER_THRESHOLD_FRACTION = 0.03f
  * タップ領域はドットより大きい 32dp を確保して操作性を向上させる。
  *
  * バー上の相対位置（0.0〜1.0）を使用してドット描画位置を計算する。
+ * fractionは動画duration基準で算出される。
  *
  * Epic: コメントタイムスタンプ同期
  * Story: US-3 (タイムスタンプマーカー表示)
  *
  * @param markers 表示するタイムスタンプマーカーのリスト
- * @param barStartFraction バーの開始位置（タイムレンジ全体に対する割合 0.0〜1.0）
- * @param barEndFraction バーの終了位置（タイムレンジ全体に対する割合 0.0〜1.0）
+ * @param videoDurationSeconds 動画の長さ（秒）
  * @param onMarkerClick マーカータップ時のコールバック（代表マーカーを引数に渡す）
  * @param modifier Modifier
  */
 @Composable
 fun TimestampMarkerDots(
     markers: List<TimestampMarker>,
-    barStartFraction: Float,
-    barEndFraction: Float,
+    videoDurationSeconds: Long,
     onMarkerClick: (TimestampMarker) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    if (markers.isEmpty()) return
+    if (markers.isEmpty() || videoDurationSeconds <= 0L) return
 
     val dotColor = MaterialTheme.colorScheme.tertiary
     val density = LocalDensity.current
@@ -65,26 +64,20 @@ fun TimestampMarkerDots(
     val markerDotRadiusPx = with(density) { MARKER_DOT_RADIUS_DP.toPx() }
     val tapRadiusPx = with(density) { MARKER_TAP_RADIUS_DP.toPx() }
 
-    val barDuration = barEndFraction - barStartFraction
-    if (barDuration <= 0f) return
-
     Box(modifier = modifier) {
         // クラスタリング済みマーカーリストをキャッシュ
-        val clusters = remember(markers, barStartFraction, barEndFraction) {
+        // fractionは動画duration基準（0.0 = 動画開始, 1.0 = 動画終了）
+        val clusters = remember(markers, videoDurationSeconds) {
             clusterMarkers(
                 markers = markers,
+                videoDurationSeconds = videoDurationSeconds,
                 clusterThreshold = CLUSTER_THRESHOLD_FRACTION,
             )
         }
 
-        // 描画用の位置（バー内の相対位置 0.0〜1.0）を計算してキャッシュ
-        // マーカーセット全体の最小・最大秒数を基準にした位置を、バー内位置に変換する
-        val clusterBarFractions = remember(clusters, barStartFraction, barEndFraction) {
-            clusters.map { cluster ->
-                val markerFraction = cluster.centerFraction
-                // バー外の場合はクリップ
-                ((markerFraction - barStartFraction) / barDuration).coerceIn(0f, 1f)
-            }
+        // 動画duration基準のfractionをそのままバー内位置として使用
+        val clusterBarFractions = remember(clusters) {
+            clusters.map { it.centerFraction }
         }
 
         Canvas(
@@ -127,7 +120,7 @@ fun TimestampMarkerDots(
  * マーカークラスターを表すデータクラス。
  *
  * @param markers このクラスターに属するマーカーリスト
- * @param centerFraction クラスターの中心位置（マーカーセット全体に対する0.0〜1.0）
+ * @param centerFraction クラスターの中心位置（動画duration基準 0.0〜1.0）
  * @param representativeMarker タップ時にプレビュー表示する代表マーカー（いいね数最大）
  */
 data class MarkerCluster(
@@ -137,32 +130,29 @@ data class MarkerCluster(
 )
 
 /**
- * タイムスタンプマーカーをバー幅に対してクラスタリングする。
+ * タイムスタンプマーカーを動画duration基準でクラスタリングする。
  *
  * 近接マーカー（しきい値 3% 以内）をグループ化し、
  * グループの中央位置に代表ドットを配置する。
  * 代表マーカーはいいね数の最も多いコメントを選択する。
  *
  * @param markers クラスタリング対象のマーカーリスト
+ * @param videoDurationSeconds 動画の長さ（秒）
  * @param clusterThreshold クラスタリングしきい値（0.0〜1.0）
  * @return クラスタリング済みマーカークラスターのリスト
  */
 fun clusterMarkers(
     markers: List<TimestampMarker>,
+    videoDurationSeconds: Long,
     clusterThreshold: Float = CLUSTER_THRESHOLD_FRACTION,
 ): List<MarkerCluster> {
-    if (markers.isEmpty()) return emptyList()
+    if (markers.isEmpty() || videoDurationSeconds <= 0L) return emptyList()
 
-    // マーカー全体の時間範囲を計算してバー内相対位置を計算
-    val minSeconds = markers.minOf { it.timestampSeconds }.toFloat()
-    val maxSeconds = markers.maxOf { it.timestampSeconds }.toFloat()
-    val range = (maxSeconds - minSeconds).takeIf { it > 0f } ?: 1f
-
-    // 各マーカーのバー内相対位置を計算
+    // 各マーカーの動画duration基準の相対位置を計算
     val markersWithFraction = markers
         .sortedBy { it.timestampSeconds }
         .map { marker ->
-            val fraction = (marker.timestampSeconds - minSeconds) / range
+            val fraction = marker.timestampSeconds.toFloat() / videoDurationSeconds
             marker to fraction
         }
 
@@ -277,8 +267,7 @@ private fun TimestampMarkerDotsPreview() {
         ) {
             TimestampMarkerDots(
                 markers = mockMarkers,
-                barStartFraction = 0.0f,
-                barEndFraction = 1.0f,
+                videoDurationSeconds = 7200L, // 2時間
                 onMarkerClick = {},
                 modifier = Modifier.fillMaxSize(),
             )
@@ -298,8 +287,7 @@ private fun TimestampMarkerDotsEmptyPreview() {
         ) {
             TimestampMarkerDots(
                 markers = emptyList(),
-                barStartFraction = 0.0f,
-                barEndFraction = 1.0f,
+                videoDurationSeconds = 7200L,
                 onMarkerClick = {},
                 modifier = Modifier.fillMaxSize(),
             )

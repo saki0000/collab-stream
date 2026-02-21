@@ -170,6 +170,21 @@ sealed interface TimelineSyncIntent {
      * @param channelId 再試行対象のチャンネルID
      */
     data class RetryLoadComments(val channelId: String) : TimelineSyncIntent
+
+    // ============================================
+    // アーカイブHome プリセット遷移（US-4）
+    // ============================================
+
+    /**
+     * アーカイブHome画面からプリセット付きでタイムラインを読み込む。
+     *
+     * presetChannelsJson: PresetChannelリストのJSON文字列
+     * presetDate: プリセット日付
+     */
+    data class LoadWithPresets(
+        val presetChannelsJson: String,
+        val presetDate: LocalDate,
+    ) : TimelineSyncIntent
 }
 
 /**

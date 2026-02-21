@@ -21,6 +21,8 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
+import kotlinx.serialization.json.Json
+import org.example.project.core.navigation.PresetChannel
 import org.example.project.domain.model.ChannelInfo
 import org.example.project.domain.model.FollowedChannel
 import org.example.project.domain.model.SelectedStreamInfo
@@ -96,6 +98,11 @@ class TimelineSyncViewModel(
             is TimelineSyncIntent.SelectMarker -> selectMarker(intent.channelId, intent.marker)
             TimelineSyncIntent.DismissMarkerPreview -> dismissMarkerPreview()
             is TimelineSyncIntent.RetryLoadComments -> retryLoadComments(intent.channelId)
+            // アーカイブHome プリセット遷移（US-4）
+            is TimelineSyncIntent.LoadWithPresets -> loadWithPresets(
+                presetChannelsJson = intent.presetChannelsJson,
+                presetDate = intent.presetDate,
+            )
         }
     }
 
@@ -467,8 +474,9 @@ class TimelineSyncViewModel(
             channelAddError = null,
         )
 
-        // US-3: YouTube チャンネルで selectedStream がある場合はコメントを自動取得
-        // ただし addChannel 時点では selectedStream は null なので、loadComments はストリーム選択時に呼ぶ
+        // US-3: addChannel 時点では selectedStream は null
+        // ストリーム選択フロー実装時に loadCommentsForChannel を呼び出すこと
+        // TODO: ストリーム選択時にYouTubeチャンネルのコメントを自動取得
     }
 
     /**
@@ -585,6 +593,59 @@ class TimelineSyncViewModel(
         // Timeline bar positions are calculated in UI layer based on
         // channel streams and selected date.
         // This method can be used for additional server-side filtering if needed.
+    }
+
+    // ============================================
+    // アーカイブHome プリセット遷移（US-4）
+    // ============================================
+
+    /**
+     * アーカイブHome画面からプリセット付きでタイムラインを読み込む。
+     *
+     * JSON文字列を List<PresetChannel> にデコードし、SyncChannel に変換してUiStateを更新する。
+     * 重複チャンネルは除去する。チャンネルのプリセットのみで、ストリーム選択はしない。
+     */
+    private fun loadWithPresets(presetChannelsJson: String, presetDate: LocalDate) {
+        _uiState.value = _uiState.value.copy(
+            isLoading = true,
+            errorMessage = null,
+        )
+
+        viewModelScope.launch {
+            try {
+                val presetChannels = Json.decodeFromString<List<PresetChannel>>(presetChannelsJson)
+
+                // PresetChannel -> SyncChannel に変換（重複チャンネルを除去）
+                val syncChannels = presetChannels
+                    .distinctBy { it.channelId }
+                    .map { presetChannel ->
+                        SyncChannel(
+                            channelId = presetChannel.channelId,
+                            channelName = presetChannel.channelName,
+                            channelIconUrl = presetChannel.channelIconUrl,
+                            serviceType = VideoServiceType.valueOf(presetChannel.serviceType),
+                            selectedStream = null,
+                            syncStatus = SyncStatus.NOT_SYNCED,
+                        )
+                    }
+
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    channels = syncChannels,
+                    selectedDate = presetDate,
+                    displayedWeekStart = presetDate.startOfWeek(),
+                    syncTime = null,
+                    errorMessage = null,
+                )
+            } catch (e: Exception) {
+                // JSONデコード失敗時はデフォルトのLoadScreenにフォールバック
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    errorMessage = null,
+                )
+                loadChannelsData()
+            }
+        }
     }
 
     // ============================================
