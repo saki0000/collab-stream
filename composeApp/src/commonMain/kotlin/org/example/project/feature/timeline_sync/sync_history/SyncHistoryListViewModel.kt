@@ -38,6 +38,7 @@ import org.example.project.domain.repository.SyncHistoryRepository
 class SyncHistoryListViewModel(
     private val syncHistoryRepository: SyncHistoryRepository,
     private val clock: kotlin.time.Clock = kotlin.time.Clock.System,
+    private val timeZone: TimeZone = TimeZone.currentSystemDefault(),
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SyncHistoryListUiState())
@@ -258,9 +259,9 @@ class SyncHistoryListViewModel(
             // 使用状況を更新（失敗してもナビゲーションをブロックしない）
             syncHistoryRepository.recordUsage(historyId)
 
-            // 今日の日付を取得（Container層と同じclock注入パターン）
+            // 今日の日付を取得
             val today = clock.now()
-                .toLocalDateTime(TimeZone.currentSystemDefault())
+                .toLocalDateTime(timeZone)
                 .date
             val presetDate = today.toString()
 

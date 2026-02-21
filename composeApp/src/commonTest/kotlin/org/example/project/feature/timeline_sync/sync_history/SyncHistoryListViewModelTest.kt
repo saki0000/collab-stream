@@ -22,6 +22,7 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import kotlinx.datetime.TimeZone
 import org.example.project.domain.model.SavedChannelInfo
 import org.example.project.domain.model.SyncChannel
 import org.example.project.domain.model.SyncHistory
@@ -410,7 +411,7 @@ class SyncHistoryListViewModelTest {
         // Arrange
         val repository = FakeSyncHistoryRepository(initialHistories = sampleHistories)
         val fixedClock = FixedClock(Instant.parse("2024-01-15T09:00:00Z"))
-        val viewModel = createViewModel(repository, clock = fixedClock)
+        val viewModel = createViewModel(repository, clock = fixedClock, timeZone = TimeZone.UTC)
         viewModel.handleIntent(SyncHistoryListIntent.LoadScreen)
         advanceUntilIdle()
 
@@ -471,10 +472,13 @@ class SyncHistoryListViewModelTest {
     fun `RestoreHistory_presetDateが今日の日付であること`() = runTest {
         // Arrange
         val repository = FakeSyncHistoryRepository(initialHistories = sampleHistories)
-        // UTC時刻: 2024-03-20T15:00:00Z → システムデフォルトタイムゾーンによって日付が変わるため
-        // テストでは固定時刻を使用し、UTC日付を期待値とする
-        val fixedClock = FixedClock(Instant.parse("2024-03-20T00:00:00Z"))
-        val viewModel = createViewModel(repository, clock = fixedClock)
+        // UTC 2024-03-20 15:00:00Z は JSTでは 2024-03-21 00:00:00
+        val fixedClock = FixedClock(Instant.parse("2024-03-20T15:00:00Z"))
+        val viewModel = createViewModel(
+            repository,
+            clock = fixedClock,
+            timeZone = TimeZone.of("Asia/Tokyo"),
+        )
 
         var receivedSideEffect: SyncHistoryListSideEffect? = null
         val job = launch {
@@ -488,9 +492,8 @@ class SyncHistoryListViewModelTest {
         // Assert
         val sideEffect = receivedSideEffect
         assertTrue(sideEffect is SyncHistoryListSideEffect.NavigateToTimeline)
-        // 日付文字列が ISO形式（YYYY-MM-DD）であること
-        val datePattern = Regex("\\d{4}-\\d{2}-\\d{2}")
-        assertTrue(datePattern.matches(sideEffect.presetDate))
+        // JSTでの日付が正しく計算されていることを確認
+        assertEquals("2024-03-21", sideEffect.presetDate)
         job.cancel()
     }
 
@@ -557,9 +560,11 @@ class SyncHistoryListViewModelTest {
     private fun createViewModel(
         repository: SyncHistoryRepository = FakeSyncHistoryRepository(),
         clock: kotlin.time.Clock = kotlin.time.Clock.System,
+        timeZone: TimeZone = TimeZone.UTC,
     ): SyncHistoryListViewModel = SyncHistoryListViewModel(
         syncHistoryRepository = repository,
         clock = clock,
+        timeZone = timeZone,
     )
 }
 
