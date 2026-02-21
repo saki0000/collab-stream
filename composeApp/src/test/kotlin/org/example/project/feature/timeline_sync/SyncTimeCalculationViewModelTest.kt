@@ -67,7 +67,13 @@ class SyncTimeCalculationViewModelTest {
         channelSearchUseCase = ChannelSearchUseCase(mockVideoSearchRepository)
         mockChannelFollowRepository = FakeChannelFollowRepository()
         mockSyncHistoryRepository = FakeSyncHistoryRepository()
-        viewModel = TimelineSyncViewModel(mockRepository, channelSearchUseCase, mockChannelFollowRepository, mockSyncHistoryRepository)
+        viewModel = TimelineSyncViewModel(
+            mockRepository,
+            channelSearchUseCase,
+            mockChannelFollowRepository,
+            FakeCommentRepository(),
+            mockSyncHistoryRepository,
+        )
     }
 
     @AfterTest

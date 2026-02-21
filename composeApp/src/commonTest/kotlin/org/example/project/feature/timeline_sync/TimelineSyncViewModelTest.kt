@@ -4,9 +4,13 @@ package org.example.project.feature.timeline_sync
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.time.ExperimentalTime
 import org.example.project.domain.model.ChannelInfo
+import org.example.project.domain.model.CommentTimestampResult
+import org.example.project.domain.model.TimestampMarker
+import org.example.project.domain.model.VideoComment
 import org.example.project.domain.model.VideoServiceType
 
 /**
@@ -450,6 +454,247 @@ class TimelineSyncViewModelTest {
 
         // Assert
         assertEquals(VideoServiceType.TWITCH, defaultChannel.serviceType)
+    }
+
+    // ========================================
+    // US-3: コメントタイムスタンプマーカー - UiState操作
+    // ========================================
+
+    @Test
+    fun `channelComments_初期状態では空マップであること`() {
+        // Arrange
+        val state = TimelineSyncUiState()
+
+        // Assert
+        assertTrue(state.channelComments.isEmpty())
+    }
+
+    @Test
+    fun `selectedMarkerPreview_初期状態ではnullであること`() {
+        // Arrange
+        val state = TimelineSyncUiState()
+
+        // Assert
+        assertNull(state.selectedMarkerPreview)
+    }
+
+    @Test
+    fun `ChannelCommentState_LOADING状態では markers が空であること`() {
+        // Arrange
+        val commentState = ChannelCommentState(
+            videoId = "video_001",
+            status = CommentLoadStatus.LOADING,
+        )
+
+        // Assert
+        assertEquals(CommentLoadStatus.LOADING, commentState.status)
+        assertTrue(commentState.markers.isEmpty())
+        assertNull(commentState.errorMessage)
+    }
+
+    @Test
+    fun `ChannelCommentState_LOADED状態では markers にデータが入ること`() {
+        // Arrange
+        val mockMarker = TimestampMarker(
+            timestampSeconds = 600L,
+            displayTimestamp = "10:00",
+            comment = VideoComment(
+                commentId = "c1",
+                authorDisplayName = "ユーザーA",
+                authorProfileImageUrl = "",
+                textContent = "10:00 ここが面白い",
+                likeCount = 100,
+                publishedAt = "2024-01-01T10:00:00Z",
+            ),
+        )
+
+        val commentState = ChannelCommentState(
+            videoId = "video_001",
+            status = CommentLoadStatus.LOADED,
+            markers = listOf(mockMarker),
+        )
+
+        // Assert
+        assertEquals(CommentLoadStatus.LOADED, commentState.status)
+        assertEquals(1, commentState.markers.size)
+        assertEquals(600L, commentState.markers.first().timestampSeconds)
+    }
+
+    @Test
+    fun `ChannelCommentState_DISABLED状態ではエラーメッセージが設定されること`() {
+        // Arrange
+        val commentState = ChannelCommentState(
+            videoId = "video_001",
+            status = CommentLoadStatus.DISABLED,
+            errorMessage = "この動画ではコメントが無効です",
+        )
+
+        // Assert
+        assertEquals(CommentLoadStatus.DISABLED, commentState.status)
+        assertEquals("この動画ではコメントが無効です", commentState.errorMessage)
+        assertTrue(commentState.markers.isEmpty())
+    }
+
+    @Test
+    fun `ChannelCommentState_ERROR状態ではエラーメッセージが設定されること`() {
+        // Arrange
+        val commentState = ChannelCommentState(
+            videoId = "video_001",
+            status = CommentLoadStatus.ERROR,
+            errorMessage = "コメントの読み込みに失敗しました",
+        )
+
+        // Assert
+        assertEquals(CommentLoadStatus.ERROR, commentState.status)
+        assertEquals("コメントの読み込みに失敗しました", commentState.errorMessage)
+    }
+
+    @Test
+    fun `channelComments_マップへの追加が正しく動作すること`() {
+        // Arrange
+        val initialState = TimelineSyncUiState()
+        val commentState = ChannelCommentState(
+            videoId = "video_001",
+            status = CommentLoadStatus.LOADED,
+            markers = emptyList(),
+        )
+
+        // Act
+        val updatedState = initialState.copy(
+            channelComments = initialState.channelComments + ("channel_01" to commentState),
+        )
+
+        // Assert
+        assertEquals(1, updatedState.channelComments.size)
+        assertEquals(commentState, updatedState.channelComments["channel_01"])
+    }
+
+    @Test
+    fun `selectedMarkerPreview_マーカー選択でプレビューが設定されること`() {
+        // Arrange
+        val mockMarker = TimestampMarker(
+            timestampSeconds = 1800L,
+            displayTimestamp = "30:00",
+            comment = VideoComment(
+                commentId = "c1",
+                authorDisplayName = "ユーザーA",
+                authorProfileImageUrl = "",
+                textContent = "30:00 最高",
+                likeCount = 500,
+                publishedAt = "2024-01-01T10:00:00Z",
+            ),
+        )
+        val initialState = TimelineSyncUiState()
+
+        // Act: マーカーを選択
+        val updatedState = initialState.copy(
+            selectedMarkerPreview = TimestampMarkerPreview(
+                channelId = "channel_01",
+                marker = mockMarker,
+            ),
+        )
+
+        // Assert
+        val preview = updatedState.selectedMarkerPreview
+        assertTrue(preview != null)
+        assertEquals("channel_01", preview.channelId)
+        assertEquals(1800L, preview.marker.timestampSeconds)
+    }
+
+    @Test
+    fun `selectedMarkerPreview_プレビューを閉じるとnullになること`() {
+        // Arrange
+        val mockMarker = TimestampMarker(
+            timestampSeconds = 1800L,
+            displayTimestamp = "30:00",
+            comment = VideoComment(
+                commentId = "c1",
+                authorDisplayName = "ユーザーA",
+                authorProfileImageUrl = "",
+                textContent = "30:00 最高",
+                likeCount = 500,
+                publishedAt = "2024-01-01T10:00:00Z",
+            ),
+        )
+        val stateWithPreview = TimelineSyncUiState(
+            selectedMarkerPreview = TimestampMarkerPreview(
+                channelId = "channel_01",
+                marker = mockMarker,
+            ),
+        )
+
+        // Act: プレビューを閉じる
+        val updatedState = stateWithPreview.copy(selectedMarkerPreview = null)
+
+        // Assert
+        assertNull(updatedState.selectedMarkerPreview)
+    }
+
+    // ========================================
+    // US-3: CommentTimestampResult - commentsDisabled ハンドリング
+    // ========================================
+
+    @Test
+    fun `CommentTimestampResult_commentsDisabledがtrueの場合DISABLED状態になること`() {
+        // Arrange
+        val result = CommentTimestampResult(
+            videoId = "video_001",
+            comments = emptyList(),
+            timestampMarkers = emptyList(),
+            nextPageToken = null,
+            commentsDisabled = true,
+        )
+
+        // Assert
+        assertTrue(result.commentsDisabled)
+        assertTrue(result.timestampMarkers.isEmpty())
+    }
+
+    @Test
+    fun `CommentTimestampResult_commentsDisabledがfalseで markers が0件の場合タイムスタンプなし状態`() {
+        // Arrange
+        val result = CommentTimestampResult(
+            videoId = "video_001",
+            comments = emptyList(),
+            timestampMarkers = emptyList(),
+            nextPageToken = null,
+            commentsDisabled = false,
+        )
+
+        // Assert
+        assertTrue(!result.commentsDisabled)
+        assertTrue(result.timestampMarkers.isEmpty())
+    }
+
+    @Test
+    fun `CommentTimestampResult_タイムスタンプありの場合markers にデータが入ること`() {
+        // Arrange
+        val mockComment = VideoComment(
+            commentId = "c1",
+            authorDisplayName = "ユーザーA",
+            authorProfileImageUrl = "",
+            textContent = "10:00 ここが面白い",
+            likeCount = 100,
+            publishedAt = "2024-01-01T10:00:00Z",
+        )
+        val mockMarker = TimestampMarker(
+            timestampSeconds = 600L,
+            displayTimestamp = "10:00",
+            comment = mockComment,
+        )
+
+        val result = CommentTimestampResult(
+            videoId = "video_001",
+            comments = listOf(mockComment),
+            timestampMarkers = listOf(mockMarker),
+            nextPageToken = null,
+            commentsDisabled = false,
+        )
+
+        // Assert
+        assertEquals(1, result.timestampMarkers.size)
+        assertEquals(600L, result.timestampMarkers.first().timestampSeconds)
+        assertEquals("10:00", result.timestampMarkers.first().displayTimestamp)
     }
 
     // ========================================

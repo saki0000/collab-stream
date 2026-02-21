@@ -49,6 +49,7 @@ val appModule = module {
             timelineSyncRepository = get(),
             channelSearchUseCase = get(),
             channelFollowRepository = get(),
+            commentRepository = get(),
             syncHistoryRepository = get(),
         )
     }

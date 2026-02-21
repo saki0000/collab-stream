@@ -51,6 +51,7 @@ import org.example.project.core.theme.Spacing
 import org.example.project.domain.model.SelectedStreamInfo
 import org.example.project.domain.model.SyncChannel
 import org.example.project.domain.model.SyncStatus
+import org.example.project.domain.model.TimestampMarker
 import org.example.project.domain.model.VideoServiceType
 import org.example.project.feature.timeline_sync.TimelineBarInfo
 import org.jetbrains.compose.ui.tooling.preview.Preview
@@ -63,13 +64,15 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
  * The visible window shows ±30 minutes around the sync time.
  *
  * Epic: Timeline Sync (EPIC-002)
- * Story: US-3 (Sync Time Selection)
+ * Story: US-3 (Sync Time Selection), Story: US-3 (タイムスタンプマーカー表示)
  *
  * @param channels List of channels with selected streams
  * @param barInfoMap Map of channelId to TimelineBarInfo
  * @param syncTime Current sync time
  * @param syncTimeRange Total time range (union of all streams)
  * @param onSyncTimeChange Callback when sync time changes during scroll
+ * @param channelMarkersMap チャンネルIDをキーとするマーカーリストのマップ
+ * @param onMarkerClick マーカータップ時のコールバック
  * @param modifier Modifier for the layout
  */
 @Composable
@@ -80,6 +83,8 @@ fun TimelineCardsWithSyncLine(
     syncTimeRange: Pair<Instant, Instant>?,
     onSyncTimeChange: (Instant) -> Unit,
     onOpenClick: (channelId: String) -> Unit = {},
+    channelMarkersMap: Map<String, List<TimestampMarker>> = emptyMap(),
+    onMarkerClick: (channelId: String, marker: TimestampMarker) -> Unit = { _, _ -> },
     modifier: Modifier = Modifier,
 ) {
     if (syncTimeRange == null) return
@@ -160,6 +165,8 @@ fun TimelineCardsWithSyncLine(
                         scrollState = scrollState,
                         contentWidthPx = contentWidth,
                         onOpenClick = { onOpenClick(channel.channelId) },
+                        markers = channelMarkersMap[channel.channelId] ?: emptyList(),
+                        onMarkerClick = { marker -> onMarkerClick(channel.channelId, marker) },
                     )
                 }
             }
@@ -210,6 +217,15 @@ fun TimelineCardsWithSyncLine(
 
 /**
  * Individual timeline card with fixed header and scrollable timeline bar.
+ *
+ * @param channel チャンネル情報
+ * @param barInfo タイムラインバー情報
+ * @param scrollState スクロール状態（全カードで共有）
+ * @param contentWidthPx コンテンツ幅（px）
+ * @param onOpenClick 外部アプリを開くボタンのコールバック
+ * @param markers このチャンネルのタイムスタンプマーカーリスト
+ * @param onMarkerClick マーカータップ時のコールバック
+ * @param modifier Modifier
  */
 @Composable
 private fun TimelineCardWithScrollableBar(
@@ -218,6 +234,8 @@ private fun TimelineCardWithScrollableBar(
     scrollState: androidx.compose.foundation.ScrollState,
     contentWidthPx: Float,
     onOpenClick: () -> Unit = {},
+    markers: List<TimestampMarker> = emptyList(),
+    onMarkerClick: (TimestampMarker) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val density = LocalDensity.current
@@ -355,6 +373,21 @@ private fun TimelineCardWithScrollableBar(
                                     },
                                 ),
                         )
+
+                        // US-3: タイムスタンプマーカードットをバー上に重ねて表示
+                        // マーカーはバー全体（contentWidthDp）にわたって描画される
+                        val videoDurationSeconds = channel.selectedStream?.duration?.inWholeSeconds
+                        if (markers.isNotEmpty() && !barInfo.isUpcoming && videoDurationSeconds != null && videoDurationSeconds > 0) {
+                            TimestampMarkerDots(
+                                markers = markers,
+                                videoDurationSeconds = videoDurationSeconds,
+                                onMarkerClick = onMarkerClick,
+                                modifier = Modifier
+                                    .padding(start = barOffsetDp)
+                                    .width(barWidthDp)
+                                    .height(Dimensions.iconLg),
+                            )
+                        }
                     }
                 }
 

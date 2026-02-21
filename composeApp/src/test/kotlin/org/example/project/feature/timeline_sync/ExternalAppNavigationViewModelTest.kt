@@ -53,7 +53,13 @@ class ExternalAppNavigationViewModelTest {
         mockChannelFollowRepository = FakeChannelFollowRepository()
         mockSyncHistoryRepository = FakeSyncHistoryRepository()
         val channelSearchUseCase = org.example.project.domain.usecase.ChannelSearchUseCase(mockVideoSearchRepository)
-        viewModel = TimelineSyncViewModel(mockRepository, channelSearchUseCase, mockChannelFollowRepository, mockSyncHistoryRepository)
+        viewModel = TimelineSyncViewModel(
+            mockRepository,
+            channelSearchUseCase,
+            mockChannelFollowRepository,
+            FakeCommentRepository(),
+            mockSyncHistoryRepository,
+        )
     }
 
     @AfterTest

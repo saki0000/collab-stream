@@ -3,6 +3,7 @@
 package org.example.project.feature.timeline_sync.ui
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -32,10 +33,12 @@ import kotlinx.datetime.toLocalDateTime
 import org.example.project.core.theme.Dimensions
 import org.example.project.core.theme.Spacing
 import org.example.project.domain.model.SyncChannel
+import org.example.project.feature.timeline_sync.CommentLoadStatus
 import org.example.project.feature.timeline_sync.TimelineBarInfo
 import org.example.project.feature.timeline_sync.TimelineSyncIntent
 import org.example.project.feature.timeline_sync.TimelineSyncUiState
 import org.example.project.feature.timeline_sync.ui.components.ChannelAvatarRow
+import org.example.project.feature.timeline_sync.ui.components.MarkerPreviewPopup
 import org.example.project.feature.timeline_sync.ui.components.SyncTimeDisplay
 import org.example.project.feature.timeline_sync.ui.components.TimelineCardsWithSyncLine
 import org.example.project.feature.timeline_sync.ui.components.WeekCalendar
@@ -111,21 +114,45 @@ fun TimelineContent(
             modifier = Modifier.align(Alignment.CenterHorizontally),
         )
 
+        // US-3: チャンネルごとのマーカーリストを remember でキャッシュ
+        val channelMarkersMap = remember(uiState.channelComments) {
+            uiState.channelComments
+                .filter { (_, state) -> state.status == CommentLoadStatus.LOADED }
+                .mapValues { (_, state) -> state.markers }
+        }
+
         // Timeline Cards with Sync Line (horizontal scrolling)
         if (channelsWithStreams.isNotEmpty()) {
-            TimelineCardsWithSyncLine(
-                channels = channelsWithStreams,
-                barInfoMap = barInfoMap,
-                syncTime = uiState.syncTime,
-                syncTimeRange = uiState.syncTimeRange,
-                onSyncTimeChange = { newTime ->
-                    onIntent(TimelineSyncIntent.UpdateSyncTime(newTime))
-                },
-                onOpenClick = { channelId ->
-                    onIntent(TimelineSyncIntent.OpenExternalApp(channelId))
-                },
-                modifier = Modifier.fillMaxWidth(),
-            )
+            Box {
+                TimelineCardsWithSyncLine(
+                    channels = channelsWithStreams,
+                    barInfoMap = barInfoMap,
+                    syncTime = uiState.syncTime,
+                    syncTimeRange = uiState.syncTimeRange,
+                    onSyncTimeChange = { newTime ->
+                        onIntent(TimelineSyncIntent.UpdateSyncTime(newTime))
+                    },
+                    onOpenClick = { channelId ->
+                        onIntent(TimelineSyncIntent.OpenExternalApp(channelId))
+                    },
+                    channelMarkersMap = channelMarkersMap,
+                    onMarkerClick = { channelId, marker ->
+                        onIntent(TimelineSyncIntent.SelectMarker(channelId, marker))
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                )
+
+                // US-3: マーカープレビュー Popup
+                val preview = uiState.selectedMarkerPreview
+                if (preview != null) {
+                    MarkerPreviewPopup(
+                        marker = preview.marker,
+                        onDismiss = {
+                            onIntent(TimelineSyncIntent.DismissMarkerPreview)
+                        },
+                    )
+                }
+            }
         }
 
         // Bottom spacer for better scrolling
