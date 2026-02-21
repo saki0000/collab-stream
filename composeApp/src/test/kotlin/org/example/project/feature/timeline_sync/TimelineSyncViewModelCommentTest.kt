@@ -51,6 +51,7 @@ class TimelineSyncViewModelCommentTest {
             channelSearchUseCase = ChannelSearchUseCase(FakeVideoSearchRepository()),
             channelFollowRepository = fakeChannelFollowRepository,
             commentRepository = fakeCommentRepository,
+            syncHistoryRepository = FakeSyncHistoryRepository(),
         )
     }
 
