@@ -28,4 +28,22 @@ sealed interface SyncHistoryListSideEffect {
      * 「名前の変更に失敗しました」メッセージを自動消去で表示する。
      */
     data object ShowRenameError : SyncHistoryListSideEffect
+
+    /**
+     * 復元成功時のTimeline画面への遷移。
+     * 履歴のチャンネル情報をPresetChannelのJSON形式で渡す。
+     *
+     * @param presetChannelsJson PresetChannelリストのJSON文字列
+     * @param presetDate 選択日（今日の日付のISO文字列）
+     */
+    data class NavigateToTimeline(
+        val presetChannelsJson: String,
+        val presetDate: String,
+    ) : SyncHistoryListSideEffect
+
+    /**
+     * 復元失敗時のSnackbar表示。
+     * 「復元に失敗しました」メッセージを自動消去で表示する。
+     */
+    data object ShowRestoreError : SyncHistoryListSideEffect
 }

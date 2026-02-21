@@ -26,14 +26,18 @@ import org.koin.compose.viewmodel.koinViewModel
  * 4層構造: Container -> Screen -> Content -> Component
  *
  * Epic: 同期チャンネル履歴保存 (EPIC-003)
- * Story: US-3 (履歴一覧表示)
+ * Story: US-3 (履歴一覧表示), US-4 (履歴からの復元)
  *
  * @param onNavigateBack 戻るボタンのコールバック（NavGraphから提供）
+ * @param onNavigateToTimeline TimelineSync画面へのナビゲーションコールバック（NavGraphから提供）
+ *   @param presetChannelsJson PresetChannelリストのJSON文字列
+ *   @param presetDate 今日の日付のISO文字列
  */
 @OptIn(ExperimentalTime::class)
 @Composable
 fun SyncHistoryListContainer(
     onNavigateBack: () -> Unit,
+    onNavigateToTimeline: (presetChannelsJson: String, presetDate: String) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: SyncHistoryListViewModel = koinViewModel(),
 ) {
@@ -68,6 +72,20 @@ fun SyncHistoryListContainer(
                 SyncHistoryListSideEffect.ShowRenameError -> {
                     snackbarHostState.showSnackbar(
                         message = "名前の変更に失敗しました",
+                        duration = SnackbarDuration.Short,
+                    )
+                }
+
+                is SyncHistoryListSideEffect.NavigateToTimeline -> {
+                    onNavigateToTimeline(
+                        sideEffect.presetChannelsJson,
+                        sideEffect.presetDate,
+                    )
+                }
+
+                SyncHistoryListSideEffect.ShowRestoreError -> {
+                    snackbarHostState.showSnackbar(
+                        message = "復元に失敗しました",
                         duration = SnackbarDuration.Short,
                     )
                 }

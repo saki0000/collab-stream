@@ -167,3 +167,54 @@ stateDiagram-v2
 
     空表示 --> コンテンツ表示: 外部で履歴が追加された場合
 ```
+
+---
+---
+
+# US-4: 履歴からの再同期機能
+
+---
+
+## 1. ユーザーストーリー
+
+### 履歴からの復元
+- 履歴一覧画面で履歴カードをタップすると、TimelineSync画面にチャンネルが復元される
+- 復元されたチャンネルは初期状態（ストリーム未選択、同期ステータス NOT_SYNCED）で追加される
+- TimelineSyncの選択日は今日の日付に設定される
+
+### 使用状況の自動更新
+- 復元実行時に使用回数（usageCount）が +1 インクリメントされる
+- 復元実行時に最終使用日時（lastUsedAt）が現在時刻に更新される
+- 更新は履歴一覧の Flow で自動反映される（戻った際に反映済み）
+
+### エラー処理
+- 復元に失敗した場合、Snackbar で「復元に失敗しました」と表示される
+- 使用状況の更新失敗はナビゲーションをブロックしない（更新失敗してもTimelineSyncへ遷移する）
+
+---
+
+## 2. ビジネスルール
+
+| ドメイン | ルール | 条件/値 | 備考 |
+|----------|--------|---------|------|
+| 復元 | タップ対象 | 履歴カード全体（3点メニュー以外） | カードの onClick |
+| 復元 | チャンネル変換 | SavedChannelInfo → PresetChannel | 既存のプリセット遷移パターンを再利用 |
+| 復元 | ナビゲーション先 | TimelineSyncRoute | presetChannelsJson + presetDate |
+| 復元 | 選択日 | 今日の日付 | TimelineSyncのselectedDateに設定 |
+| 使用状況更新 | タイミング | ナビゲーション発行前 | recordUsage 呼び出し |
+| 使用状況更新 | usageCount | +1 | SyncHistoryRepository.recordUsage |
+| 使用状況更新 | lastUsedAt | 現在時刻 | SyncHistoryRepository.recordUsage |
+| エラー | 復元失敗 | Snackbar「復元に失敗しました」 | 自動消去 |
+
+---
+
+## 3. 状態遷移
+
+```mermaid
+stateDiagram-v2
+    [*] --> 一覧表示
+
+    一覧表示 --> 復元中: 履歴カードタップ
+    復元中 --> [*]: 使用状況更新完了 → TimelineSync画面へ遷移
+    復元中 --> 一覧表示: 履歴取得失敗（Snackbar表示）
+```

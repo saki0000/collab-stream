@@ -49,15 +49,16 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
  * 同期履歴のカードコンポーネント（Component層）。
  *
  * 履歴の表示名、チャンネルアイコン（最大3つ）、最終使用日時（相対表示）、
- * 使用回数を表示する。右端のメニューアイコンから削除・名前変更が可能。
+ * 使用回数を表示する。カードタップで復元、右端のメニューアイコンから削除・名前変更が可能。
  *
  * 4層構造: Container -> Screen -> Content -> Component
  *
  * Epic: 同期チャンネル履歴保存 (EPIC-003)
- * Story: US-3 (履歴一覧表示)
+ * Story: US-3 (履歴一覧表示), US-4 (履歴からの復元)
  *
  * @param history 表示する履歴データ
  * @param relativeTimeText 最終使用日時の相対表示テキスト（"3日前" 等）
+ * @param onClick カードタップ時のコールバック（メニュー領域を除く）。復元ナビゲーションに使用。
  * @param onDeleteClick 削除メニュー選択時のコールバック
  * @param onRenameClick 名前変更メニュー選択時のコールバック
  */
@@ -66,6 +67,7 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 fun SyncHistoryCard(
     history: SyncHistory,
     relativeTimeText: String,
+    onClick: () -> Unit,
     onDeleteClick: () -> Unit,
     onRenameClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -73,6 +75,7 @@ fun SyncHistoryCard(
     var isMenuExpanded by remember { mutableStateOf(false) }
 
     Card(
+        onClick = onClick,
         modifier = modifier
             .fillMaxWidth()
             .semantics(mergeDescendants = true) {},
@@ -259,6 +262,7 @@ private fun SyncHistoryCardPreview() {
         SyncHistoryCard(
             history = history,
             relativeTimeText = "3日前",
+            onClick = {},
             onDeleteClick = {},
             onRenameClick = {},
         )
@@ -285,6 +289,7 @@ private fun SyncHistoryCardManyChannelsPreview() {
         SyncHistoryCard(
             history = history,
             relativeTimeText = "1週間前",
+            onClick = {},
             onDeleteClick = {},
             onRenameClick = {},
         )

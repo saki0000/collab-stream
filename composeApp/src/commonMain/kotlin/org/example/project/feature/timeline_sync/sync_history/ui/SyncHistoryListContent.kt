@@ -32,7 +32,7 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
  * 4層構造: Container -> Screen -> Content -> Component
  *
  * Epic: 同期チャンネル履歴保存 (EPIC-003)
- * Story: US-3 (履歴一覧表示)
+ * Story: US-3 (履歴一覧表示), US-4 (履歴からの復元)
  *
  * @param histories 表示する履歴リスト
  * @param now 現在時刻（Container層から渡す。Clock使用禁止）
@@ -65,6 +65,9 @@ fun SyncHistoryListContent(
             SyncHistoryCard(
                 history = history,
                 relativeTimeText = relativeText,
+                onClick = {
+                    onIntent(SyncHistoryListIntent.RestoreHistory(history.id))
+                },
                 onDeleteClick = {
                     onIntent(SyncHistoryListIntent.ShowDeleteDialog(history.id))
                 },

@@ -402,6 +402,99 @@ class SyncHistoryListViewModelTest {
     }
 
     // ========================================
+    // 復元機能
+    // ========================================
+
+    @Test
+    fun `RestoreHistory_成功時にNavigateToTimelineSideEffectが発行されること`() = runTest {
+        // Arrange
+        val repository = FakeSyncHistoryRepository(initialHistories = sampleHistories)
+        val fixedClock = FixedClock(Instant.parse("2024-01-15T09:00:00Z"))
+        val viewModel = createViewModel(repository, clock = fixedClock)
+        viewModel.handleIntent(SyncHistoryListIntent.LoadScreen)
+        advanceUntilIdle()
+
+        var receivedSideEffect: SyncHistoryListSideEffect? = null
+        val job = launch {
+            viewModel.sideEffect.collect { receivedSideEffect = it }
+        }
+
+        // Act
+        viewModel.handleIntent(SyncHistoryListIntent.RestoreHistory("hist-1"))
+        advanceUntilIdle()
+
+        // Assert
+        val sideEffect = receivedSideEffect
+        assertTrue(sideEffect is SyncHistoryListSideEffect.NavigateToTimeline)
+        assertEquals("2024-01-15", sideEffect.presetDate)
+        // presetChannelsJson に hist-1 のチャンネル情報が含まれること
+        assertTrue(sideEffect.presetChannelsJson.contains("ch1"))
+        assertTrue(sideEffect.presetChannelsJson.contains("TWITCH"))
+        job.cancel()
+    }
+
+    @Test
+    fun `RestoreHistory_存在しない履歴IDの場合ShowRestoreErrorが発行されること`() = runTest {
+        // Arrange
+        val repository = FakeSyncHistoryRepository(initialHistories = sampleHistories)
+        val viewModel = createViewModel(repository)
+
+        var receivedSideEffect: SyncHistoryListSideEffect? = null
+        val job = launch {
+            viewModel.sideEffect.collect { receivedSideEffect = it }
+        }
+
+        // Act
+        viewModel.handleIntent(SyncHistoryListIntent.RestoreHistory("non-existent-id"))
+        advanceUntilIdle()
+
+        // Assert
+        assertEquals(SyncHistoryListSideEffect.ShowRestoreError, receivedSideEffect)
+        job.cancel()
+    }
+
+    @Test
+    fun `RestoreHistory_成功時にrecordUsageが呼ばれること`() = runTest {
+        // Arrange
+        val repository = FakeSyncHistoryRepository(initialHistories = sampleHistories)
+        val viewModel = createViewModel(repository)
+
+        // Act
+        viewModel.handleIntent(SyncHistoryListIntent.RestoreHistory("hist-1"))
+        advanceUntilIdle()
+
+        // Assert
+        assertEquals("hist-1", repository.lastRecordedUsageId)
+    }
+
+    @Test
+    fun `RestoreHistory_presetDateが今日の日付であること`() = runTest {
+        // Arrange
+        val repository = FakeSyncHistoryRepository(initialHistories = sampleHistories)
+        // UTC時刻: 2024-03-20T15:00:00Z → システムデフォルトタイムゾーンによって日付が変わるため
+        // テストでは固定時刻を使用し、UTC日付を期待値とする
+        val fixedClock = FixedClock(Instant.parse("2024-03-20T00:00:00Z"))
+        val viewModel = createViewModel(repository, clock = fixedClock)
+
+        var receivedSideEffect: SyncHistoryListSideEffect? = null
+        val job = launch {
+            viewModel.sideEffect.collect { receivedSideEffect = it }
+        }
+
+        // Act
+        viewModel.handleIntent(SyncHistoryListIntent.RestoreHistory("hist-1"))
+        advanceUntilIdle()
+
+        // Assert
+        val sideEffect = receivedSideEffect
+        assertTrue(sideEffect is SyncHistoryListSideEffect.NavigateToTimeline)
+        // 日付文字列が ISO形式（YYYY-MM-DD）であること
+        val datePattern = Regex("\\d{4}-\\d{2}-\\d{2}")
+        assertTrue(datePattern.matches(sideEffect.presetDate))
+        job.cancel()
+    }
+
+    // ========================================
     // 空状態の判定
     // ========================================
 
@@ -463,8 +556,10 @@ class SyncHistoryListViewModelTest {
 
     private fun createViewModel(
         repository: SyncHistoryRepository = FakeSyncHistoryRepository(),
+        clock: kotlin.time.Clock = kotlin.time.Clock.System,
     ): SyncHistoryListViewModel = SyncHistoryListViewModel(
         syncHistoryRepository = repository,
+        clock = clock,
     )
 }
 
@@ -479,6 +574,10 @@ private class FakeSyncHistoryRepository(
 ) : SyncHistoryRepository {
 
     private val historiesFlow = MutableStateFlow(initialHistories)
+
+    /** recordUsage が呼ばれた最後の履歴ID。テスト検証用。 */
+    var lastRecordedUsageId: String? = null
+        private set
 
     override fun observeHistories(sortBy: HistorySortOrder): Flow<List<SyncHistory>> = historiesFlow
 
@@ -500,7 +599,10 @@ private class FakeSyncHistoryRepository(
         return Result.success(Unit)
     }
 
-    override suspend fun recordUsage(historyId: String): Result<Unit> = Result.success(Unit)
+    override suspend fun recordUsage(historyId: String): Result<Unit> {
+        lastRecordedUsageId = historyId
+        return Result.success(Unit)
+    }
 
     override suspend fun updateHistoryName(
         historyId: String,
@@ -512,4 +614,13 @@ private class FakeSyncHistoryRepository(
         }
         return Result.success(Unit)
     }
+}
+
+/**
+ * テスト用の固定時刻Clock。
+ * 決定論的なテスト実行のために使用する。
+ */
+@OptIn(ExperimentalTime::class)
+private class FixedClock(private val fixedTime: Instant) : kotlin.time.Clock {
+    override fun now(): Instant = fixedTime
 }
