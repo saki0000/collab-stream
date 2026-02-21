@@ -10,6 +10,7 @@ import io.ktor.server.netty.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.serialization.json.Json
+import org.example.project.auth.TwitchAuthProvider
 import org.example.project.config.ApiKeyConfig
 import org.example.project.plugins.configureCors
 import org.example.project.plugins.configureSerialization
@@ -51,9 +52,10 @@ fun Application.module() {
     }
 
     // サービス初期化
-    val videoService = VideoServiceImpl(httpClient)
+    val twitchAuth = TwitchAuthProvider(httpClient)
+    val videoService = VideoServiceImpl(httpClient, twitchAuth)
     val commentService = CommentServiceImpl(httpClient)
-    val searchService = SearchServiceImpl(httpClient)
+    val searchService = SearchServiceImpl(httpClient, twitchAuth)
 
     // ルーティング設定
     routing {
