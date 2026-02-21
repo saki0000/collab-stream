@@ -3,6 +3,7 @@
 package org.example.project.service
 
 import io.ktor.client.*
+import io.ktor.util.logging.*
 import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
@@ -32,6 +33,8 @@ import org.example.project.plugins.ServiceUnavailableException
  *
  * Ktor HttpClient を使用して外部APIを呼び出し、検索結果を取得する。
  */
+private val logger = KtorSimpleLogger("org.example.project.service.SearchServiceImpl")
+
 class SearchServiceImpl(
     private val httpClient: HttpClient,
     private val twitchAuth: TwitchAuthProvider,
@@ -191,7 +194,8 @@ class SearchServiceImpl(
             try {
                 searchYouTubeVideos(query, maxResults, pageToken, eventType, order)
             } catch (e: Exception) {
-                null // エラーは無視
+                logger.error("YouTube動画検索でエラー: ${e.message}", e)
+                null
             }
         }
 
@@ -199,7 +203,8 @@ class SearchServiceImpl(
             try {
                 searchTwitchVideos(query, maxResults, cursor)
             } catch (e: Exception) {
-                null // エラーは無視
+                logger.error("Twitch動画検索でエラー: ${e.message}", e)
+                null
             }
         }
 
@@ -352,7 +357,8 @@ class SearchServiceImpl(
             try {
                 searchYouTubeChannels(query, maxResults, pageToken)
             } catch (e: Exception) {
-                null // エラーは無視
+                logger.error("YouTubeチャンネル検索でエラー: ${e.message}", e)
+                null
             }
         }
 
@@ -360,7 +366,8 @@ class SearchServiceImpl(
             try {
                 searchTwitchChannels(query, maxResults, cursor)
             } catch (e: Exception) {
-                null // エラーは無視
+                logger.error("Twitchチャンネル検索でエラー: ${e.message}", e)
+                null
             }
         }
 

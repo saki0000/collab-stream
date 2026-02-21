@@ -7,7 +7,9 @@ import io.ktor.client.call.*
 import io.ktor.client.request.forms.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
-import kotlinx.datetime.Instant
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlin.time.Instant
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.example.project.config.ApiKeyConfig
@@ -25,18 +27,30 @@ class TwitchAuthProvider(private val httpClient: HttpClient) {
 
     private var cachedToken: String? = null
     private var expiresAt: Instant? = null
+    private val mutex = Mutex()
 
     /**
      * 有効な App Access Token を返す。
      * キャッシュが無効な場合は自動的にリフレッシュする。
+     * Mutex によるダブルチェックロッキングで競合状態を防止。
      */
     suspend fun getAccessToken(): String {
+        if (isTokenValid()) {
+            return cachedToken!!
+        }
+        return mutex.withLock {
+            if (isTokenValid()) {
+                cachedToken!!
+            } else {
+                refreshToken()
+            }
+        }
+    }
+
+    private fun isTokenValid(): Boolean {
         val token = cachedToken
         val expires = expiresAt
-        if (token != null && expires != null && Clock.System.now() < expires) {
-            return token
-        }
-        return refreshToken()
+        return token != null && expires != null && Clock.System.now() < expires
     }
 
     private suspend fun refreshToken(): String {
@@ -63,10 +77,8 @@ class TwitchAuthProvider(private val httpClient: HttpClient) {
 
             val tokenResponse: TwitchTokenResponse = response.body()
 
-            // 有効期限の60秒前にリフレッシュするようマージンを設ける
-            val margin = 60.seconds
             cachedToken = tokenResponse.accessToken
-            expiresAt = Clock.System.now() + tokenResponse.expiresIn.seconds - margin
+            expiresAt = Clock.System.now() + tokenResponse.expiresIn.seconds - REFRESH_MARGIN
 
             return tokenResponse.accessToken
         } catch (e: Exception) {
@@ -77,6 +89,10 @@ class TwitchAuthProvider(private val httpClient: HttpClient) {
                 )
             }
         }
+    }
+
+    private companion object {
+        private val REFRESH_MARGIN = 60.seconds
     }
 }
 
