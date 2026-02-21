@@ -30,11 +30,11 @@ config:
 ---
 kanban
   backlog[Backlog]
-    us5[US-5: サーバーサイド検証API]
   spec[Spec]
   design[Design]
   dev[Dev]
   done[Done]
+    us5[US-5: サーバーサイド検証API]
     us4[US-4: サブスクリプション管理UI]
     us3[US-3: RevenueCat SDK統合]
     us1[US-1: ドメインモデル & Feature Gate基盤]@{ priority: 'High' }

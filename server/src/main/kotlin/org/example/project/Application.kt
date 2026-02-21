@@ -18,9 +18,11 @@ import org.example.project.plugins.configureStatusPages
 import org.example.project.routes.commentRoutes
 import org.example.project.routes.healthRoutes
 import org.example.project.routes.searchRoutes
+import org.example.project.routes.subscriptionRoutes
 import org.example.project.routes.videoRoutes
 import org.example.project.service.CommentServiceImpl
 import org.example.project.service.SearchServiceImpl
+import org.example.project.service.SubscriptionServiceImpl
 import org.example.project.service.VideoServiceImpl
 
 fun main() {
@@ -56,6 +58,7 @@ fun Application.module() {
     val videoService = VideoServiceImpl(httpClient, twitchAuth)
     val commentService = CommentServiceImpl(httpClient)
     val searchService = SearchServiceImpl(httpClient, twitchAuth)
+    val subscriptionService = SubscriptionServiceImpl(httpClient)
 
     // ルーティング設定
     routing {
@@ -75,6 +78,9 @@ fun Application.module() {
 
         // 検索API
         searchRoutes(searchService)
+
+        // サブスクリプション検証API
+        subscriptionRoutes(subscriptionService)
     }
 
     // アプリケーション終了時にHttpClientをクローズ

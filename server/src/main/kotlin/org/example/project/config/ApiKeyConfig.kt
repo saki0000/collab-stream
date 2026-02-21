@@ -30,6 +30,16 @@ object ApiKeyConfig {
         private set
 
     /**
+     * RevenueCat Secret API Key
+     *
+     * RevenueCat REST API v1 のベアラートークン認証に使用する。
+     * ADR-005（段階的APIセキュリティ Phase 2）に基づき、
+     * サーバーでAPIキーを一元管理する。
+     */
+    var revenueCatApiKey: String? = null
+        private set
+
+    /**
      * 環境変数からAPIキーを読み込む
      *
      * 未設定の場合は警告ログを出力するが、サーバー起動は継続する。
@@ -50,5 +60,6 @@ object ApiKeyConfig {
         youtubeApiKey = loadKey("YOUTUBE_API_KEY", "YouTube API Key")
         twitchClientId = loadKey("TWITCH_CLIENT_ID", "Twitch Client ID")
         twitchClientSecret = loadKey("TWITCH_CLIENT_SECRET", "Twitch Client Secret")
+        revenueCatApiKey = loadKey("REVENUECAT_API_KEY", "RevenueCat API Key")
     }
 }
