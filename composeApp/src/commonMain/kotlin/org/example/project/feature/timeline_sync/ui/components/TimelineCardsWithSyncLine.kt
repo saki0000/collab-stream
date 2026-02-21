@@ -53,6 +53,7 @@ import org.example.project.domain.model.SyncChannel
 import org.example.project.domain.model.SyncStatus
 import org.example.project.domain.model.TimestampMarker
 import org.example.project.domain.model.VideoServiceType
+import org.example.project.feature.timeline_sync.CommentLoadStatus
 import org.example.project.feature.timeline_sync.TimelineBarInfo
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
@@ -73,6 +74,8 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
  * @param onSyncTimeChange Callback when sync time changes during scroll
  * @param channelMarkersMap チャンネルIDをキーとするマーカーリストのマップ
  * @param onMarkerClick マーカータップ時のコールバック
+ * @param commentLoadStatusMap チャンネルIDをキーとするコメント読み込み状態のマップ
+ * @param onCommentListClick コメントリストボタンタップ時のコールバック
  * @param modifier Modifier for the layout
  */
 @Composable
@@ -85,6 +88,8 @@ fun TimelineCardsWithSyncLine(
     onOpenClick: (channelId: String) -> Unit = {},
     channelMarkersMap: Map<String, List<TimestampMarker>> = emptyMap(),
     onMarkerClick: (channelId: String, marker: TimestampMarker) -> Unit = { _, _ -> },
+    commentLoadStatusMap: Map<String, CommentLoadStatus> = emptyMap(),
+    onCommentListClick: (channelId: String) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     if (syncTimeRange == null) return
@@ -159,14 +164,20 @@ fun TimelineCardsWithSyncLine(
             channels.forEach { channel ->
                 val barInfo = barInfoMap[channel.channelId]
                 if (barInfo != null) {
+                    val markers = channelMarkersMap[channel.channelId] ?: emptyList()
+                    val commentStatus = commentLoadStatusMap[channel.channelId]
+                    val showCommentListButton = commentStatus == CommentLoadStatus.LOADED &&
+                        markers.isNotEmpty()
                     TimelineCardWithScrollableBar(
                         channel = channel,
                         barInfo = barInfo,
                         scrollState = scrollState,
                         contentWidthPx = contentWidth,
                         onOpenClick = { onOpenClick(channel.channelId) },
-                        markers = channelMarkersMap[channel.channelId] ?: emptyList(),
+                        markers = markers,
                         onMarkerClick = { marker -> onMarkerClick(channel.channelId, marker) },
+                        showCommentListButton = showCommentListButton,
+                        onCommentListClick = { onCommentListClick(channel.channelId) },
                     )
                 }
             }
@@ -225,6 +236,8 @@ fun TimelineCardsWithSyncLine(
  * @param onOpenClick 外部アプリを開くボタンのコールバック
  * @param markers このチャンネルのタイムスタンプマーカーリスト
  * @param onMarkerClick マーカータップ時のコールバック
+ * @param showCommentListButton コメントリストボタンを表示するかどうか
+ * @param onCommentListClick コメントリストボタンタップコールバック
  * @param modifier Modifier
  */
 @Composable
@@ -236,6 +249,8 @@ private fun TimelineCardWithScrollableBar(
     onOpenClick: () -> Unit = {},
     markers: List<TimestampMarker> = emptyList(),
     onMarkerClick: (TimestampMarker) -> Unit = {},
+    showCommentListButton: Boolean = false,
+    onCommentListClick: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val density = LocalDensity.current
@@ -282,6 +297,8 @@ private fun TimelineCardWithScrollableBar(
                 channel = channel,
                 barInfo = barInfo,
                 onOpenClick = onOpenClick,
+                showCommentListButton = showCommentListButton,
+                onCommentListClick = onCommentListClick,
             )
 
             Spacer(modifier = Modifier.height(Spacing.md))

@@ -172,6 +172,45 @@ sealed interface TimelineSyncIntent {
     data class RetryLoadComments(val channelId: String) : TimelineSyncIntent
 
     // ============================================
+    // US-4: コメントリスト
+    // ============================================
+
+    /**
+     * コメントリスト BottomSheet を開く。
+     *
+     * @param channelId コメントリストを表示するチャンネルID
+     */
+    data class OpenCommentList(val channelId: String) : TimelineSyncIntent
+
+    /**
+     * コメントリスト BottomSheet を閉じる。
+     */
+    data object CloseCommentList : TimelineSyncIntent
+
+    /**
+     * コメントリストのソート順を変更する。
+     *
+     * @param sortOrder 新しいソート順
+     */
+    data class ChangeCommentSortOrder(val sortOrder: CommentSortOrder) : TimelineSyncIntent
+
+    /**
+     * コメントリストの次ページを読み込む（スクロール末尾で発行）。
+     */
+    data object LoadMoreComments : TimelineSyncIntent
+
+    /**
+     * コメントリスト内のタイムスタンプをタップして同期時刻を更新する。
+     *
+     * @param channelId 対象チャンネルID
+     * @param timestampSeconds タップしたタイムスタンプの秒数（動画先頭からの経過秒）
+     */
+    data class TapCommentTimestamp(
+        val channelId: String,
+        val timestampSeconds: Long,
+    ) : TimelineSyncIntent
+
+    // ============================================
     // 履歴保存 (US-2: 同期チャンネル履歴保存)
     // ============================================
 

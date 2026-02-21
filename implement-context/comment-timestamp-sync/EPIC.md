@@ -35,11 +35,11 @@ config:
 ---
 kanban
   backlog[Backlog]
-    us4[US-4: コメントリスト表示 & 同期連携]
   spec[Spec]
   design[Design]
   dev[Dev]
   done[Done]
+    us4[US-4: コメントリスト表示 & 同期連携]
     us3[US-3: タイムスタンプマーカーUI]
     us2[US-2: タイムスタンプ抽出ドメイン & データ層]
     us1[US-1: コメントAPIプロキシエンドポイント]@{ priority: 'High' }

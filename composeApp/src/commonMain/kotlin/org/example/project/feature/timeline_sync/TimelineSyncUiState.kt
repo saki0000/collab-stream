@@ -136,6 +136,33 @@ data class TimelineSyncUiState(
     val selectedMarkerPreview: TimestampMarkerPreview? = null,
 
     // ============================================
+    // US-4: コメントリスト
+    // ============================================
+
+    /**
+     * コメントリスト BottomSheet が表示中かどうか。
+     */
+    val isCommentListVisible: Boolean = false,
+
+    /**
+     * コメントリストを表示中のチャンネルID。
+     * isCommentListVisible が true の場合のみ有効。
+     */
+    val commentListChannelId: String? = null,
+
+    /**
+     * コメントリストのソート順。
+     * デフォルトはいいね数順（降順）。
+     */
+    val commentSortOrder: CommentSortOrder = CommentSortOrder.LIKES,
+
+    /**
+     * コメント追加読み込み中かどうか。
+     * ページネーションで次ページを取得中の場合 true。
+     */
+    val isLoadingMoreComments: Boolean = false,
+
+    // ============================================
     // 履歴保存 (US-2: 同期チャンネル履歴保存)
     // ============================================
 
@@ -263,7 +290,22 @@ data class ChannelCommentState(
 
     /** エラーメッセージ（status が ERROR または DISABLED の場合のみ） */
     val errorMessage: String? = null,
+
+    /** 次ページ取得用トークン（null の場合は追加読み込み不可） */
+    val nextPageToken: String? = null,
 )
+
+/**
+ * コメントリストのソート順を表す列挙型。
+ * US-4: コメントリスト機能
+ */
+enum class CommentSortOrder {
+    /** いいね数順（降順） - デフォルト */
+    LIKES,
+
+    /** 時間順（タイムスタンプ秒 昇順） */
+    TIME,
+}
 
 /**
  * マーカープレビュー表示用データクラス。

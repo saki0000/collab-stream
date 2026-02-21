@@ -33,11 +33,13 @@ import kotlinx.datetime.toLocalDateTime
 import org.example.project.core.theme.Dimensions
 import org.example.project.core.theme.Spacing
 import org.example.project.domain.model.SyncChannel
+import org.example.project.feature.timeline_sync.ChannelCommentState
 import org.example.project.feature.timeline_sync.CommentLoadStatus
 import org.example.project.feature.timeline_sync.TimelineBarInfo
 import org.example.project.feature.timeline_sync.TimelineSyncIntent
 import org.example.project.feature.timeline_sync.TimelineSyncUiState
 import org.example.project.feature.timeline_sync.ui.components.ChannelAvatarRow
+import org.example.project.feature.timeline_sync.ui.components.CommentListBottomSheet
 import org.example.project.feature.timeline_sync.ui.components.MarkerPreviewPopup
 import org.example.project.feature.timeline_sync.ui.components.SyncTimeDisplay
 import org.example.project.feature.timeline_sync.ui.components.TimelineCardsWithSyncLine
@@ -121,6 +123,11 @@ fun TimelineContent(
                 .mapValues { (_, state) -> state.markers }
         }
 
+        // コメント読み込み状態マップをキャッシュ
+        val commentLoadStatusMap = remember(uiState.channelComments) {
+            uiState.channelComments.mapValues { (_, state) -> state.status }
+        }
+
         // Timeline Cards with Sync Line (horizontal scrolling)
         if (channelsWithStreams.isNotEmpty()) {
             Box {
@@ -139,6 +146,10 @@ fun TimelineContent(
                     onMarkerClick = { channelId, marker ->
                         onIntent(TimelineSyncIntent.SelectMarker(channelId, marker))
                     },
+                    commentLoadStatusMap = commentLoadStatusMap,
+                    onCommentListClick = { channelId ->
+                        onIntent(TimelineSyncIntent.OpenCommentList(channelId))
+                    },
                     modifier = Modifier.fillMaxWidth(),
                 )
 
@@ -152,6 +163,40 @@ fun TimelineContent(
                         },
                     )
                 }
+            }
+        }
+
+        // US-4: コメントリスト BottomSheet
+        val commentChannelId = uiState.commentListChannelId
+        if (uiState.isCommentListVisible && commentChannelId != null) {
+            val commentState = uiState.channelComments[commentChannelId]
+            val channelName = uiState.channels
+                .find { it.channelId == commentChannelId }?.channelName ?: commentChannelId
+
+            if (commentState != null) {
+                CommentListBottomSheet(
+                    channelName = channelName,
+                    commentState = commentState,
+                    sortOrder = uiState.commentSortOrder,
+                    isLoadingMore = uiState.isLoadingMoreComments,
+                    onSortOrderChange = { sortOrder ->
+                        onIntent(TimelineSyncIntent.ChangeCommentSortOrder(sortOrder))
+                    },
+                    onTimestampClick = { timestampSeconds ->
+                        onIntent(
+                            TimelineSyncIntent.TapCommentTimestamp(
+                                channelId = commentChannelId,
+                                timestampSeconds = timestampSeconds,
+                            ),
+                        )
+                    },
+                    onLoadMore = {
+                        onIntent(TimelineSyncIntent.LoadMoreComments)
+                    },
+                    onDismiss = {
+                        onIntent(TimelineSyncIntent.CloseCommentList)
+                    },
+                )
             }
         }
 

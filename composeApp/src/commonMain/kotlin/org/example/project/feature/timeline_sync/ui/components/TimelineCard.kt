@@ -11,11 +11,13 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Comment
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.OpenInNew
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -46,17 +48,27 @@ fun getPlatformColor(serviceType: VideoServiceType): Color = when (serviceType) 
 /**
  * Timeline card header component displaying channel information.
  *
- * Shows platform icon, channel name, time range, and Open/Wait button.
+ * Shows platform icon, channel name, time range, Open/Wait button,
+ * and optional comment list button (US-4).
  * This is the fixed (non-scrolling) part of the timeline card.
  *
  * Epic: Timeline Sync (EPIC-002)
- * Story: US-1 (Timeline Display), US-3 (Sync Time Selection), US-4 (External App Navigation)
+ * Story: US-1 (Timeline Display), US-3 (Sync Time Selection), US-4 (External App Navigation / コメントリスト)
+ *
+ * @param channel チャンネル情報
+ * @param barInfo タイムラインバー情報
+ * @param onOpenClick 外部アプリを開くボタンのコールバック
+ * @param showCommentListButton コメントリストボタンを表示するかどうか（LOADED状態かつマーカーあり）
+ * @param onCommentListClick コメントリストボタンタップコールバック
+ * @param modifier Modifier
  */
 @Composable
 fun TimelineCardHeader(
     channel: SyncChannel,
     barInfo: TimelineBarInfo?,
     onOpenClick: () -> Unit,
+    showCommentListButton: Boolean = false,
+    onCommentListClick: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val platformColor = getPlatformColor(channel.serviceType)
@@ -101,6 +113,21 @@ fun TimelineCardHeader(
                     text = "${barInfo.displayStartTime} - ${barInfo.displayEndTime}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.secondary,
+                )
+            }
+        }
+
+        // US-4: コメントリストボタン（LOADED状態かつマーカーありの場合のみ表示）
+        if (showCommentListButton) {
+            IconButton(
+                onClick = onCommentListClick,
+                modifier = Modifier.size(Dimensions.icon2xl),
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Comment,
+                    contentDescription = "コメントリストを開く",
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(Dimensions.iconLg),
                 )
             }
         }
